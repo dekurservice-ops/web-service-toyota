@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AutoCare - Dashboard Service Analytics</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Font Inter dari Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Animasi loading sederhana */
+        .shimmer {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+        }
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased flex h-screen overflow-hidden">
+
+    <!-- ================= SIDEBAR NAVIGASI ================= -->
+    <aside class="w-64 bg-slate-900 text-slate-300 flex flex-col shrink-0">
+        <div class="p-6 border-b border-slate-800 flex items-center space-x-3">
+            <div class="p-2.5 bg-blue-600 text-white rounded-xl shadow-lg shadow-blue-600/30">
+                <i data-lucide="wrench" class="w-6 h-6"></i>
+            </div>
+            <div>
+                <h1 class="font-bold text-white text-lg leading-tight">AutoCare</h1>
+                <p class="text-xs text-slate-400">Service Analytics</p>
+            </div>
+        </div>
+
+        <nav class="flex-1 p-4 space-y-1 overflow-y-auto">
+            <p class="px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Menu Utama</p>
+            <a href="#" class="flex items-center space-x-3 px-4 py-3 rounded-xl bg-blue-600 text-white font-medium shadow-md shadow-blue-600/20 transition">
+                <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
+                <span>Dashboard</span>
+            </a>
+            <a href="#" class="flex items-center space-x-3 px-4 py-3 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white font-medium transition group">
+                <i data-lucide="bell" class="w-5 h-5 group-hover:text-blue-400 transition"></i>
+                <span>Reminder Service</span>
+            </a>
+            <a href="#" class="flex items-center space-x-3 px-4 py-3 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white font-medium transition group">
+                <i data-lucide="history" class="w-5 h-5 group-hover:text-blue-400 transition"></i>
+                <span>Riwayat Unit</span>
+            </a>
+        </nav>
+
+        <div class="p-4 border-t border-slate-800 flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center text-white font-semibold border border-slate-600">AD</div>
+            <div class="flex-1 min-w-0">
+                <p class="text-sm font-medium text-white truncate">Admin Bengkel</p>
+                <p class="text-xs text-slate-400 truncate">admin@autocare.com</p>
+            </div>
+        </div>
+    </aside>
+
+    <!-- ================= KONTEN UTAMA ================= -->
+    <div class="flex-1 flex flex-col h-screen overflow-hidden">
+        
+        <header class="bg-white border-b border-slate-200 px-8 py-4 flex items-center justify-between shrink-0">
+            <div>
+                <h2 class="text-2xl font-bold text-slate-800">Dashboard Analytics</h2>
+                <p class="text-sm text-slate-500">Ringkasan performa dan status operasional service hari ini.</p>
+            </div>
+            <div class="flex items-center space-x-4">
+                <button onclick="fetchData()" class="p-2 hover:bg-slate-100 rounded-full transition text-slate-500" title="Refresh Data">
+                    <i data-lucide="refresh-cw" class="w-5 h-5" id="refresh-icon"></i>
+                </button>
+                <div class="bg-slate-100 text-slate-600 text-xs font-semibold px-3 py-2 rounded-lg flex items-center space-x-2">
+                    <i data-lucide="calendar" class="w-4 h-4 text-slate-500"></i>
+                    <span id="current-date">-- Oktober 2023</span>
+                </div>
+            </div>
+        </header>
+
+        <main class="flex-1 overflow-y-auto p-8 space-y-8 bg-slate-50">
+            
+            <!-- 3 KARTU STATISTIK (Dinamis dari jumlah data) -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                    <p class="text-sm font-medium text-slate-500">Total Unit Terdata</p>
+                    <h3 id="stat-total" class="text-3xl font-bold text-slate-800 mt-2">0</h3>
+                </div>
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                    <p class="text-sm font-medium text-slate-500">Service On-Time</p>
+                    <h3 id="stat-ontime" class="text-3xl font-bold text-emerald-600 mt-2">0</h3>
+                </div>
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                    <p class="text-sm font-medium text-slate-500">Unit Perlu Perhatian</p>
+                    <h3 id="stat-alert" class="text-3xl font-bold text-rose-600 mt-2">0</h3>
+                </div>
+            </div>
+
+            <!-- TABEL RINGKASAN SERVICE -->
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                <div class="p-6 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div>
+                        <h3 class="text-lg font-bold text-slate-800">Status Service Terkini (Real-time)</h3>
+                        <p class="text-xs text-slate-500 mt-0.5">Data diambil langsung dari Google Sheets.</p>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50 border-b border-slate-200 text-slate-500 text-xs font-semibold uppercase tracking-wider">
+                                <th class="py-4 px-6">No Polisi</th>
+                                <th class="py-4 px-6">Model Kendaraan</th>
+                                <th class="py-4 px-6">Nama Pemilik</th>
+                                <th class="py-4 px-6">KM Terakhir</th>
+                                <th class="py-4 px-6">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-body" class="divide-y divide-slate-100 text-sm">
+                            <!-- Data akan masuk di sini melalui JavaScript -->
+                            <tr>
+                                <td colspan="5" class="py-8 text-center text-slate-400">Sedang mengambil data...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Inisialisasi Icon
+        lucide.createIcons();
+
+        // Update Tanggal Hari Ini
+        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        document.getElementById('current-date').innerText = new Date().toLocaleDateString('id-ID', options);
+
+        // URL API Google Apps Script Anda
+        const API_URL = "https://script.google.com/macros/s/AKfycbzeDpHkydSu6v40v4Usk2KHkywrgr4E2LPLFox0XQVq69JyKhFSp0_4A00ScKip4CkuwQ/exec";
+
+        async function fetchData() {
+            const tableBody = document.getElementById('table-body');
+            const refreshIcon = document.getElementById('refresh-icon');
+            
+            // Animasi putar pada icon refresh saat loading
+            refreshIcon.classList.add('animate-spin');
+
+            try {
+                const response = await fetch(API_URL);
+                const data = await response.json();
+
+                // Kosongkan tabel
+                tableBody.innerHTML = '';
+
+                // Statistik counter
+                let onTimeCount = 0;
+                let alertCount = 0;
+
+                if (data.length === 0) {
+                    tableBody.innerHTML = `<tr><td colspan="5" class="py-8 text-center text-slate-400">Tidak ada data ditemukan.</td></tr>`;
+                } else {
+                    data.forEach(item => {
+                        // Logika warna status
+                        let statusClass = "";
+                        let dotClass = "";
+                        
+                        const statusText = item["Status"] || "Unknown";
+                        
+                        if (statusText.toLowerCase() === 'on time' || statusText.toLowerCase() === 'selesai') {
+                            statusClass = "bg-emerald-50 text-emerald-700 border-emerald-200";
+                            dotClass = "bg-emerald-500";
+                            onTimeCount++;
+                        } else if (statusText.toLowerCase() === 'overdue' || statusText.toLowerCase() === 'terlambat') {
+                            statusClass = "bg-rose-50 text-rose-700 border-rose-200";
+                            dotClass = "bg-rose-500";
+                            alertCount++;
+                        } else {
+                            statusClass = "bg-blue-50 text-blue-700 border-blue-200";
+                            dotClass = "bg-blue-500";
+                        }
+
+                        // Buat baris tabel
+                        const row = `
+                            <tr class="hover:bg-slate-50/80 transition">
+                                <td class="py-4 px-6 font-semibold text-slate-800">${item["No Polisi"]}</td>
+                                <td class="py-4 px-6 text-slate-600">${item["Model"]}</td>
+                                <td class="py-4 px-6 text-slate-600">${item["Pemilik"]}</td>
+                                <td class="py-4 px-6 text-slate-600 font-medium">${Number(item["KM Terakhir"]).toLocaleString('id-ID')} km</td>
+                                <td class="py-4 px-6">
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border ${statusClass}">
+                                        <span class="w-1.5 h-1.5 rounded-full ${dotClass} mr-1.5"></span>
+                                        ${statusText}
+                                    </span>
+                                </td>
+                            </tr>
+                        `;
+                        tableBody.innerHTML += row;
+                    });
+                }
+
+                // Update Statistik di Card
+                document.getElementById('stat-total').innerText = data.length;
+                document.getElementById('stat-ontime').innerText = onTimeCount;
+                document.getElementById('stat-alert').innerText = alertCount;
+
+            } catch (error) {
+                console.error("Gagal mengambil data:", error);
+                tableBody.innerHTML = `<tr><td colspan="5" class="py-8 text-center text-rose-500 font-medium">Gagal memuat data. Pastikan API sudah dipublikasikan sebagai 'Anyone'.</td></tr>`;
+            } finally {
+                // Hentikan animasi putar
+                refreshIcon.classList.remove('animate-spin');
+            }
+        }
+
+        // Jalankan fetch pertama kali saat halaman dimuat
+        window.onload = fetchData;
+
+    </script>
+</body>
+</html>
