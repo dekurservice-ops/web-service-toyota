@@ -41,9 +41,13 @@
         </div>
 
         <nav class="p-4 space-y-1.5 flex-1">
-            <button class="w-full flex items-center gap-3 px-4 py-3 bg-red-50 text-red-600 font-semibold rounded-xl transition-all">
+            <button id="nav-booking" onclick="switchView('booking')" class="w-full flex items-center gap-3 px-4 py-3 bg-red-50 text-red-600 font-semibold rounded-xl transition-all">
                 <i data-lucide="calendar-check" class="w-5 h-5"></i>
                 <span>Booking Analytics</span>
+            </button>
+            <button id="nav-sop" onclick="switchView('sop')" class="w-full flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-slate-50 font-semibold rounded-xl transition-all">
+                <i data-lucide="package-check" class="w-5 h-5"></i>
+                <span>Special Order Part</span>
             </button>
         </nav>
     </aside>
@@ -55,8 +59,8 @@
                     <i data-lucide="menu" class="w-5 h-5"></i>
                 </button>
                 <div>
-                    <h1 class="text-base sm:text-xl font-bold text-slate-900 leading-tight">Astrido Karawang Booking Analytics</h1>
-                    <p class="text-xs text-slate-500">Monitoring Kedatangan & Performance Booking MRA</p>
+                    <h1 id="page-title" class="text-base sm:text-xl font-bold text-slate-900 leading-tight">Astrido Karawang Booking Analytics</h1>
+                    <p id="page-subtitle" class="text-xs text-slate-500">Monitoring Kedatangan & Performance Booking MRA</p>
                 </div>
             </div>
             <div class="flex items-center gap-3">
@@ -69,143 +73,159 @@
         </div>
     </header>
 
-    <main class="flex-1 max-w-[1600px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+    <main class="flex-1 max-w-[1600px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
         
-        <section class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row gap-4 items-stretch md:items-center justify-between">
-            <div class="flex items-center gap-2 text-slate-700 font-semibold text-sm">
-                <i data-lucide="filter" class="w-4 h-4 text-red-600"></i>
-                <span>Filter Analytics:</span>
-            </div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 md:flex gap-3 items-center flex-1 md:justify-end">
-                <div class="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5">
-                    <label class="text-xs text-slate-500 whitespace-nowrap">Rentang Service:</label>
-                    <input type="date" id="startDate" onchange="applyBookingFilters()" class="bg-transparent text-xs text-slate-800 font-medium focus:outline-none">
-                    <span class="text-xs text-slate-400">-</span>
-                    <input type="date" id="endDate" onchange="applyBookingFilters()" class="bg-transparent text-xs text-slate-800 font-medium focus:outline-none">
+        <div id="view-booking" class="space-y-6">
+            <section class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row gap-4 items-stretch md:items-center justify-between">
+                <div class="flex items-center gap-2 text-slate-700 font-semibold text-sm">
+                    <i data-lucide="filter" class="w-4 h-4 text-red-600"></i>
+                    <span>Filter Analytics:</span>
                 </div>
-                <div class="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5">
-                    <label class="text-xs text-slate-500 whitespace-nowrap">Nama MRA:</label>
-                    <select id="filterMra" onchange="applyBookingFilters()" class="bg-transparent text-xs text-slate-800 font-medium focus:outline-none w-full">
-                        <option value="ALL">Semua MRA</option>
-                    </select>
-                </div>
-            </div>
-        </section>
-
-        <section class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3.5">
-            <div onclick="openBookingModal('TOTAL BOOKING')" class="kpi-card bg-white p-4 rounded-2xl border border-slate-200 shadow-sm group">
-                <div class="flex items-center justify-between mb-2">
-                    <span class="text-xs font-semibold text-slate-500">TOTAL BOOKING</span>
-                    <div class="p-1.5 bg-blue-50 text-blue-600 rounded-lg"><i data-lucide="calendar" class="w-4 h-4"></i></div>
-                </div>
-                <div id="kpiTotalBooking" class="text-xl sm:text-2xl font-bold text-slate-900">-</div>
-                <span class="text-[10px] text-blue-600 font-medium">Klik detail data &rarr;</span>
-            </div>
-
-            <div onclick="openBookingModal('TOTAL DATANG')" class="kpi-card bg-white p-4 rounded-2xl border border-slate-200 shadow-sm group">
-                <div class="flex items-center justify-between mb-2">
-                    <span class="text-xs font-semibold text-slate-500">TOTAL DATANG</span>
-                    <div class="p-1.5 bg-emerald-50 text-emerald-600 rounded-lg"><i data-lucide="check-circle-2" class="w-4 h-4"></i></div>
-                </div>
-                <div id="kpiTotalDatang" class="text-xl sm:text-2xl font-bold text-emerald-600">-</div>
-                <span class="text-[10px] text-emerald-600 font-medium">Klik detail data &rarr;</span>
-            </div>
-
-            <div onclick="openBookingModal('TIDAK DATANG')" class="kpi-card bg-white p-4 rounded-2xl border border-slate-200 shadow-sm group">
-                <div class="flex items-center justify-between mb-2">
-                    <span class="text-xs font-semibold text-slate-500">TIDAK DATANG</span>
-                    <div class="p-1.5 bg-rose-50 text-rose-600 rounded-lg"><i data-lucide="x-circle" class="w-4 h-4"></i></div>
-                </div>
-                <div id="kpiTidakDatang" class="text-xl sm:text-2xl font-bold text-rose-600">-</div>
-                <span class="text-[10px] text-rose-600 font-medium">Klik detail data &rarr;</span>
-            </div>
-
-            <div onclick="openBookingModal('BELUM DATANG')" class="kpi-card bg-white p-4 rounded-2xl border border-slate-200 shadow-sm group">
-                <div class="flex items-center justify-between mb-2">
-                    <span class="text-xs font-semibold text-slate-500">BELUM DATANG</span>
-                    <div class="p-1.5 bg-amber-50 text-amber-600 rounded-lg"><i data-lucide="clock" class="w-4 h-4"></i></div>
-                </div>
-                <div id="kpiBelumDatang" class="text-xl sm:text-2xl font-bold text-amber-600">-</div>
-                <span class="text-[10px] text-amber-600 font-medium">Klik detail data &rarr;</span>
-            </div>
-
-            <div onclick="openBookingModal('SHOW RATE')" class="kpi-card bg-white p-4 rounded-2xl border border-slate-200 shadow-sm group">
-                <div class="flex items-center justify-between mb-2">
-                    <span class="text-xs font-semibold text-slate-500">SHOW RATE</span>
-                    <div class="p-1.5 bg-indigo-50 text-indigo-600 rounded-lg"><i data-lucide="trending-up" class="w-4 h-4"></i></div>
-                </div>
-                <div id="kpiShowRate" class="text-xl sm:text-2xl font-bold text-indigo-600">-%</div>
-                <span class="text-[10px] text-indigo-600 font-medium">Klik detail data &rarr;</span>
-            </div>
-
-            <div onclick="openBookingModal('ACTIVE MRA')" class="kpi-card bg-white p-4 rounded-2xl border border-slate-200 shadow-sm group">
-                <div class="flex items-center justify-between mb-2">
-                    <span class="text-xs font-semibold text-slate-500">ACTIVE MRA</span>
-                    <div class="p-1.5 bg-purple-50 text-purple-600 rounded-lg"><i data-lucide="users" class="w-4 h-4"></i></div>
-                </div>
-                <div id="kpiActiveMra" class="text-xl sm:text-2xl font-bold text-purple-600">-</div>
-                <span class="text-[10px] text-purple-600 font-medium">Klik rangkuman &rarr;</span>
-            </div>
-        </section>
-
-        <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div class="lg:col-span-2 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col">
-                <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
-                    <div>
-                        <h3 class="font-bold text-slate-800 text-sm">Trend Kedatangan Service</h3>
-                        <p class="text-xs text-slate-400">Berdasarkan Service Tanggal</p>
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:flex gap-3 items-center flex-1 md:justify-end">
+                    <div class="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5">
+                        <label class="text-xs text-slate-500 whitespace-nowrap">Rentang Service:</label>
+                        <input type="date" id="startDate" onchange="applyBookingFilters()" class="bg-transparent text-xs text-slate-800 font-medium focus:outline-none">
+                        <span class="text-xs text-slate-400">-</span>
+                        <input type="date" id="endDate" onchange="applyBookingFilters()" class="bg-transparent text-xs text-slate-800 font-medium focus:outline-none">
                     </div>
-                    <div class="flex items-center gap-2">
-                        <select id="trendGranularity" onchange="renderTrendChart()" class="bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-700 rounded-xl px-2.5 py-1.5 focus:outline-none cursor-pointer">
-                            <option value="daily" selected>Harian</option>
-                            <option value="weekly">Mingguan</option>
-                            <option value="monthly">Bulanan</option>
+                    <div class="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5">
+                        <label class="text-xs text-slate-500 whitespace-nowrap">Nama MRA:</label>
+                        <select id="filterMra" onchange="applyBookingFilters()" class="bg-transparent text-xs text-slate-800 font-medium focus:outline-none w-full">
+                            <option value="ALL">Semua MRA</option>
                         </select>
                     </div>
                 </div>
-                <div class="relative flex-1 min-h-[280px]">
-                    <canvas id="trendChart"></canvas>
-                </div>
-            </div>
+            </section>
 
-            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col">
-                <div class="flex items-center justify-between mb-4">
-                    <div>
-                        <h3 class="font-bold text-slate-800 text-sm">Top Sumber Data Booking</h3>
-                        <p class="text-xs text-slate-400">Jumlah Booking berdasarkan Media</p>
+            <section class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3.5">
+                <div onclick="openBookingModal('TOTAL BOOKING')" class="kpi-card bg-white p-4 rounded-2xl border border-slate-200 shadow-sm group">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-xs font-semibold text-slate-500">TOTAL BOOKING</span>
+                        <div class="p-1.5 bg-blue-50 text-blue-600 rounded-lg"><i data-lucide="calendar" class="w-4 h-4"></i></div>
+                    </div>
+                    <div id="kpiTotalBooking" class="text-xl sm:text-2xl font-bold text-slate-900">-</div>
+                    <span class="text-[10px] text-blue-600 font-medium">Klik detail data &rarr;</span>
+                </div>
+
+                <div onclick="openBookingModal('TOTAL DATANG')" class="kpi-card bg-white p-4 rounded-2xl border border-slate-200 shadow-sm group">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-xs font-semibold text-slate-500">TOTAL DATANG</span>
+                        <div class="p-1.5 bg-emerald-50 text-emerald-600 rounded-lg"><i data-lucide="check-circle-2" class="w-4 h-4"></i></div>
+                    </div>
+                    <div id="kpiTotalDatang" class="text-xl sm:text-2xl font-bold text-emerald-600">-</div>
+                    <span class="text-[10px] text-emerald-600 font-medium">Klik detail data &rarr;</span>
+                </div>
+
+                <div onclick="openBookingModal('TIDAK DATANG')" class="kpi-card bg-white p-4 rounded-2xl border border-slate-200 shadow-sm group">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-xs font-semibold text-slate-500">TIDAK DATANG</span>
+                        <div class="p-1.5 bg-rose-50 text-rose-600 rounded-lg"><i data-lucide="x-circle" class="w-4 h-4"></i></div>
+                    </div>
+                    <div id="kpiTidakDatang" class="text-xl sm:text-2xl font-bold text-rose-600">-</div>
+                    <span class="text-[10px] text-rose-600 font-medium">Klik detail data &rarr;</span>
+                </div>
+
+                <div onclick="openBookingModal('BELUM DATANG')" class="kpi-card bg-white p-4 rounded-2xl border border-slate-200 shadow-sm group">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-xs font-semibold text-slate-500">BELUM DATANG</span>
+                        <div class="p-1.5 bg-amber-50 text-amber-600 rounded-lg"><i data-lucide="clock" class="w-4 h-4"></i></div>
+                    </div>
+                    <div id="kpiBelumDatang" class="text-xl sm:text-2xl font-bold text-amber-600">-</div>
+                    <span class="text-[10px] text-amber-600 font-medium">Klik detail data &rarr;</span>
+                </div>
+
+                <div onclick="openBookingModal('SHOW RATE')" class="kpi-card bg-white p-4 rounded-2xl border border-slate-200 shadow-sm group">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-xs font-semibold text-slate-500">SHOW RATE</span>
+                        <div class="p-1.5 bg-indigo-50 text-indigo-600 rounded-lg"><i data-lucide="trending-up" class="w-4 h-4"></i></div>
+                    </div>
+                    <div id="kpiShowRate" class="text-xl sm:text-2xl font-bold text-indigo-600">-%</div>
+                    <span class="text-[10px] text-indigo-600 font-medium">Klik detail data &rarr;</span>
+                </div>
+
+                <div onclick="openBookingModal('ACTIVE MRA')" class="kpi-card bg-white p-4 rounded-2xl border border-slate-200 shadow-sm group">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-xs font-semibold text-slate-500">ACTIVE MRA</span>
+                        <div class="p-1.5 bg-purple-50 text-purple-600 rounded-lg"><i data-lucide="users" class="w-4 h-4"></i></div>
+                    </div>
+                    <div id="kpiActiveMra" class="text-xl sm:text-2xl font-bold text-purple-600">-</div>
+                    <span class="text-[10px] text-purple-600 font-medium">Klik rangkuman &rarr;</span>
+                </div>
+            </section>
+
+            <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="lg:col-span-2 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col">
+                    <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+                        <div>
+                            <h3 class="font-bold text-slate-800 text-sm">Trend Kedatangan Service</h3>
+                            <p class="text-xs text-slate-400">Berdasarkan Service Tanggal</p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <select id="trendGranularity" onchange="renderTrendChart()" class="bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-700 rounded-xl px-2.5 py-1.5 focus:outline-none cursor-pointer">
+                                <option value="daily" selected>Harian</option>
+                                <option value="weekly">Mingguan</option>
+                                <option value="monthly">Bulanan</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="relative flex-1 min-h-[280px]">
+                        <canvas id="trendChart"></canvas>
                     </div>
                 </div>
-                <div class="relative flex-1 min-h-[280px]">
-                    <canvas id="sumberDataChart"></canvas>
-                </div>
-            </div>
-        </section>
 
-        <section class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-            <div class="p-5 border-b border-slate-100 flex items-center justify-between">
-                <div>
-                    <h3 class="font-bold text-slate-800 text-base">Leaderboard Performance MRA</h3>
-                    <p class="text-xs text-slate-400">Klik angka pada tabel untuk melihat rincian Nopol & Tanggal Service</p>
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col">
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <h3 class="font-bold text-slate-800 text-sm">Top Sumber Data Booking</h3>
+                            <p class="text-xs text-slate-400">Jumlah Booking berdasarkan Media</p>
+                        </div>
+                    </div>
+                    <div class="relative flex-1 min-h-[280px]">
+                        <canvas id="sumberDataChart"></canvas>
+                    </div>
                 </div>
-                <div class="p-2 bg-amber-50 text-amber-600 rounded-xl"><i data-lucide="trophy" class="w-5 h-5"></i></div>
+            </section>
+
+            <section class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                <div class="p-5 border-b border-slate-100 flex items-center justify-between">
+                    <div>
+                        <h3 class="font-bold text-slate-800 text-base">Leaderboard Performance MRA</h3>
+                        <p class="text-xs text-slate-400">Klik angka pada tabel untuk melihat rincian Nopol & Tanggal Service</p>
+                    </div>
+                    <div class="p-2 bg-amber-50 text-amber-600 rounded-xl"><i data-lucide="trophy" class="w-5 h-5"></i></div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs text-slate-600">
+                        <thead class="bg-slate-50 text-slate-700 font-semibold uppercase tracking-wider border-b border-slate-100">
+                            <tr>
+                                <th class="py-3.5 px-4 text-center">Rank</th>
+                                <th class="py-3.5 px-4">Nama MRA</th>
+                                <th class="py-3.5 px-4 text-center">Total Booking</th>
+                                <th class="py-3.5 px-4 text-center">Datang</th>
+                                <th class="py-3.5 px-4 text-center">Tidak Datang</th>
+                                <th class="py-3.5 px-4 text-center">Belum Datang</th>
+                                <th class="py-3.5 px-4 text-center">Show Rate (%)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="mraTableBody" class="divide-y divide-slate-100 font-medium"></tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+
+        <div id="view-sop" class="hidden space-y-6">
+            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col items-center justify-center min-h-[350px] text-center">
+                <div class="p-4 bg-red-50 text-red-600 rounded-2xl mb-4">
+                    <i data-lucide="package-check" class="w-10 h-10"></i>
+                </div>
+                <h3 class="text-lg font-bold text-slate-900">Special Order Part Analytics</h3>
+                <p class="text-xs text-slate-500 max-w-md mt-1 mb-4">Menu pemesanan suku cadang khusus (*Special Order Part*) siap digunakan.</p>
+                <div class="px-4 py-2 bg-slate-100 text-slate-600 rounded-xl text-xs font-semibold">
+                    Status: Fitur Aktif & Siap Dihubungkan ke Source Data
+                </div>
             </div>
-            <div class="overflow-x-auto">
-                <table class="w-full text-left text-xs text-slate-600">
-                    <thead class="bg-slate-50 text-slate-700 font-semibold uppercase tracking-wider border-b border-slate-100">
-                        <tr>
-                            <th class="py-3.5 px-4 text-center">Rank</th>
-                            <th class="py-3.5 px-4">Nama MRA</th>
-                            <th class="py-3.5 px-4 text-center">Total Booking</th>
-                            <th class="py-3.5 px-4 text-center">Datang</th>
-                            <th class="py-3.5 px-4 text-center">Tidak Datang</th>
-                            <th class="py-3.5 px-4 text-center">Belum Datang</th>
-                            <th class="py-3.5 px-4 text-center">Show Rate (%)</th>
-                        </tr>
-                    </thead>
-                    <tbody id="mraTableBody" class="divide-y divide-slate-100 font-medium"></tbody>
-                </table>
-            </div>
-        </section>
+        </div>
+
     </main>
 
     <div id="bookingModal" class="fixed inset-0 bg-slate-900/60 z-50 hidden flex items-center justify-center p-3 sm:p-4 backdrop-blur-sm">
@@ -245,6 +265,43 @@
             fetchBookingData();
         });
 
+        // FUNGSI PERPINDAHAN MENU (BOOKING ANALYTICS VS SPECIAL ORDER PART)
+        function switchView(viewName) {
+            const bookingView = document.getElementById('view-booking');
+            const sopView = document.getElementById('view-sop');
+            const navBooking = document.getElementById('nav-booking');
+            const navSop = document.getElementById('nav-sop');
+            const pageTitle = document.getElementById('page-title');
+            const pageSubtitle = document.getElementById('page-subtitle');
+
+            if (viewName === 'booking') {
+                bookingView.classList.remove('hidden');
+                sopView.classList.add('hidden');
+                
+                navBooking.className = "w-full flex items-center gap-3 px-4 py-3 bg-red-50 text-red-600 font-semibold rounded-xl transition-all";
+                navSop.className = "w-full flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-slate-50 font-semibold rounded-xl transition-all";
+                
+                pageTitle.textContent = "Astrido Karawang Booking Analytics";
+                pageSubtitle.textContent = "Monitoring Kedatangan & Performance Booking MRA";
+            } else {
+                bookingView.classList.add('hidden');
+                sopView.classList.remove('hidden');
+                
+                navSop.className = "w-full flex items-center gap-3 px-4 py-3 bg-red-50 text-red-600 font-semibold rounded-xl transition-all";
+                navBooking.className = "w-full flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-slate-50 font-semibold rounded-xl transition-all";
+                
+                pageTitle.textContent = "Astrido Karawang Special Order Part";
+                pageSubtitle.textContent = "Monitoring Pesanan Suku Cadang Khusus";
+            }
+
+            toggleSidebar(); // Otomatis menutup sidebar setelah menu dipilih
+        }
+
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('-translate-x-full');
+            document.getElementById('sidebarOverlay').classList.toggle('hidden');
+        }
+
         function getVal(row, keys) {
             if (!row) return '';
             const rowKeys = Object.keys(row);
@@ -257,7 +314,6 @@
             return '';
         }
 
-        // Parsing Tanggal Tangguh ("2- Jul- 26", "2-Jul-26", "02/07/2026")
         function parseDate(dateStr) {
             if (!dateStr || dateStr === '-' || dateStr === 'N/A') return null;
             let cleaned = String(dateStr).trim().replace(/\s+/g, ' ');
@@ -303,7 +359,6 @@
 
         function processBookingData(data) {
             return data.map(row => {
-                // Deteksi otomatis kolom Nomor Polisi dari spreadsheet
                 const nopol = getVal(row, ['Nomor Polisi', 'No Polisi', 'No Pol', 'Nopol']) || '-';
                 const sumber = getVal(row, ['Sumber Data', 'Sumber', 'Media']) || 'Lainnya';
                 const tglService = getVal(row, ['Service Tanggal', 'Tgl Service', 'Tanggal Service', 'Tanggal']) || '-';
@@ -524,7 +579,6 @@
             });
         }
 
-        // Modal Klik Angka MRA
         function openMraModal(mraName, statusType) {
             let list = filteredBookingData.filter(d => d.mra === mraName);
             if (statusType !== 'ALL') {
@@ -533,10 +587,8 @@
             openBookingModalCustom(`Detail MRA: ${mraName} (${statusType})`, `Menampilkan rincian nopol unit untuk MRA ${mraName}`, list);
         }
 
-        // Modal Klik KPI Card
         function openBookingModal(type) {
             if (type === 'ACTIVE MRA') {
-                // Tampilan Khusus Rangkuman MRA
                 const mraMap = {};
                 filteredBookingData.forEach(item => {
                     const name = item.mra;
@@ -613,11 +665,6 @@
 
         function closeBookingModal() {
             document.getElementById('bookingModal').classList.add('hidden');
-        }
-
-        function toggleSidebar() {
-            document.getElementById('sidebar').classList.toggle('-translate-x-full');
-            document.getElementById('sidebarOverlay').classList.toggle('hidden');
         }
 
         function updateSyncTag() {
