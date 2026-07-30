@@ -11,290 +11,443 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
         body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; }
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: #f1f5f9; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        .kpi-card { transition: all 0.2s ease-in-out; cursor: pointer; }
-        .kpi-card:hover { transform: translateY(-3px); }
+        .kpi-card { transition: all 0.3s ease; border: 1px solid #e2e8f0; }
+        .kpi-card:hover { transform: translateY(-4px); box-shadow: 0 12px 20px -5px rgba(0,0,0,0.05); }
+        .chart-container { position: relative; height: 260px; width: 100%; }
+        /* SOP Alert System */
+        .critical-warn { background-color: #fff7ed !important; } /* Orange muda > 7 hari */
+        .critical-danger { background-color: #fef2f2 !important; } /* Merah muda > 14 hari */
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 antialiased min-h-screen flex flex-col">
 
+    <!-- SIDEBAR OVERLAY -->
     <div id="sidebarOverlay" class="fixed inset-0 bg-slate-900/50 z-40 hidden transition-opacity duration-300" onclick="toggleSidebar()"></div>
 
+    <!-- SIDEBAR -->
     <aside id="sidebar" class="fixed top-0 left-0 bottom-0 w-72 bg-white z-50 transform -translate-x-full transition-transform duration-300 ease-in-out shadow-2xl flex flex-col">
-        <div class="p-5 border-b border-slate-100 flex flex-col gap-3 relative">
-            <button onclick="toggleSidebar()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 p-1 rounded-lg">
-                <i data-lucide="x" class="w-5 h-5"></i>
+        <div class="p-6 border-b border-slate-100 flex flex-col gap-4 relative">
+            <button onclick="toggleSidebar()" class="absolute top-4 right-4 text-slate-400 hover:text-red-500 p-1 rounded-lg">
+                <i data-lucide="x" class="w-6 h-6"></i>
             </button>
             <div class="flex items-center gap-3">
-                <div class="p-2.5 bg-red-600 text-white rounded-xl shadow-md shadow-red-200">
-                    <i data-lucide="car" class="w-6 h-6"></i>
+                <div class="p-2.5 bg-red-600 text-white rounded-2xl shadow-lg shadow-red-100">
+                    <i data-lucide="car" class="w-7 h-7"></i>
                 </div>
                 <div>
-                    <h2 class="font-bold text-slate-900 text-base leading-tight">Astrido Karawang</h2>
-                    <p class="text-xs text-slate-400 mt-0.5">dekurservice@gmail.com</p>
+                    <h2 class="font-black text-slate-900 text-lg leading-tight uppercase italic">Astrido</h2>
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Karawang Aftersales</p>
                 </div>
             </div>
         </div>
 
-        <nav class="p-4 space-y-1.5 flex-1">
-            <button id="nav-booking" onclick="switchView('booking')" class="w-full flex items-center gap-3 px-4 py-3 bg-red-50 text-red-600 font-semibold rounded-xl transition-all">
+        <nav class="p-4 space-y-2 flex-1">
+            <button id="nav-booking" onclick="switchView('booking')" class="w-full flex items-center gap-3 px-5 py-4 bg-red-50 text-red-600 font-bold rounded-2xl transition-all shadow-sm">
                 <i data-lucide="calendar-check" class="w-5 h-5"></i>
                 <span>Booking Analytics</span>
             </button>
-            <button id="nav-sop" onclick="switchView('sop')" class="w-full flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-slate-50 font-semibold rounded-xl transition-all">
+            <button id="nav-sop" onclick="switchView('sop')" class="w-full flex items-center gap-3 px-5 py-4 text-slate-500 hover:bg-slate-50 font-bold rounded-2xl transition-all">
                 <i data-lucide="package-check" class="w-5 h-5"></i>
                 <span>Special Order Part</span>
             </button>
         </nav>
+        
+        <div class="p-6 border-t border-slate-100">
+            <p class="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] text-center italic">© 2024 Monitoring System</p>
+        </div>
     </aside>
 
-    <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
-        <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex items-center justify-between">
-            <div class="flex items-center gap-3 sm:gap-4">
-                <button onclick="toggleSidebar()" class="p-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors focus:outline-none">
-                    <i data-lucide="menu" class="w-5 h-5"></i>
+    <!-- HEADER -->
+    <header class="bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-30 shadow-sm">
+        <div class="max-w-[1600px] mx-auto px-4 lg:px-8 h-20 flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <button onclick="toggleSidebar()" class="p-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 transition-all focus:outline-none shadow-sm active:scale-95">
+                    <i data-lucide="menu" class="w-6 h-6"></i>
                 </button>
                 <div>
-                    <h1 id="page-title" class="text-base sm:text-xl font-bold text-slate-900 leading-tight">Astrido Karawang Booking Analytics</h1>
-                    <p id="page-subtitle" class="text-xs text-slate-500">Monitoring Kedatangan & Performance Booking MRA</p>
+                    <h1 id="page-title" class="text-lg lg:text-xl font-black text-slate-900 leading-tight uppercase tracking-tight">Booking Analytics</h1>
+                    <p id="page-subtitle" class="text-xs font-bold text-slate-400 uppercase tracking-widest">Astrido Karawang Live Monitoring</p>
                 </div>
             </div>
+            
             <div class="flex items-center gap-3">
-                <span id="last-sync-tag" class="text-xs text-slate-400 italic hidden sm:inline">Sync Active</span>
-                <button onclick="fetchBookingData()" class="flex items-center gap-2 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 px-3 py-2 rounded-xl transition-colors">
-                    <i data-lucide="refresh-cw" class="w-3.5 h-3.5" id="refreshIcon"></i>
-                    <span class="hidden sm:inline">Refresh Data</span>
+                <div class="hidden sm:flex flex-col items-end mr-2">
+                    <div class="flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                        <span class="text-[10px] font-black text-slate-500 uppercase tracking-tighter">Live System</span>
+                    </div>
+                    <span id="last-sync-tag" class="text-[10px] text-slate-400 italic">Sync Active</span>
+                </div>
+                
+                <button onclick="exportViewData()" class="p-2.5 bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white rounded-xl transition-all shadow-sm active:scale-90" title="Export Excel">
+                    <i data-lucide="download" class="w-5 h-5"></i>
+                </button>
+
+                <button onclick="fetchAllData()" class="flex items-center gap-2 text-xs font-black text-white bg-slate-900 hover:bg-red-600 px-5 py-2.5 rounded-xl transition-all shadow-lg active:scale-95">
+                    <i data-lucide="refresh-cw" class="w-4 h-4" id="refreshIcon"></i>
+                    <span class="hidden md:inline tracking-widest uppercase">Refresh</span>
                 </button>
             </div>
         </div>
     </header>
 
-    <main class="flex-1 max-w-[1600px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <main class="flex-1 max-w-[1600px] w-full mx-auto px-4 lg:px-8 py-8">
         
-        <div id="view-booking" class="space-y-6">
-            <section class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row gap-4 items-stretch md:items-center justify-between">
-                <div class="flex items-center gap-2 text-slate-700 font-semibold text-sm">
-                    <i data-lucide="filter" class="w-4 h-4 text-red-600"></i>
-                    <span>Filter Analytics:</span>
-                </div>
-                <div class="grid grid-cols-1 sm:grid-cols-2 md:flex gap-3 items-center flex-1 md:justify-end">
-                    <div class="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5">
-                        <label class="text-xs text-slate-500 whitespace-nowrap">Rentang Service:</label>
-                        <input type="date" id="startDate" onchange="applyBookingFilters()" class="bg-transparent text-xs text-slate-800 font-medium focus:outline-none">
-                        <span class="text-xs text-slate-400">-</span>
-                        <input type="date" id="endDate" onchange="applyBookingFilters()" class="bg-transparent text-xs text-slate-800 font-medium focus:outline-none">
-                    </div>
-                    <div class="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5">
-                        <label class="text-xs text-slate-500 whitespace-nowrap">Nama MRA:</label>
-                        <select id="filterMra" onchange="applyBookingFilters()" class="bg-transparent text-xs text-slate-800 font-medium focus:outline-none w-full">
-                            <option value="ALL">Semua MRA</option>
-                        </select>
+        <!-- ========================================== -->
+        <!-- VIEW 1: BOOKING ANALYTICS -->
+        <!-- ========================================== -->
+        <div id="view-booking" class="space-y-8 animate-in fade-in duration-500">
+            <section class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div>
+                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 block">Rentang Tanggal Service</label>
+                    <div class="flex items-center gap-2 bg-slate-50 border border-slate-100 rounded-2xl px-4 py-2.5">
+                        <input type="date" id="startDate" onchange="applyBookingFilters()" class="bg-transparent text-xs font-bold text-slate-700 outline-none w-full">
+                        <span class="text-slate-300 font-bold">TO</span>
+                        <input type="date" id="endDate" onchange="applyBookingFilters()" class="bg-transparent text-xs font-bold text-slate-700 outline-none w-full">
                     </div>
                 </div>
-            </section>
-
-            <section class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3.5">
-                <div onclick="openBookingModal('TOTAL BOOKING')" class="kpi-card bg-white p-4 rounded-2xl border border-slate-200 shadow-sm group">
-                    <div class="flex items-center justify-between mb-2">
-                        <span class="text-xs font-semibold text-slate-500">TOTAL BOOKING</span>
-                        <div class="p-1.5 bg-blue-50 text-blue-600 rounded-lg"><i data-lucide="calendar" class="w-4 h-4"></i></div>
-                    </div>
-                    <div id="kpiTotalBooking" class="text-xl sm:text-2xl font-bold text-slate-900">-</div>
-                    <span class="text-[10px] text-blue-600 font-medium">Klik detail data &rarr;</span>
-                </div>
-
-                <div onclick="openBookingModal('TOTAL DATANG')" class="kpi-card bg-white p-4 rounded-2xl border border-slate-200 shadow-sm group">
-                    <div class="flex items-center justify-between mb-2">
-                        <span class="text-xs font-semibold text-slate-500">TOTAL DATANG</span>
-                        <div class="p-1.5 bg-emerald-50 text-emerald-600 rounded-lg"><i data-lucide="check-circle-2" class="w-4 h-4"></i></div>
-                    </div>
-                    <div id="kpiTotalDatang" class="text-xl sm:text-2xl font-bold text-emerald-600">-</div>
-                    <span class="text-[10px] text-emerald-600 font-medium">Klik detail data &rarr;</span>
-                </div>
-
-                <div onclick="openBookingModal('TIDAK DATANG')" class="kpi-card bg-white p-4 rounded-2xl border border-slate-200 shadow-sm group">
-                    <div class="flex items-center justify-between mb-2">
-                        <span class="text-xs font-semibold text-slate-500">TIDAK DATANG</span>
-                        <div class="p-1.5 bg-rose-50 text-rose-600 rounded-lg"><i data-lucide="x-circle" class="w-4 h-4"></i></div>
-                    </div>
-                    <div id="kpiTidakDatang" class="text-xl sm:text-2xl font-bold text-rose-600">-</div>
-                    <span class="text-[10px] text-rose-600 font-medium">Klik detail data &rarr;</span>
-                </div>
-
-                <div onclick="openBookingModal('BELUM DATANG')" class="kpi-card bg-white p-4 rounded-2xl border border-slate-200 shadow-sm group">
-                    <div class="flex items-center justify-between mb-2">
-                        <span class="text-xs font-semibold text-slate-500">BELUM DATANG</span>
-                        <div class="p-1.5 bg-amber-50 text-amber-600 rounded-lg"><i data-lucide="clock" class="w-4 h-4"></i></div>
-                    </div>
-                    <div id="kpiBelumDatang" class="text-xl sm:text-2xl font-bold text-amber-600">-</div>
-                    <span class="text-[10px] text-amber-600 font-medium">Klik detail data &rarr;</span>
-                </div>
-
-                <div onclick="openBookingModal('SHOW RATE')" class="kpi-card bg-white p-4 rounded-2xl border border-slate-200 shadow-sm group">
-                    <div class="flex items-center justify-between mb-2">
-                        <span class="text-xs font-semibold text-slate-500">SHOW RATE</span>
-                        <div class="p-1.5 bg-indigo-50 text-indigo-600 rounded-lg"><i data-lucide="trending-up" class="w-4 h-4"></i></div>
-                    </div>
-                    <div id="kpiShowRate" class="text-xl sm:text-2xl font-bold text-indigo-600">-%</div>
-                    <span class="text-[10px] text-indigo-600 font-medium">Klik detail data &rarr;</span>
-                </div>
-
-                <div onclick="openBookingModal('ACTIVE MRA')" class="kpi-card bg-white p-4 rounded-2xl border border-slate-200 shadow-sm group">
-                    <div class="flex items-center justify-between mb-2">
-                        <span class="text-xs font-semibold text-slate-500">ACTIVE MRA</span>
-                        <div class="p-1.5 bg-purple-50 text-purple-600 rounded-lg"><i data-lucide="users" class="w-4 h-4"></i></div>
-                    </div>
-                    <div id="kpiActiveMra" class="text-xl sm:text-2xl font-bold text-purple-600">-</div>
-                    <span class="text-[10px] text-purple-600 font-medium">Klik rangkuman &rarr;</span>
+                <div>
+                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 block">Pencarian MRA</label>
+                    <select id="filterMra" onchange="applyBookingFilters()" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-100 rounded-2xl text-xs font-bold outline-none cursor-pointer hover:bg-slate-100 transition-colors">
+                        <option value="ALL">Semua MRA</option>
+                    </select>
                 </div>
             </section>
 
-            <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div class="lg:col-span-2 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col">
-                    <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
-                        <div>
-                            <h3 class="font-bold text-slate-800 text-sm">Trend Kedatangan Service</h3>
-                            <p class="text-xs text-slate-400">Berdasarkan Service Tanggal</p>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <select id="trendGranularity" onchange="renderTrendChart()" class="bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-700 rounded-xl px-2.5 py-1.5 focus:outline-none cursor-pointer">
-                                <option value="daily" selected>Harian</option>
-                                <option value="weekly">Mingguan</option>
-                                <option value="monthly">Bulanan</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="relative flex-1 min-h-[280px]">
-                        <canvas id="trendChart"></canvas>
-                    </div>
-                </div>
-
-                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col">
+            <section class="grid grid-cols-2 lg:grid-cols-6 gap-4">
+                <div onclick="openBookingModal('TOTAL BOOKING')" class="kpi-card bg-white p-5 rounded-3xl cursor-pointer">
                     <div class="flex items-center justify-between mb-4">
-                        <div>
-                            <h3 class="font-bold text-slate-800 text-sm">Top Sumber Data Booking</h3>
-                            <p class="text-xs text-slate-400">Jumlah Booking berdasarkan Media</p>
-                        </div>
+                        <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total</span>
+                        <div class="p-2 bg-blue-50 text-blue-600 rounded-xl"><i data-lucide="calendar" class="w-5 h-5"></i></div>
                     </div>
-                    <div class="relative flex-1 min-h-[280px]">
-                        <canvas id="sumberDataChart"></canvas>
+                    <div id="kpiTotalBooking" class="text-3xl font-black text-slate-900">-</div>
+                </div>
+
+                <div onclick="openBookingModal('TOTAL DATANG')" class="kpi-card bg-white p-5 rounded-3xl cursor-pointer">
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="text-[10px] font-black text-emerald-400 uppercase tracking-widest">Datang</span>
+                        <div class="p-2 bg-emerald-50 text-emerald-600 rounded-xl"><i data-lucide="check-circle-2" class="w-5 h-5"></i></div>
                     </div>
+                    <div id="kpiTotalDatang" class="text-3xl font-black text-emerald-600">-</div>
+                </div>
+
+                <div onclick="openBookingModal('TIDAK DATANG')" class="kpi-card bg-white p-5 rounded-3xl cursor-pointer text-rose-600">
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="text-[10px] font-black uppercase tracking-widest text-rose-400">Cancel</span>
+                        <div class="p-2 bg-rose-50 text-rose-600 rounded-xl"><i data-lucide="x-circle" class="w-5 h-5"></i></div>
+                    </div>
+                    <div id="kpiTidakDatang" class="text-3xl font-black">-</div>
+                </div>
+
+                <div onclick="openBookingModal('BELUM DATANG')" class="kpi-card bg-white p-5 rounded-3xl cursor-pointer text-amber-600">
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="text-[10px] font-black uppercase tracking-widest text-amber-400">Waiting</span>
+                        <div class="p-2 bg-amber-50 text-amber-600 rounded-xl"><i data-lucide="clock" class="w-5 h-5"></i></div>
+                    </div>
+                    <div id="kpiBelumDatang" class="text-3xl font-black">-</div>
+                </div>
+
+                <div onclick="openBookingModal('SHOW RATE')" class="kpi-card bg-white p-5 rounded-3xl cursor-pointer text-indigo-600">
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="text-[10px] font-black uppercase tracking-widest text-indigo-400">Rate</span>
+                        <div class="p-2 bg-indigo-50 text-indigo-600 rounded-xl"><i data-lucide="trending-up" class="w-5 h-5"></i></div>
+                    </div>
+                    <div id="kpiShowRate" class="text-3xl font-black">-%</div>
+                </div>
+
+                <div onclick="openBookingModal('ACTIVE MRA')" class="kpi-card bg-slate-900 p-5 rounded-3xl cursor-pointer text-white shadow-xl">
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Active MRA</span>
+                        <div class="p-2 bg-white/10 text-white rounded-xl"><i data-lucide="users" class="w-5 h-5"></i></div>
+                    </div>
+                    <div id="kpiActiveMra" class="text-3xl font-black text-white">-</div>
                 </div>
             </section>
 
-            <section class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-                <div class="p-5 border-b border-slate-100 flex items-center justify-between">
-                    <div>
-                        <h3 class="font-bold text-slate-800 text-base">Leaderboard Performance MRA</h3>
-                        <p class="text-xs text-slate-400">Klik angka pada tabel untuk melihat rincian Nopol & Tanggal Service</p>
-                    </div>
-                    <div class="p-2 bg-amber-50 text-amber-600 rounded-xl"><i data-lucide="trophy" class="w-5 h-5"></i></div>
+            <section class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div class="lg:col-span-2 bg-white p-7 rounded-[2.5rem] shadow-sm border border-slate-100">
+                    <h3 class="text-sm font-black flex items-center gap-3 text-slate-900 uppercase tracking-tight mb-6">
+                        <div class="w-1 h-6 bg-red-600 rounded-full"></div> Trend Kedatangan Service
+                    </h3>
+                    <div class="relative h-[300px]"><canvas id="trendChart"></canvas></div>
+                </div>
+
+                <div class="bg-white p-7 rounded-[2.5rem] shadow-sm border border-slate-100">
+                    <h3 class="text-sm font-black flex items-center gap-3 text-slate-900 uppercase tracking-tight mb-6">
+                        <div class="w-1 h-6 bg-blue-500 rounded-full"></div> Sumber Data Booking
+                    </h3>
+                    <div class="relative h-[300px]"><canvas id="sumberDataChart"></canvas></div>
+                </div>
+            </section>
+
+            <section class="bg-white rounded-[2.5rem] shadow-sm border border-slate-200 overflow-hidden">
+                <div class="p-8 border-b border-slate-100 flex items-center justify-between bg-slate-50/30">
+                    <h3 class="font-black text-slate-900 text-base uppercase tracking-tighter">Leaderboard Performance MRA</h3>
+                    <div class="p-2.5 bg-amber-50 text-amber-600 rounded-2xl shadow-sm"><i data-lucide="trophy" class="w-6 h-6"></i></div>
                 </div>
                 <div class="overflow-x-auto">
-                    <table class="w-full text-left text-xs text-slate-600">
-                        <thead class="bg-slate-50 text-slate-700 font-semibold uppercase tracking-wider border-b border-slate-100">
+                    <table class="w-full text-left text-[11px] lg:text-xs">
+                        <thead class="bg-white text-slate-400 font-black uppercase tracking-[0.15em] border-b border-slate-100">
                             <tr>
-                                <th class="py-3.5 px-4 text-center">Rank</th>
-                                <th class="py-3.5 px-4">Nama MRA</th>
-                                <th class="py-3.5 px-4 text-center">Total Booking</th>
-                                <th class="py-3.5 px-4 text-center">Datang</th>
-                                <th class="py-3.5 px-4 text-center">Tidak Datang</th>
-                                <th class="py-3.5 px-4 text-center">Belum Datang</th>
-                                <th class="py-3.5 px-4 text-center">Show Rate (%)</th>
+                                <th class="py-5 px-8 text-center">Rank</th>
+                                <th class="py-5 px-4">Nama MRA</th>
+                                <th class="py-5 px-4 text-center">Total Booking</th>
+                                <th class="py-5 px-4 text-center">Datang</th>
+                                <th class="py-5 px-4 text-center">Cancel</th>
+                                <th class="py-5 px-4 text-center">Waiting</th>
+                                <th class="py-5 px-8 text-center">Show Rate</th>
                             </tr>
                         </thead>
-                        <tbody id="mraTableBody" class="divide-y divide-slate-100 font-medium"></tbody>
+                        <tbody id="mraTableBody" class="divide-y divide-slate-50 font-bold text-slate-700"></tbody>
                     </table>
                 </div>
             </section>
         </div>
 
-        <div id="view-sop" class="hidden space-y-6">
-            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col items-center justify-center min-h-[350px] text-center">
-                <div class="p-4 bg-red-50 text-red-600 rounded-2xl mb-4">
-                    <i data-lucide="package-check" class="w-10 h-10"></i>
+
+        <!-- ========================================== -->
+        <!-- VIEW 2: SPECIAL ORDER PART (SOP) -->
+        <!-- ========================================== -->
+        <div id="view-sop" class="hidden space-y-8 animate-in fade-in duration-500">
+            <section class="grid grid-cols-2 lg:grid-cols-6 gap-4">
+                <div onclick="openSopKPIModal('', 'Semua Order Part')" class="kpi-card bg-white p-5 rounded-3xl cursor-pointer">
+                    <div class="flex items-center justify-between text-slate-400 mb-3">
+                        <span class="text-[10px] font-black uppercase tracking-widest">Total Order</span>
+                        <i data-lucide="layers" class="w-5 h-5 text-indigo-500"></i>
+                    </div>
+                    <h3 id="sop-kpi-total" class="text-3xl font-black text-slate-900">0</h3>
                 </div>
-                <h3 class="text-lg font-bold text-slate-900">Special Order Part Analytics</h3>
-                <p class="text-xs text-slate-500 max-w-md mt-1 mb-4">Menu pemesanan suku cadang khusus (*Special Order Part*) siap digunakan.</p>
-                <div class="px-4 py-2 bg-slate-100 text-slate-600 rounded-xl text-xs font-semibold">
-                    Status: Fitur Aktif & Siap Dihubungkan ke Source Data
+
+                <div onclick="openSopKPIModal('B/O', 'Backorder (B/O)')" class="kpi-card bg-white p-5 rounded-3xl cursor-pointer text-red-600 border-red-50">
+                    <div class="flex items-center justify-between mb-3 text-red-400">
+                        <span class="text-[10px] font-black uppercase tracking-widest">Backorder</span>
+                        <i data-lucide="alert-circle" class="w-5 h-5"></i>
+                    </div>
+                    <h3 id="sop-kpi-bo" class="text-3xl font-black">0</h3>
                 </div>
-            </div>
+
+                <div onclick="openSopKPIModal('Konfirmasi Jadwal', 'Konfirmasi Jadwal')" class="kpi-card bg-white p-5 rounded-3xl cursor-pointer text-amber-600 border-amber-50">
+                    <div class="flex items-center justify-between mb-3 text-amber-400">
+                        <span class="text-[10px] font-black uppercase tracking-widest text-amber-500">Konfirmasi</span>
+                        <i data-lucide="help-circle" class="w-5 h-5"></i>
+                    </div>
+                    <h3 id="sop-kpi-konfirmasi" class="text-3xl font-black">0</h3>
+                </div>
+
+                <div onclick="openSopKPIModal('Tunggu Pemasangan', 'Tunggu Pasang')" class="kpi-card bg-white p-5 rounded-3xl cursor-pointer text-blue-600 border-blue-50">
+                    <div class="flex items-center justify-between mb-3 text-blue-400">
+                        <span class="text-[10px] font-black uppercase tracking-widest text-blue-500">Ready</span>
+                        <i data-lucide="clock" class="w-5 h-5"></i>
+                    </div>
+                    <h3 id="sop-kpi-pasang" class="text-3xl font-black">0</h3>
+                </div>
+
+                <div onclick="openSopKPIModal('Terpasang', 'Part Terpasang')" class="kpi-card bg-white p-5 rounded-3xl cursor-pointer text-emerald-600 border-emerald-50">
+                    <div class="flex items-center justify-between mb-3 text-emerald-400">
+                        <span class="text-[10px] font-black uppercase tracking-widest text-emerald-500">Terpasang</span>
+                        <i data-lucide="check-circle-2" class="w-5 h-5"></i>
+                    </div>
+                    <h3 id="sop-kpi-terpasang" class="text-3xl font-black">0</h3>
+                </div>
+
+                <div class="bg-slate-900 p-5 rounded-3xl text-white shadow-xl">
+                    <div class="flex items-center justify-between text-slate-400 mb-3">
+                        <span class="text-[10px] font-black uppercase tracking-widest">% Progress</span>
+                        <i data-lucide="percent" class="w-5 h-5 text-emerald-400"></i>
+                    </div>
+                    <h3 id="sop-kpi-pct" class="text-3xl font-black">0%</h3>
+                    <div class="w-full bg-white/10 rounded-full h-1.5 mt-4">
+                        <div id="sop-kpi-bar" class="bg-emerald-400 h-1.5 rounded-full transition-all duration-1000" style="width: 0%"></div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-200 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+                <div class="lg:col-span-1">
+                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Search</label>
+                    <input type="text" id="sop-search" placeholder="No Pol / Part / Nama..." class="w-full px-4 py-2.5 bg-slate-50 border border-slate-100 rounded-2xl text-xs font-bold outline-none focus:ring-4 focus:ring-red-500/10 focus:border-red-500">
+                </div>
+                <div>
+                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Advisor</label>
+                    <select id="sop-filter-sa" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-100 rounded-2xl text-xs font-bold outline-none"></select>
+                </div>
+                <div>
+                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Status Part</label>
+                    <select id="sop-filter-status" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-100 rounded-2xl text-xs font-bold outline-none">
+                        <option value="">Semua Status</option>
+                        <option value="B/O">B/O</option>
+                        <option value="Konfirmasi Jadwal">Konfirmasi Jadwal</option>
+                        <option value="Tunggu Pemasangan">Tunggu Pemasangan</option>
+                        <option value="Terpasang">Terpasang</option>
+                    </select>
+                </div>
+                <div><label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Start Date</label><input type="date" id="sop-filter-start" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-100 rounded-2xl text-xs font-bold outline-none"></div>
+                <div><label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">End Date</label><input type="date" id="sop-filter-end" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-100 rounded-2xl text-xs font-bold outline-none"></div>
+            </section>
+
+            <section class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div class="lg:col-span-2 bg-white p-7 rounded-[2.5rem] shadow-sm border border-slate-100 flex flex-col">
+                    <h3 class="text-sm font-black flex items-center gap-3 text-slate-900 uppercase tracking-tight mb-6">
+                        <div class="w-1 h-6 bg-indigo-500 rounded-full"></div> Top 10 Nomor Part Terorder
+                    </h3>
+                    <div class="chart-container flex-1"><canvas id="sopTopPartChart"></canvas></div>
+                </div>
+                <div class="bg-white p-7 rounded-[2.5rem] shadow-sm border border-slate-100 flex flex-col">
+                    <h3 class="text-sm font-black flex items-center gap-3 text-slate-900 uppercase tracking-tight mb-6">
+                        <div class="w-1 h-6 bg-amber-500 rounded-full"></div> Suplai Efficiency
+                    </h3>
+                    <div class="grid grid-cols-2 gap-3 mb-6">
+                        <div class="bg-slate-50 p-4 rounded-2xl text-center border border-slate-100">
+                            <span class="text-[9px] font-black text-slate-400 uppercase block mb-1">Part Tiba</span>
+                            <span id="sop-stat-suplai" class="text-lg font-black text-emerald-600">0</span>
+                        </div>
+                        <div class="bg-slate-50 p-4 rounded-2xl text-center border border-slate-100">
+                            <span class="text-[9px] font-black text-slate-400 uppercase block mb-1">BO Pending</span>
+                            <span id="sop-stat-total-bo" class="text-lg font-black text-red-600">0</span>
+                        </div>
+                    </div>
+                    <div class="chart-container flex-1" style="max-height: 180px;"><canvas id="sopSupplyRatioChart"></canvas></div>
+                </div>
+            </section>
+
+            <section class="bg-white rounded-[2.5rem] shadow-sm border border-slate-200 overflow-hidden">
+                <div class="p-8 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+                    <h3 class="font-black text-slate-800 text-sm uppercase tracking-tighter">SOP Tracking Board</h3>
+                    <span id="sop-data-count" class="text-[10px] font-black bg-white border border-slate-200 text-slate-600 px-4 py-1.5 rounded-full shadow-sm">0 RECORDS FOUND</span>
+                </div>
+                <div class="overflow-x-auto max-h-[600px] overflow-y-auto custom-scrollbar">
+                    <table class="w-full text-left text-[11px] lg:text-xs">
+                        <thead class="sticky top-0 bg-white shadow-sm z-10 border-b border-slate-100 text-slate-400 font-black uppercase tracking-widest">
+                            <tr>
+                                <th class="px-8 py-5">Code</th>
+                                <th class="px-8 py-5">Advisor</th>
+                                <th class="px-8 py-5">No Polisi</th>
+                                <th class="px-6 py-5">Tgl Order</th>
+                                <th class="px-6 py-5 text-center">Tipe</th>
+                                <th class="px-6 py-5 text-center">ETA B/O</th>
+                                <th class="px-6 py-5 text-center">Status</th>
+                                <th class="px-6 py-5 text-center">Detail</th>
+                            </tr>
+                        </thead>
+                        <tbody id="sop-table-body" class="divide-y divide-slate-50"></tbody>
+                    </table>
+                </div>
+            </section>
         </div>
 
     </main>
 
-    <div id="bookingModal" class="fixed inset-0 bg-slate-900/60 z-50 hidden flex items-center justify-center p-3 sm:p-4 backdrop-blur-sm">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden">
-            <div class="p-4 sm:p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+    <!-- ========================================== -->
+    <!-- MODALS SECTION -->
+    <!-- ========================================== -->
+    
+    <!-- MODAL BOOKING -->
+    <div id="bookingModal" class="fixed inset-0 bg-slate-900/60 z-[100] hidden flex items-center justify-center p-4 backdrop-blur-md">
+        <div class="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in duration-300">
+            <div class="p-8 border-b border-slate-100 flex items-center justify-between bg-slate-50">
                 <div>
-                    <h3 id="bookingModalTitle" class="font-bold text-slate-900 text-base">Detail Data Booking</h3>
-                    <p id="bookingModalSubtitle" class="text-xs text-slate-500">Daftar transaksi unit booking</p>
+                    <h3 id="bookingModalTitle" class="font-black text-slate-900 text-xl uppercase">Detail Data Booking</h3>
+                    <p id="bookingModalSubtitle" class="text-xs font-bold text-slate-400 uppercase tracking-widest">Astrido Karawang System</p>
                 </div>
-                <button onclick="closeBookingModal()" class="p-2 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-200 transition-colors">
-                    <i data-lucide="x" class="w-5 h-5"></i>
-                </button>
+                <button onclick="closeBookingModal()" class="p-2.5 rounded-full bg-slate-200 text-slate-600 hover:bg-red-500 hover:text-white transition-all"><i data-lucide="x" class="w-6 h-6"></i></button>
             </div>
-            <div class="p-4 sm:p-5 flex-1 overflow-y-auto">
-                <div class="rounded-xl border border-slate-200 overflow-x-auto max-h-[60vh] relative">
+            <div class="p-8 flex-1 overflow-y-auto custom-scrollbar">
+                <div class="rounded-3xl border border-slate-100 overflow-x-auto relative">
                     <table class="w-full text-left text-xs border-collapse">
-                        <thead id="bookingModalTableHeader" class="bg-slate-100 text-slate-700 font-semibold border-b border-slate-200 sticky top-0 z-20 shadow-sm"></thead>
-                        <tbody id="bookingModalTableBody" class="divide-y divide-slate-100 font-medium text-slate-700 bg-white"></tbody>
+                        <thead id="bookingModalTableHeader" class="bg-slate-50 text-slate-400 font-black uppercase tracking-widest border-b border-slate-200 sticky top-0 z-20"></thead>
+                        <tbody id="bookingModalTableBody" class="divide-y divide-slate-50 font-bold text-slate-700 bg-white"></tbody>
                     </table>
                 </div>
             </div>
-            <div class="p-4 border-t border-slate-100 bg-slate-50 flex justify-between items-center text-xs text-slate-500">
-                <span id="bookingModalRecordCount">Total: 0 Record</span>
-                <button onclick="closeBookingModal()" class="px-4 py-2 bg-slate-800 text-white font-semibold rounded-xl hover:bg-slate-900 transition-colors">Tutup</button>
+            <div class="p-8 border-t border-slate-100 bg-white flex justify-between items-center">
+                <span id="bookingModalRecordCount" class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">0 RECORDS FOUND</span>
+                <button onclick="closeBookingModal()" class="px-8 py-3 bg-slate-900 text-white font-black text-xs rounded-2xl hover:bg-red-600 transition-all uppercase tracking-widest shadow-xl">Tutup Jendela</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL SOP KPI -->
+    <div id="sopKpiModal" class="fixed inset-0 z-[100] hidden bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-4">
+        <div class="bg-white rounded-[2.5rem] w-full max-w-5xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div class="bg-slate-50 px-8 py-6 border-b border-slate-100 flex justify-between items-center">
+                <h3 id="sopKpiModalTitle" class="text-lg font-black text-slate-900 uppercase">Filtered SOP List</h3>
+                <button onclick="closeSopKPIModal()" class="text-slate-400 hover:text-red-500 p-2"><i data-lucide="x" class="w-7 h-7"></i></button>
+            </div>
+            <div class="p-8 overflow-y-auto custom-scrollbar flex-1">
+                <table class="w-full text-left text-[11px] border-collapse">
+                    <thead class="bg-white sticky top-0 border-b-2 border-slate-100 font-black text-slate-400 uppercase tracking-widest">
+                        <tr><th class="px-4 py-4">Code</th><th class="px-4 py-4">SA</th><th class="px-4 py-4">No Polisi</th><th class="px-4 py-4">Status</th></tr>
+                    </thead>
+                    <tbody id="sopKpiModalTableBody" class="divide-y divide-slate-100 font-bold text-slate-700"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL SOP DETAIL RINCIAN -->
+    <div id="sopDetailModal" class="fixed inset-0 z-[100] hidden bg-slate-900/90 backdrop-blur-md flex items-center justify-center p-4">
+        <div class="bg-white rounded-[2.5rem] w-full max-w-lg shadow-2xl overflow-hidden animate-in zoom-in duration-300">
+            <div class="p-10">
+                <div class="flex justify-between items-start mb-8">
+                    <div>
+                        <h3 class="text-2xl font-black text-slate-900 uppercase tracking-tight">Rincian Part</h3>
+                        <div class="w-12 h-1 bg-red-600 mt-2 rounded-full shadow-lg shadow-red-200"></div>
+                    </div>
+                    <button onclick="closeSopDetailModal()" class="text-slate-300 hover:text-red-500 transition-colors"><i data-lucide="x-circle" class="w-8 h-8"></i></button>
+                </div>
+                <div id="sopModalContent" class="space-y-6"></div>
+                <button onclick="closeSopDetailModal()" class="w-full mt-10 bg-slate-900 text-white py-4 rounded-2xl font-black text-xs hover:bg-red-600 transition-all uppercase tracking-[0.2em] shadow-xl">Tutup Jendela</button>
             </div>
         </div>
     </div>
 
     <script>
+        // DATA SOURCES
         const CSV_BOOKING_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRgLQ8hj-ab5ZOJu31Z1d2gyWxeYNxl4BXHjXYZSq9eaAAnURBkcv61joIaU0Qpj-7G-eQ-yV2uGAIz/pub?gid=0&single=true&output=csv';
+        const CSV_SOP_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTIDLFkByyO5KJDw2vLnF2kxcj1lSoDEeN_Hw9fnYOEnmXvuZuzynN1ncnaGsudHALaj-DR0nzMHB0j/pub?gid=0&single=true&output=csv';
 
+        // GLOBAL VARIABLES
         let rawBookingData = [], filteredBookingData = [];
         let trendChartInstance = null, sumberChartInstance = null;
+        let rawSopData = [], filteredSopData = [], sopCharts = {};
+        let currentActiveView = 'booking';
 
         document.addEventListener('DOMContentLoaded', () => {
             lucide.createIcons();
-            fetchBookingData();
+            fetchAllData();
+            setInterval(fetchAllData, 30000);
+            ['sop-search', 'sop-filter-sa', 'sop-filter-status', 'sop-filter-start', 'sop-filter-end'].forEach(id => {
+                document.getElementById(id).addEventListener('input', applySopFilters);
+            });
         });
 
-        // FUNGSI PERPINDAHAN MENU (BOOKING ANALYTICS VS SPECIAL ORDER PART)
         function switchView(viewName) {
+            currentActiveView = viewName;
             const bookingView = document.getElementById('view-booking');
             const sopView = document.getElementById('view-sop');
             const navBooking = document.getElementById('nav-booking');
             const navSop = document.getElementById('nav-sop');
             const pageTitle = document.getElementById('page-title');
-            const pageSubtitle = document.getElementById('page-subtitle');
 
             if (viewName === 'booking') {
                 bookingView.classList.remove('hidden');
                 sopView.classList.add('hidden');
-                
-                navBooking.className = "w-full flex items-center gap-3 px-4 py-3 bg-red-50 text-red-600 font-semibold rounded-xl transition-all";
-                navSop.className = "w-full flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-slate-50 font-semibold rounded-xl transition-all";
-                
-                pageTitle.textContent = "Astrido Karawang Booking Analytics";
-                pageSubtitle.textContent = "Monitoring Kedatangan & Performance Booking MRA";
+                navBooking.className = "w-full flex items-center gap-3 px-5 py-4 bg-red-50 text-red-600 font-bold rounded-2xl transition-all shadow-sm";
+                navSop.className = "w-full flex items-center gap-3 px-5 py-4 text-slate-500 hover:bg-slate-50 font-bold rounded-2xl transition-all";
+                pageTitle.textContent = "Booking Analytics";
             } else {
                 bookingView.classList.add('hidden');
                 sopView.classList.remove('hidden');
-                
-                navSop.className = "w-full flex items-center gap-3 px-4 py-3 bg-red-50 text-red-600 font-semibold rounded-xl transition-all";
-                navBooking.className = "w-full flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-slate-50 font-semibold rounded-xl transition-all";
-                
-                pageTitle.textContent = "Astrido Karawang Special Order Part";
-                pageSubtitle.textContent = "Monitoring Pesanan Suku Cadang Khusus";
+                navSop.className = "w-full flex items-center gap-3 px-5 py-4 bg-red-50 text-red-600 font-bold rounded-2xl transition-all shadow-sm";
+                navBooking.className = "w-full flex items-center gap-3 px-5 py-4 text-slate-500 hover:bg-slate-50 font-bold rounded-2xl transition-all";
+                pageTitle.textContent = "Special Order Part";
             }
-
-            toggleSidebar(); // Otomatis menutup sidebar setelah menu dipilih
+            toggleSidebar();
         }
 
         function toggleSidebar() {
@@ -302,14 +455,49 @@
             document.getElementById('sidebarOverlay').classList.toggle('hidden');
         }
 
+        function fetchAllData() {
+            const refreshIcon = document.getElementById('refreshIcon');
+            if(refreshIcon) refreshIcon.classList.add('animate-spin');
+            
+            Promise.all([
+                new Promise(resolve => {
+                    Papa.parse(`${CSV_BOOKING_URL}&_t=${Date.now()}`, {
+                        download: true, header: true, skipEmptyLines: true,
+                        complete: function(results) {
+                            rawBookingData = processBookingData(results.data);
+                            populateBookingMraFilterOptions();
+                            applyBookingFilters();
+                            resolve();
+                        }
+                    });
+                }),
+                new Promise(resolve => {
+                    Papa.parse(`${CSV_SOP_URL}&_t=${Date.now()}`, {
+                        download: true, header: true, skipEmptyLines: true,
+                        complete: function(results) {
+                            rawSopData = results.data;
+                            populateSopSAFilter();
+                            applySopFilters();
+                            resolve();
+                        }
+                    });
+                })
+            ]).then(() => {
+                if(refreshIcon) refreshIcon.classList.remove('animate-spin');
+                const el = document.getElementById('last-sync-tag');
+                if(el) el.innerText = `Sync: ${new Date().toLocaleTimeString()}`;
+            });
+        }
+
+        // ==========================================
+        // BOOKING LOGIC
+        // ==========================================
         function getVal(row, keys) {
             if (!row) return '';
             const rowKeys = Object.keys(row);
             for (let key of keys) {
                 const found = rowKeys.find(k => k.trim().toLowerCase() === key.toLowerCase());
-                if (found && row[found] !== undefined && row[found] !== null) {
-                    return String(row[found]).trim();
-                }
+                if (found) return String(row[found]).trim();
             }
             return '';
         }
@@ -318,64 +506,30 @@
             if (!dateStr || dateStr === '-' || dateStr === 'N/A') return null;
             let cleaned = String(dateStr).trim().replace(/\s+/g, ' ');
             const parts = cleaned.split(/[-/\s]+/);
-            
             if (parts.length >= 3) {
                 const day = parseInt(parts[0], 10);
                 const monthStr = parts[1].toLowerCase();
                 let year = parseInt(parts[2], 10);
                 if (year < 100) year += 2000;
-
-                const months = {
-                    jan: 0, feb: 1, mar: 2, apr: 3, mei: 4, may: 4, jun: 5,
-                    jul: 6, agu: 7, aug: 7, sep: 8, okt: 9, oct: 9, nov: 10, des: 11, dec: 11
-                };
-
-                if (months[monthStr] !== undefined && !isNaN(day) && !isNaN(year)) {
-                    return new Date(year, months[monthStr], day);
-                }
+                const months = { jan: 0, feb: 1, mar: 2, apr: 3, mei: 4, may: 4, jun: 5, jul: 6, agu: 7, aug: 7, sep: 8, okt: 9, oct: 9, nov: 10, des: 11, dec: 11 };
+                if (months[monthStr] !== undefined && !isNaN(day) && !isNaN(year)) return new Date(year, months[monthStr], day);
             }
             const d = new Date(cleaned);
             return isNaN(d.getTime()) ? null : d;
-        }
-
-        function fetchBookingData() {
-            const refreshIcon = document.getElementById('refreshIcon');
-            if(refreshIcon) refreshIcon.classList.add('animate-spin');
-
-            Papa.parse(`${CSV_BOOKING_URL}&_t=${Date.now()}`, {
-                download: true, header: true, skipEmptyLines: true,
-                complete: function(results) {
-                    if(refreshIcon) refreshIcon.classList.remove('animate-spin');
-                    rawBookingData = processBookingData(results.data);
-                    populateBookingMraFilterOptions();
-                    applyBookingFilters();
-                    updateSyncTag();
-                },
-                error: function() {
-                    if(refreshIcon) refreshIcon.classList.remove('animate-spin');
-                }
-            });
         }
 
         function processBookingData(data) {
             return data.map(row => {
                 const nopol = getVal(row, ['Nomor Polisi', 'No Polisi', 'No Pol', 'Nopol']) || '-';
                 const sumber = getVal(row, ['Sumber Data', 'Sumber', 'Media']) || 'Lainnya';
-                const tglService = getVal(row, ['Service Tanggal', 'Tgl Service', 'Tanggal Service', 'Tanggal']) || '-';
+                const tglService = getVal(row, ['Service Tanggal', 'Tgl Service', 'Tanggal Service']) || '-';
                 const mraVal = getVal(row, ['Nama MRA', 'MRA', 'Nama Mra']);
                 const mra = mraVal !== '' ? mraVal : 'Unassigned';
-                
                 const caiVal = getVal(row, ['CAI', 'Status Kedatangan', 'Status']).toUpperCase();
-
                 let status = 'BELUM DATANG';
-                if (caiVal.includes('BELUM')) {
-                    status = 'BELUM DATANG';
-                } else if (caiVal.includes('TIDAK') || caiVal.includes('CANCEL') || caiVal.includes('BATAL')) {
-                    status = 'TIDAK DATANG';
-                } else if (caiVal.includes('DATANG') || caiVal.includes('DATAN') || caiVal === 'SBE' || caiVal === 'GRP') {
-                    status = 'DATANG';
-                }
-
+                if (caiVal.includes('BELUM')) status = 'BELUM DATANG';
+                else if (caiVal.includes('TIDAK') || caiVal.includes('CANCEL') || caiVal.includes('BATAL')) status = 'TIDAK DATANG';
+                else if (caiVal.includes('DATANG') || caiVal === 'SBE' || caiVal === 'GRP') status = 'DATANG';
                 return { nopol, sumber, tglService, mra, status };
             });
         }
@@ -383,10 +537,7 @@
         function populateBookingMraFilterOptions() {
             const filterMra = document.getElementById('filterMra');
             const currentSelected = filterMra.value;
-            const mraList = [...new Set(rawBookingData.map(item => item.mra))]
-                .filter(m => m !== 'Unassigned' && m !== '-' && m !== '')
-                .sort();
-            
+            const mraList = [...new Set(rawBookingData.map(item => item.mra))].filter(m => m !== 'Unassigned' && m !== '-' && m !== '').sort();
             filterMra.innerHTML = '<option value="ALL">Semua MRA</option>';
             mraList.forEach(mra => {
                 const opt = document.createElement('option');
@@ -400,134 +551,74 @@
             const startDateVal = document.getElementById('startDate').value;
             const endDateVal = document.getElementById('endDate').value;
             const selectedMra = document.getElementById('filterMra').value;
-
             const startLimit = startDateVal ? new Date(startDateVal + 'T00:00:00') : null;
             const endLimit = endDateVal ? new Date(endDateVal + 'T23:59:59') : null;
 
             filteredBookingData = rawBookingData.filter(item => {
                 if (selectedMra !== 'ALL' && item.mra !== selectedMra) return false;
-                
                 if (startLimit || endLimit) {
                     const itemDate = parseDate(item.tglService);
                     if (itemDate) {
                         if (startLimit && itemDate < startLimit) return false;
                         if (endLimit && itemDate > endLimit) return false;
-                    }
+                    } else { return false; }
                 }
                 return true;
             });
-
-            updateBookingKPIs();
-            renderTrendChart();
-            renderSumberDataChart();
-            renderMraLeaderboard();
+            updateBookingKPIs(); renderTrendChart(); renderSumberDataChart(); renderMraLeaderboard();
         }
 
         function updateBookingKPIs() {
-            const totalBooking = filteredBookingData.length;
-            const totalDatang = filteredBookingData.filter(d => d.status === 'DATANG').length;
-            const tidakDatang = filteredBookingData.filter(d => d.status === 'TIDAK DATANG').length;
-            const belumDatang = filteredBookingData.filter(d => d.status === 'BELUM DATANG').length;
-            const showRate = totalBooking > 0 ? ((totalDatang / totalBooking) * 100).toFixed(1) : 0;
+            const total = filteredBookingData.length;
+            const datang = filteredBookingData.filter(d => d.status === 'DATANG').length;
+            const tidak = filteredBookingData.filter(d => d.status === 'TIDAK DATANG').length;
+            const belum = filteredBookingData.filter(d => d.status === 'BELUM DATANG').length;
+            const showRate = total > 0 ? ((datang / total) * 100).toFixed(1) : 0;
             const activeMras = new Set(filteredBookingData.map(d => d.mra).filter(m => m !== 'Unassigned' && m !== '-' && m !== '')).size;
-
-            document.getElementById('kpiTotalBooking').textContent = totalBooking.toLocaleString('id-ID');
-            document.getElementById('kpiTotalDatang').textContent = totalDatang.toLocaleString('id-ID');
-            document.getElementById('kpiTidakDatang').textContent = tidakDatang.toLocaleString('id-ID');
-            document.getElementById('kpiBelumDatang').textContent = belumDatang.toLocaleString('id-ID');
+            document.getElementById('kpiTotalBooking').textContent = total;
+            document.getElementById('kpiTotalDatang').textContent = datang;
+            document.getElementById('kpiTidakDatang').textContent = tidak;
+            document.getElementById('kpiBelumDatang').textContent = belum;
             document.getElementById('kpiShowRate').textContent = `${showRate}%`;
             document.getElementById('kpiActiveMra').textContent = activeMras;
         }
 
         function renderTrendChart() {
-            const granularity = document.getElementById('trendGranularity')?.value || 'daily';
-            const monthsShort = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
-
             const groupMap = {};
-
             filteredBookingData.forEach(item => {
                 const pDate = parseDate(item.tglService);
                 if (!pDate) return;
-
-                let groupKey = '';
-                let displayLabel = '';
-
-                if (granularity === 'monthly') {
-                    groupKey = `${pDate.getFullYear()}-${String(pDate.getMonth() + 1).padStart(2, '0')}`;
-                    displayLabel = `${monthsShort[pDate.getMonth()]} ${pDate.getFullYear()}`;
-                } else if (granularity === 'weekly') {
-                    const d = new Date(pDate.getTime());
-                    const day = d.getDay();
-                    const diff = d.getDate() - day + (day === 0 ? -6 : 1);
-                    const monday = new Date(d.setDate(diff));
-                    groupKey = `${monday.getFullYear()}-${String(monday.getMonth() + 1).padStart(2, '0')}-${String(monday.getDate()).padStart(2, '0')}`;
-                    displayLabel = `Minggu (${String(monday.getDate()).padStart(2, '0')} ${monthsShort[monday.getMonth()]})`;
-                } else {
-                    groupKey = `${pDate.getFullYear()}-${String(pDate.getMonth() + 1).padStart(2, '0')}-${String(pDate.getDate()).padStart(2, '0')}`;
-                    displayLabel = `${String(pDate.getDate()).padStart(2, '0')} ${monthsShort[pDate.getMonth()]}`;
-                }
-
-                if (!groupMap[groupKey]) {
-                    groupMap[groupKey] = { label: displayLabel, DATANG: 0, 'TIDAK DATANG': 0, 'BELUM DATANG': 0 };
-                }
-
-                if (groupMap[groupKey][item.status] !== undefined) {
-                    groupMap[groupKey][item.status]++;
-                }
+                const groupKey = `${pDate.getFullYear()}-${String(pDate.getMonth() + 1).padStart(2, '0')}-${String(pDate.getDate()).padStart(2, '0')}`;
+                const displayLabel = `${String(pDate.getDate()).padStart(2, '0')}/${pDate.getMonth()+1}`;
+                if (!groupMap[groupKey]) groupMap[groupKey] = { label: displayLabel, datang: 0 };
+                if (item.status === 'DATANG') groupMap[groupKey].datang++;
             });
-
             const sortedKeys = Object.keys(groupMap).sort();
-            const labels = sortedKeys.map(k => groupMap[k].label);
-            const datangData = sortedKeys.map(k => groupMap[k].DATANG);
-            const tidakDatangData = sortedKeys.map(k => groupMap[k]['TIDAK DATANG']);
-            const belumDatangData = sortedKeys.map(k => groupMap[k]['BELUM DATANG']);
-
-            if (trendChartInstance) {
-                trendChartInstance.destroy();
-            }
-
+            if (trendChartInstance) trendChartInstance.destroy();
             const ctx = document.getElementById('trendChart').getContext('2d');
             trendChartInstance = new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels,
-                    datasets: [
-                        { label: 'Datang', data: datangData, borderColor: '#10b981', backgroundColor: '#10b98120', tension: 0.3, fill: true },
-                        { label: 'Tidak Datang', data: tidakDatangData, borderColor: '#ef4444', backgroundColor: '#ef444420', tension: 0.3, fill: true },
-                        { label: 'Belum Datang', data: belumDatangData, borderColor: '#f59e0b', backgroundColor: '#f59e0b20', tension: 0.3, fill: true }
-                    ]
+                    labels: sortedKeys.map(k => groupMap[k].label),
+                    datasets: [{ label: 'Unit Datang', data: sortedKeys.map(k => groupMap[k].datang), borderColor: '#ef4444', backgroundColor: '#ef444410', tension: 0.4, fill: true, pointRadius: 4 }]
                 },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { position: 'top', labels: { boxWidth: 12, font: { size: 11 } } } },
-                    scales: { x: { grid: { display: false } }, y: { beginAtZero: true, ticks: { precision: 0 } } }
-                }
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false } }, y: { beginAtZero: true, ticks: { precision: 0 } } } }
             });
         }
 
         function renderSumberDataChart() {
             const counts = {};
             filteredBookingData.forEach(item => { counts[item.sumber] = (counts[item.sumber] || 0) + 1; });
-            const sortedKeys = Object.keys(counts).sort((a,b) => counts[b] - counts[a]).slice(0, 7);
-            const dataVals = sortedKeys.map(k => counts[k]);
-
-            if (sumberChartInstance) {
-                sumberChartInstance.destroy();
-            }
-
+            const sortedKeys = Object.keys(counts).sort((a,b) => counts[b] - counts[a]).slice(0, 5);
+            if (sumberChartInstance) sumberChartInstance.destroy();
             const ctx = document.getElementById('sumberDataChart').getContext('2d');
             sumberChartInstance = new Chart(ctx, {
                 type: 'bar',
                 data: {
                     labels: sortedKeys,
-                    datasets: [{ label: 'Total Booking', data: dataVals, backgroundColor: '#3b82f6', borderRadius: 6 }]
+                    datasets: [{ data: sortedKeys.map(k => counts[k]), backgroundColor: '#3b82f6', borderRadius: 12, barThickness: 25 }]
                 },
-                options: {
-                    indexAxis: 'y', responsive: true, maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: { x: { beginAtZero: true, ticks: { precision: 0 } }, y: { grid: { display: false } } }
-                }
+                options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true }, y: { grid: { display: false } } } }
             });
         }
 
@@ -541,7 +632,6 @@
                 else if (item.status === 'TIDAK DATANG') mraStats[name].tidak++;
                 else mraStats[name].belum++;
             });
-
             const sortedMra = Object.keys(mraStats).map(name => {
                 const total = mraStats[name].total;
                 const datang = mraStats[name].datang;
@@ -550,127 +640,229 @@
             }).sort((a,b) => b.showRate - a.showRate || b.total - a.total);
 
             const tbody = document.getElementById('mraTableBody');
-            tbody.innerHTML = '';
+            tbody.innerHTML = sortedMra.map((mra, index) => {
+                const badge = mra.showRate >= 60 ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : mra.showRate >= 40 ? 'bg-amber-50 text-amber-600 border-amber-100' : 'bg-rose-50 text-rose-600 border-rose-100';
+                return `
+                <tr class="hover:bg-slate-50 transition-all">
+                    <td class="py-4 px-8 text-center"><span class="inline-flex items-center justify-center w-6 h-6 rounded-full text-[10px] font-black ${index === 0 ? 'bg-amber-400 text-white' : 'bg-slate-100 text-slate-500'}">${index + 1}</span></td>
+                    <td class="py-4 px-4 uppercase">${mra.name}</td>
+                    <td class="py-4 px-4 text-center font-black">${mra.total}</td>
+                    <td class="py-4 px-4 text-center text-emerald-600 font-black cursor-pointer hover:underline" onclick="openMraModal('${mra.name}', 'DATANG')">${mra.datang}</td>
+                    <td class="py-4 px-4 text-center text-rose-600 font-black cursor-pointer hover:underline" onclick="openMraModal('${mra.name}', 'TIDAK DATANG')">${mra.tidak}</td>
+                    <td class="py-4 px-4 text-center text-amber-600 font-black cursor-pointer hover:underline" onclick="openMraModal('${mra.name}', 'BELUM DATANG')">${mra.belum}</td>
+                    <td class="py-4 px-8 text-center"><span class="px-3 py-1 rounded-full border ${badge}">${mra.showRate}%</span></td>
+                </tr>`;
+            }).join('');
+        }
 
-            if (sortedMra.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="7" class="py-6 text-center text-slate-400">Tidak ada data ditemukan</td></tr>`;
-                return;
-            }
-
-            sortedMra.forEach((mra, index) => {
-                let badgeClass = 'bg-red-50 text-red-600 border-red-200';
-                if (mra.showRate > 60) badgeClass = 'bg-emerald-50 text-emerald-600 border-emerald-200';
-                else if (mra.showRate >= 40) badgeClass = 'bg-amber-50 text-amber-600 border-amber-200';
-
-                const tr = document.createElement('tr');
-                tr.className = "hover:bg-slate-50 transition-colors";
-                tr.innerHTML = `
-                    <td class="py-3 px-4 text-center">
-                        <span class="inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold ${index === 0 ? 'bg-amber-100 text-amber-700' : index === 1 ? 'bg-slate-200 text-slate-700' : index === 2 ? 'bg-amber-800/10 text-amber-800' : 'text-slate-500'}">${index + 1}</span>
-                    </td>
-                    <td class="py-3 px-4 font-bold text-slate-800">${mra.name}</td>
-                    <td class="py-3 px-4 text-center font-bold text-blue-600 hover:underline cursor-pointer" onclick="openMraModal('${mra.name}', 'ALL')">${mra.total}</td>
-                    <td class="py-3 px-4 text-center text-emerald-600 font-bold hover:underline cursor-pointer" onclick="openMraModal('${mra.name}', 'DATANG')">${mra.datang}</td>
-                    <td class="py-3 px-4 text-center text-rose-600 font-bold hover:underline cursor-pointer" onclick="openMraModal('${mra.name}', 'TIDAK DATANG')">${mra.tidak}</td>
-                    <td class="py-3 px-4 text-center text-amber-600 font-bold hover:underline cursor-pointer" onclick="openMraModal('${mra.name}', 'BELUM DATANG')">${mra.belum}</td>
-                    <td class="py-3 px-4 text-center"><span class="px-2.5 py-1 rounded-full text-xs font-bold border ${badgeClass}">${mra.showRate}%</span></td>
-                `;
-                tbody.appendChild(tr);
+        // ==========================================
+        // SOP LOGIC
+        // ==========================================
+        function populateSopSAFilter() {
+            const select = document.getElementById('sop-filter-sa');
+            const current = select.value;
+            const saList = [...new Set(rawSopData.map(i => i['Nama SA']).filter(Boolean))].sort();
+            select.innerHTML = '<option value="">Semua SA</option>';
+            saList.forEach(sa => {
+                const opt = document.createElement('option');
+                opt.value = sa; opt.textContent = sa;
+                if(sa === current) opt.selected = true;
+                select.appendChild(opt);
             });
         }
 
-        function openMraModal(mraName, statusType) {
-            let list = filteredBookingData.filter(d => d.mra === mraName);
-            if (statusType !== 'ALL') {
-                list = list.filter(d => d.status === statusType);
-            }
-            openBookingModalCustom(`Detail MRA: ${mraName} (${statusType})`, `Menampilkan rincian nopol unit untuk MRA ${mraName}`, list);
+        function applySopFilters() {
+            const search = document.getElementById('sop-search').value.toLowerCase();
+            const sa = document.getElementById('sop-filter-sa').value;
+            const status = document.getElementById('sop-filter-status').value;
+            const start = document.getElementById('sop-filter-start').value;
+            const end = document.getElementById('sop-filter-end').value;
+
+            filteredSopData = rawSopData.filter(i => {
+                const searchableText = `${i['No Kendaraan']} ${i['Nomor Part']} ${i['Nama Part']} ${i['Code']}`.toLowerCase();
+                const matchesSearch = !search || searchableText.includes(search);
+                const matchesSA = !sa || i['Nama SA'] === sa;
+                const matchesStatus = !status || i['Status Part'] === status;
+                let matchesDate = true;
+                if (start || end) {
+                    const d = parseDate(i['Tanggal Order']);
+                    if (d) {
+                        if (start && d < new Date(start)) matchesDate = false;
+                        if (end) { const ed = new Date(end); ed.setHours(23,59,59); if (d > ed) matchesDate = false; }
+                    } else { matchesDate = false; }
+                }
+                return matchesSearch && matchesSA && matchesStatus && matchesDate;
+            });
+            filteredSopData.sort((a,b) => (parseDate(b['Tanggal Order']) || 0) - (parseDate(a['Tanggal Order']) || 0));
+            updateSopUI();
         }
 
+        function updateSopUI() {
+            const getLen = (st) => filteredSopData.filter(i => i['Status Part'] === st).length;
+            const counts = { total: filteredSopData.length, bo: getLen('B/O'), konf: getLen('Konfirmasi Jadwal'), pasang: getLen('Tunggu Pemasangan'), terpasang: getLen('Terpasang') };
+            Object.keys(counts).forEach(k => { if(document.getElementById(`sop-kpi-${k}`)) document.getElementById(`sop-kpi-${k}`).innerText = counts[k]; });
+            const pct = counts.total > 0 ? Math.round((counts.terpasang / counts.total) * 100) : 0;
+            document.getElementById('sop-kpi-pct').innerText = `${pct}%`;
+            document.getElementById('sop-kpi-bar').style.width = `${pct}%`;
+            document.getElementById('sop-data-count').innerText = `${filteredSopData.length} RECORDS FOUND`;
+            renderSopTable(); 
+            renderSopCharts();
+        }
+
+        function renderSopTable() {
+            const tbody = document.getElementById('sop-table-body');
+            const now = new Date();
+            tbody.innerHTML = filteredSopData.map((i, idx) => {
+                const orderDate = parseDate(i['Tanggal Order']);
+                const ageDays = orderDate ? Math.floor((now - orderDate) / 86400000) : 0;
+                let bgClass = "";
+                if(i['Status Part'] === 'B/O') {
+                    if(ageDays >= 14) bgClass = "critical-danger";
+                    else if(ageDays >= 7) bgClass = "critical-warn";
+                }
+                const st = (i['Status Part'] || '').toUpperCase();
+                const badge = st.includes('B/O') ? 'bg-red-50 text-red-600 border-red-100' : st.includes('KONFIRMASI') ? 'bg-amber-50 text-amber-600 border-amber-100' : st.includes('TUNGGU') ? 'bg-blue-50 text-blue-600 border-blue-100' : 'bg-emerald-50 text-emerald-600 border-emerald-100';
+                return `
+                <tr class="hover:bg-slate-50 transition-all cursor-pointer ${bgClass}" onclick="showSopDetail(${idx})">
+                    <td class="px-8 py-5 font-mono text-slate-500 font-bold tracking-tighter">${i['Code'] || '-'}</td>
+                    <td class="px-8 py-5 uppercase font-bold text-slate-800">${i['Nama SA'] || '-'}</td>
+                    <td class="px-8 py-5 font-black text-indigo-600 italic uppercase">${i['No Kendaraan'] || '-'}</td>
+                    <td class="px-6 py-5 text-slate-500 font-bold">${i['Tanggal Order'] || '-'}</td>
+                    <td class="px-6 py-5 text-center"><span class="bg-slate-100 px-3 py-1 rounded-lg text-[9px] font-black text-slate-500 uppercase">${i['Tipe Order'] || '-'}</span></td>
+                    <td class="px-6 py-5 text-center font-black text-red-500">${i['ETA B/O'] || '-'}</td>
+                    <td class="px-6 py-5 text-center"><span class="px-3 py-1.5 rounded-full border text-[10px] font-black ${badge}">${i['Status Part'] || 'N/A'}</span></td>
+                    <td class="px-6 py-5 text-center text-slate-300"><i data-lucide="eye" class="w-5 h-5 mx-auto"></i></td>
+                </tr>`}).join('');
+            lucide.createIcons();
+        }
+
+        function renderSopCharts() {
+            Object.values(sopCharts).forEach(c => c.destroy());
+            const partMap = {};
+            filteredSopData.forEach(i => { const p = (i['Nomor Part'] || '').trim(); if(p) partMap[p] = (partMap[p] || 0) + 1; });
+            const top = Object.entries(partMap).sort((a,b)=>b[1]-a[1]).slice(0,10);
+            sopCharts.top = new Chart(document.getElementById('sopTopPartChart').getContext('2d'), {
+                type: 'bar',
+                data: { labels: top.map(x=>x[0]), datasets: [{ data: top.map(x=>x[1]), backgroundColor: '#6366f1', borderRadius: 8, barThickness: 25 }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: '#f1f5f9' } }, x: { grid: { display: false } } } }
+            });
+            let tiba=0, boTot=0, boTiba=0, boPend=0;
+            filteredSopData.forEach(i => {
+                const hasETA = !!i['ETA B/O']?.trim() && i['ETA B/O'] !== '-', hasAct = !!i['Aktual Kedatangan']?.trim() && i['Aktual Kedatangan'] !== '-';
+                if(hasAct) tiba++; if(hasETA) { boTot++; hasAct ? boTiba++ : boPend++; }
+            });
+            document.getElementById('sop-stat-suplai').innerText = tiba;
+            document.getElementById('sop-stat-total-bo').innerText = boPend;
+            sopCharts.ratio = new Chart(document.getElementById('sopSupplyRatioChart').getContext('2d'), {
+                type: 'doughnut',
+                data: { labels: ['BO Tiba', 'BO Pending', 'Direct'], datasets: [{ data: [boTiba, boPend, Math.max(0, tiba-boTiba)], backgroundColor: ['#6366f1', '#ef4444', '#10b981'], borderWeight: 0, hoverOffset: 15 }] },
+                options: { responsive: true, maintainAspectRatio: false, cutout: '80%', plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 9, weight: 'bold' } } } } }
+            });
+        }
+
+        // ==========================================
+        // EXPORT LOGIC
+        // ==========================================
+        function exportViewData() {
+            const data = currentActiveView === 'booking' ? filteredBookingData : filteredSopData;
+            if (data.length === 0) return alert("Tidak ada data untuk diexport");
+            const headers = Object.keys(data[0]).join(",");
+            const rows = data.map(row => Object.values(row).map(v => `"${v}"`).join(",")).join("\n");
+            const blob = new Blob([headers + "\n" + rows], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.setAttribute("download", `${currentActiveView}_Export_${new Date().toISOString().split('T')[0]}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // ==========================================
+        // MODALS HELPERS
+        // ==========================================
         function openBookingModal(type) {
-            if (type === 'ACTIVE MRA') {
-                const mraMap = {};
-                filteredBookingData.forEach(item => {
-                    const name = item.mra;
-                    if (!mraMap[name]) mraMap[name] = { total: 0, datang: 0, tidak: 0, belum: 0 };
-                    mraMap[name].total++;
-                    if (item.status === 'DATANG') mraMap[name].datang++;
-                    else if (item.status === 'TIDAK DATANG') mraMap[name].tidak++;
-                    else mraMap[name].belum++;
-                });
-
-                document.getElementById('bookingModalTitle').textContent = 'Detail KPI: ACTIVE MRA';
-                document.getElementById('bookingModalSubtitle').textContent = 'Rangkuman Performa MRA';
-                
-                const thead = document.getElementById('bookingModalTableHeader');
-                const tbody = document.getElementById('bookingModalTableBody');
-
-                thead.innerHTML = `<tr><th class="py-3 px-4 text-left">Nama MRA</th><th class="py-3 px-4 text-center">Total Booking</th><th class="py-3 px-4 text-center">Datang</th><th class="py-3 px-4 text-center">Tidak Datang</th><th class="py-3 px-4 text-center">Belum Datang</th></tr>`;
-                tbody.innerHTML = '';
-
-                Object.keys(mraMap).forEach(name => {
-                    const st = mraMap[name];
-                    const tr = document.createElement('tr');
-                    tr.className = "hover:bg-slate-50 transition-colors";
-                    tr.innerHTML = `<td class="py-2.5 px-4 font-bold text-slate-800">${name}</td><td class="py-2.5 px-4 text-center font-bold text-slate-900">${st.total}</td><td class="py-2.5 px-4 text-center text-emerald-600 font-semibold">${st.datang}</td><td class="py-2.5 px-4 text-center text-rose-600 font-semibold">${st.tidak}</td><td class="py-2.5 px-4 text-center text-amber-600 font-semibold">${st.belum}</td>`;
-                    tbody.appendChild(tr);
-                });
-
-                document.getElementById('bookingModalRecordCount').textContent = `Total: ${Object.keys(mraMap).length} MRA`;
-                document.getElementById('bookingModal').classList.remove('hidden');
-                return;
-            }
-
             let list = filteredBookingData;
             if (type === 'TOTAL DATANG') list = filteredBookingData.filter(d => d.status === 'DATANG');
             else if (type === 'TIDAK DATANG') list = filteredBookingData.filter(d => d.status === 'TIDAK DATANG');
             else if (type === 'BELUM DATANG') list = filteredBookingData.filter(d => d.status === 'BELUM DATANG');
-
-            openBookingModalCustom(`Detail KPI: ${type}`, `Menampilkan daftar rincian kendaraan (${type})`, list);
+            else if (type === 'ACTIVE MRA') {
+                const mraMap = {};
+                filteredBookingData.forEach(item => {
+                    const name = item.mra;
+                    if (!mraMap[name]) mraMap[name] = { total: 0, datang: 0 };
+                    mraMap[name].total++;
+                    if (item.status === 'DATANG') mraMap[name].datang++;
+                });
+                document.getElementById('bookingModalTitle').textContent = 'Summary Active MRA';
+                document.getElementById('bookingModalTableHeader').innerHTML = `<tr><th class="py-4 px-8">Nama MRA</th><th class="py-4 px-4 text-center">Total Booking</th><th class="py-4 px-4 text-center">Unit Datang</th></tr>`;
+                document.getElementById('bookingModalTableBody').innerHTML = Object.keys(mraMap).map(name => `<tr><td class="py-4 px-8 uppercase">${name}</td><td class="py-4 px-4 text-center font-black">${mraMap[name].total}</td><td class="py-4 px-4 text-center text-emerald-600 font-black">${mraMap[name].datang}</td></tr>`).join('');
+                document.getElementById('bookingModalRecordCount').textContent = `${Object.keys(mraMap).length} MRAs`;
+                document.getElementById('bookingModal').classList.remove('hidden');
+                return;
+            }
+            openBookingModalCustom(`KPI Detail: ${type}`, `Daftar unit kendaraan untuk kategori ${type}`, list);
         }
 
         function openBookingModalCustom(title, subtitle, list) {
             document.getElementById('bookingModalTitle').textContent = title;
             document.getElementById('bookingModalSubtitle').textContent = subtitle;
-            
-            const thead = document.getElementById('bookingModalTableHeader');
-            const tbody = document.getElementById('bookingModalTableBody');
-
-            thead.innerHTML = `<tr><th class="py-3 px-4 text-left">Nomor Polisi</th><th class="py-3 px-4 text-left">Tanggal Service</th><th class="py-3 px-4 text-left">Status Kedatangan</th><th class="py-3 px-4 text-left">MRA</th><th class="py-3 px-4 text-left">Sumber Data</th></tr>`;
-            tbody.innerHTML = '';
-
-            if (!list || list.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" class="py-6 text-center text-slate-400">Tidak ada data unit ditemukan.</td></tr>`;
-            } else {
-                list.forEach(item => {
-                    let badgeColor = 'bg-amber-50 text-amber-600 border-amber-200';
-                    if (item.status === 'DATANG') badgeColor = 'bg-emerald-50 text-emerald-600 border-emerald-200';
-                    else if (item.status === 'TIDAK DATANG') badgeColor = 'bg-rose-50 text-rose-600 border-rose-200';
-
-                    const tr = document.createElement('tr');
-                    tr.className = "hover:bg-slate-50 transition-colors";
-                    tr.innerHTML = `
-                        <td class="py-2.5 px-4 font-bold text-slate-900">${item.nopol}</td>
-                        <td class="py-2.5 px-4 text-slate-600 font-medium">${item.tglService}</td>
-                        <td class="py-2.5 px-4"><span class="px-2 py-0.5 rounded text-[10px] font-bold border ${badgeColor}">${item.status}</span></td>
-                        <td class="py-2.5 px-4 font-medium text-slate-700">${item.mra}</td>
-                        <td class="py-2.5 px-4 text-slate-500">${item.sumber}</td>
-                    `;
-                    tbody.appendChild(tr);
-                });
-            }
-            document.getElementById('bookingModalRecordCount').textContent = `Total: ${list.length} Record`;
+            document.getElementById('bookingModalTableHeader').innerHTML = `<tr><th class="py-4 px-8 text-left">Nopol</th><th class="py-4 px-4 text-left">Tgl Service</th><th class="py-4 px-4 text-left">MRA</th><th class="py-4 px-4 text-left">Status</th></tr>`;
+            document.getElementById('bookingModalTableBody').innerHTML = list.map(item => `
+                <tr class="hover:bg-slate-50 transition-colors">
+                    <td class="py-4 px-8 font-black uppercase text-indigo-600">${item.nopol}</td>
+                    <td class="py-4 px-4">${item.tglService}</td>
+                    <td class="py-4 px-4 uppercase font-bold">${item.mra}</td>
+                    <td class="py-4 px-4"><span class="px-2 py-0.5 rounded text-[10px] font-black border ${item.status === 'DATANG' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-rose-50 text-rose-600 border-rose-100'}">${item.status}</span></td>
+                </tr>`).join('');
+            document.getElementById('bookingModalRecordCount').textContent = `${list.length} RECORDS FOUND`;
             document.getElementById('bookingModal').classList.remove('hidden');
         }
 
-        function closeBookingModal() {
-            document.getElementById('bookingModal').classList.add('hidden');
+        function openMraModal(mraName, statusType) {
+            const list = filteredBookingData.filter(d => d.mra === mraName && (statusType === 'ALL' || d.status === statusType));
+            openBookingModalCustom(`MRA: ${mraName}`, `Detail unit untuk status ${statusType}`, list);
         }
 
-        function updateSyncTag() {
-            const el = document.getElementById('last-sync-tag');
-            if(el) el.innerText = `Sync: ${new Date().toLocaleTimeString()}`;
+        function closeBookingModal() { document.getElementById('bookingModal').classList.add('hidden'); }
+
+        function openSopKPIModal(st, title) {
+            const list = st ? filteredSopData.filter(i => i['Status Part'] === st) : filteredSopData;
+            document.getElementById('sopKpiModalTitle').innerText = title;
+            document.getElementById('sopKpiModalTableBody').innerHTML = list.map(i => `
+                <tr class="hover:bg-slate-50 transition-colors">
+                    <td class="px-4 py-4 font-mono font-bold text-slate-500 tracking-tighter">${i['Code'] || '-'}</td>
+                    <td class="px-4 py-4 uppercase font-black text-slate-800">${i['Nama SA'] || '-'}</td>
+                    <td class="px-4 py-4 font-black text-indigo-600 italic uppercase">${i['No Kendaraan'] || '-'}</td>
+                    <td class="px-4 py-4"><span class="px-3 py-1 rounded-full border text-[10px] font-black">${i['Status Part'] || '-'}</span></td>
+                </tr>`).join('');
+            document.getElementById('sopKpiModal').classList.remove('hidden');
+            lucide.createIcons();
         }
+
+        function closeSopKPIModal() { document.getElementById('sopKpiModal').classList.add('hidden'); }
+
+        function showSopDetail(idx) {
+            const i = filteredSopData[idx];
+            document.getElementById('sopModalContent').innerHTML = `
+                <div class="space-y-6">
+                    <div class="bg-slate-900 p-6 rounded-[1.5rem] shadow-xl text-center">
+                        <p class="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1">Part Number</p>
+                        <p class="font-mono text-white font-black text-xl mb-4">${i['Nomor Part'] || '-'}</p>
+                        <p class="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1">Part Description</p>
+                        <p class="text-white font-extrabold text-sm uppercase">${i['Nama Part'] || 'No Description'}</p>
+                        <div class="mt-4 inline-block bg-emerald-500 text-white px-4 py-1 rounded-full font-black text-xs">Qty: ${i['Qty'] || '0'}</div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100"><p class="text-[9px] font-black text-slate-400 uppercase mb-1">Advisor</p><p class="font-black text-slate-800 text-xs uppercase">${i['Nama SA'] || '-'}</p></div>
+                        <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 text-right"><p class="text-[9px] font-black text-slate-400 uppercase mb-1">Plate Number</p><p class="font-black text-indigo-600 text-xs italic uppercase">${i['No Kendaraan'] || '-'}</p></div>
+                        <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100"><p class="text-[9px] font-black text-slate-400 uppercase mb-1">Order Date</p><p class="font-bold text-slate-700 text-xs">${i['Tanggal Order'] || '-'}</p></div>
+                        <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 text-right"><p class="text-[9px] font-black text-slate-400 uppercase mb-1">Supply Date</p><p class="font-bold text-emerald-600 text-xs">${i['Aktual Kedatangan'] || 'Pending'}</p></div>
+                    </div>
+                </div>`;
+            document.getElementById('sopDetailModal').classList.remove('hidden');
+        }
+
+        function closeSopDetailModal() { document.getElementById('sopDetailModal').classList.add('hidden'); }
     </script>
 </body>
 </html>
