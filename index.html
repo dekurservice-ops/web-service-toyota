@@ -368,7 +368,7 @@
                 <div class="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
                     <div>
                         <h3 class="font-bold text-slate-800 text-sm uppercase tracking-tight">Main Board Data SOP (Grouped by Code)</h3>
-                        <p class="text-[11px] text-slate-400 mt-0.5">Klik baris tabel untuk melihat rincian Part, Nama & Qty dari Sheet Detail Parts</p>
+                        <p class="text-[11px] text-slate-400 mt-0.5">Menampilkan rincian No Part, Nama Part & Qty dari Sheet Detail Parts</p>
                     </div>
                     <span id="sop-data-count" class="text-xs font-bold bg-white border border-slate-200 text-slate-600 px-3 py-1 rounded-full">0 Records</span>
                 </div>
@@ -376,12 +376,13 @@
                     <table class="w-full text-left text-xs border-collapse">
                         <thead class="sticky top-0 bg-slate-100 text-slate-700 font-bold uppercase text-[9px] tracking-wider z-20 shadow-sm border-b border-slate-200">
                             <tr>
-                                <th class="px-6 py-4 bg-slate-100">Code</th>
-                                <th class="px-6 py-4 bg-slate-100">SA</th>
-                                <th class="px-6 py-4 bg-slate-100">No Kendaraan</th>
-                                <th class="px-6 py-4 bg-slate-100">Tgl Order</th>
-                                <th class="px-6 py-4 bg-slate-100">Status</th>
-                                <th class="px-6 py-4 text-center bg-slate-100">Aksi / Rincian</th>
+                                <th class="px-4 py-4 bg-slate-100">Code</th>
+                                <th class="px-4 py-4 bg-slate-100">SA</th>
+                                <th class="px-4 py-4 bg-slate-100">No Kendaraan</th>
+                                <th class="px-4 py-4 bg-slate-100">No Part & Nama Part (Qty)</th>
+                                <th class="px-4 py-4 bg-slate-100">Tgl Order</th>
+                                <th class="px-4 py-4 bg-slate-100">Status</th>
+                                <th class="px-4 py-4 text-center bg-slate-100">Aksi</th>
                             </tr>
                         </thead>
                         <tbody id="sop-table-body" class="divide-y divide-slate-100"></tbody>
@@ -420,15 +421,15 @@
     </div>
 
     <div id="sopKpiModal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl w-full max-w-5xl shadow-2xl overflow-hidden border border-slate-200">
+        <div class="bg-white rounded-2xl w-full max-w-5xl shadow-2xl overflow-hidden border border-slate-200 flex flex-col max-h-[85vh]">
             <div class="bg-slate-50 px-6 py-4 border-b border-slate-200 flex justify-between items-center">
                 <h3 id="sopKpiModalTitle" class="text-base font-bold text-slate-900 uppercase">Detail Data SOP</h3>
                 <button onclick="closeSopKPIModal()" class="text-slate-400 hover:text-red-500 transition-colors"><i data-lucide="x" class="w-6 h-6"></i></button>
             </div>
-            <div class="p-6 max-h-[70vh] overflow-y-auto">
+            <div class="p-6 overflow-y-auto flex-1">
                 <table class="w-full text-left text-xs border-collapse">
                     <thead class="bg-slate-50 text-slate-600 font-bold uppercase text-[9px] sticky top-0 border-b border-slate-200 z-10">
-                        <tr><th class="px-4 py-3">Code</th><th class="px-4 py-3">SA</th><th class="px-4 py-3">No Kendaraan</th><th class="px-4 py-3">Status</th></tr>
+                        <tr><th class="px-4 py-3">Code</th><th class="px-4 py-3">SA</th><th class="px-4 py-3">No Kendaraan</th><th class="px-4 py-3">Rincian Part (Qty)</th><th class="px-4 py-3">Status</th></tr>
                     </thead>
                     <tbody id="sopKpiModalTableBody" class="divide-y divide-slate-100"></tbody>
                 </table>
@@ -464,7 +465,8 @@
             fetchAllData();
 
             ['sop-search', 'sop-filter-sa', 'sop-filter-status', 'sop-filter-start', 'sop-filter-end'].forEach(id => {
-                document.getElementById(id).addEventListener('input', applySopFilters);
+                const el = document.getElementById(id);
+                if(el) el.addEventListener('input', applySopFilters);
             });
         });
 
@@ -988,8 +990,8 @@
                     let items = detailMap[code];
                     if (!items || items.length === 0) {
                         items = [{
-                            'Nomor Part': '-',
-                            'Nama Part': '-',
+                            'Nomor Part': String(r[1] || '').trim(),
+                            'Nama Part': String(r[2] || '').trim(),
                             'Qty': '1'
                         }];
                     }
@@ -1015,6 +1017,7 @@
 
         function populateSopSAFilter() {
             const select = document.getElementById('sop-filter-sa');
+            if(!select) return;
             const current = select.value;
             const saList = [...new Set(groupedSopData.map(i => i['Nama SA']).filter(Boolean))].sort();
             select.innerHTML = '<option value="">Semua SA</option>';
@@ -1028,18 +1031,28 @@
 
         function parseSopDateString(str) {
             if (!str) return null;
-            const d = new Date(str);
-            if (!isNaN(d)) return d;
-            const parts = str.split('-');
-            return parts.length === 3 ? new Date(`${parts[1]}/${parts[0]}/${parts[2]}`) : null;
+            let cleaned = String(str).trim().replace(/\s+/g, ' ');
+            const parts = cleaned.split(/[-/\s]+/);
+            if (parts.length >= 3) {
+                const day = parseInt(parts[0], 10);
+                const monthStr = parts[1].toLowerCase();
+                let year = parseInt(parts[2], 10);
+                if (year < 100) year += 2000;
+                const months = { jan: 0, feb: 1, mar: 2, apr: 3, mei: 4, may: 4, jun: 5, jul: 6, agu: 7, aug: 7, sep: 8, okt: 9, oct: 9, nov: 10, des: 11, dec: 11 };
+                if (months[monthStr] !== undefined && !isNaN(day) && !isNaN(year)) {
+                    return new Date(year, months[monthStr], day);
+                }
+            }
+            const d = new Date(cleaned);
+            return isNaN(d.getTime()) ? null : d;
         }
 
         function applySopFilters() {
-            const search = document.getElementById('sop-search').value.toLowerCase();
-            const sa = document.getElementById('sop-filter-sa').value;
-            const status = document.getElementById('sop-filter-status').value;
-            const start = document.getElementById('sop-filter-start').value;
-            const end = document.getElementById('sop-filter-end').value;
+            const search = document.getElementById('sop-search')?.value.toLowerCase() || '';
+            const sa = document.getElementById('sop-filter-sa')?.value || '';
+            const status = document.getElementById('sop-filter-status')?.value || '';
+            const start = document.getElementById('sop-filter-start')?.value || '';
+            const end = document.getElementById('sop-filter-end')?.value || '';
 
             filteredSopData = groupedSopData.filter(i => {
                 const codeMatch = String(i['Code'] || '').toLowerCase().includes(search);
@@ -1052,12 +1065,20 @@
 
                 const matchesSA = !sa || i['Nama SA'] === sa;
                 const matchesStatus = !status || i['Status Part'].toUpperCase().includes(status.toUpperCase());
+                
+                // Analisa dan filter murni menggunakan Tanggal Order
                 let matchesDate = true;
                 if (start || end) {
                     const d = parseSopDateString(i['Tanggal Order']);
                     if (d) {
                         if (start && d < new Date(start)) matchesDate = false;
-                        if (end) { const ed = new Date(end); ed.setHours(23,59,59); if (d > ed) matchesDate = false; }
+                        if (end) { 
+                            const ed = new Date(end); 
+                            ed.setHours(23,59,59); 
+                            if (d > ed) matchesDate = false; 
+                        }
+                    } else {
+                        matchesDate = false;
                     }
                 }
                 return matchesSearch && matchesSA && matchesStatus && matchesDate;
@@ -1071,7 +1092,8 @@
             renderSopKPIs(); 
             renderSopTable(); 
             renderSopCharts();
-            document.getElementById('sop-data-count').innerText = `${filteredSopData.length} Records (Grouped)`;
+            const countEl = document.getElementById('sop-data-count');
+            if(countEl) countEl.innerText = `${filteredSopData.length} Records (Grouped)`;
         }
 
         function renderSopKPIs() {
@@ -1106,15 +1128,19 @@
 
         function renderSopTable() {
             const tbody = document.getElementById('sop-table-body');
+            if(!tbody) return;
+            
             tbody.innerHTML = filteredSopData.map((i, idx) => {
+                const partsFormatted = i.items.map(it => `<span class="block text-[11px]"><strong class="text-indigo-600 font-mono">${it['Nomor Part']}</strong> - ${it['Nama Part']} <span class="text-slate-500 font-bold">(Qty: ${it['Qty']})</span></span>`).join('');
                 return `
                     <tr class="hover:bg-slate-50 transition-colors cursor-pointer" onclick="showSopDetail(${idx})">
-                        <td class="px-6 py-4 font-mono text-slate-700 text-[11px] font-bold">${i['Code'] || '-'}</td>
-                        <td class="px-6 py-4 font-bold text-slate-800">${i['Nama SA'] || '-'}</td>
-                        <td class="px-6 py-4 font-bold text-indigo-600">${i['No Kendaraan'] || '-'}</td>
-                        <td class="px-6 py-4 text-slate-500">${i['Tanggal Order'] || '-'}</td>
-                        <td class="px-6 py-4"><span class="px-2 py-1 rounded-full text-[10px] font-bold border ${getSopStatusColor(i['Status Part'])}">${i['Status Part'] || '-'}</span></td>
-                        <td class="px-6 py-4 text-center text-slate-400 hover:text-indigo-600"><i data-lucide="eye" class="w-4 h-4 mx-auto"></i></td>
+                        <td class="px-4 py-4 font-mono text-slate-700 text-[11px] font-bold">${i['Code'] || '-'}</td>
+                        <td class="px-4 py-4 font-bold text-slate-800">${i['Nama SA'] || '-'}</td>
+                        <td class="px-4 py-4 font-bold text-indigo-600">${i['No Kendaraan'] || '-'}</td>
+                        <td class="px-4 py-4">${partsFormatted}</td>
+                        <td class="px-4 py-4 text-slate-500 font-medium">${i['Tanggal Order'] || '-'}</td>
+                        <td class="px-4 py-4"><span class="px-2.5 py-1 rounded-full text-[10px] font-bold border ${getSopStatusColor(i['Status Part'])}">${i['Status Part'] || '-'}</span></td>
+                        <td class="px-4 py-4 text-center text-slate-400 hover:text-indigo-600"><i data-lucide="eye" class="w-4 h-4 mx-auto"></i></td>
                     </tr>`;
             }).join('');
             lucide.createIcons();
@@ -1133,29 +1159,34 @@
             });
             const top = Object.entries(partMap).sort((a,b)=>b[1]-a[1]).slice(0,10);
 
-            const ctxTop = document.getElementById('sopTopPartChart').getContext('2d');
-            sopCharts.top = new Chart(ctxTop, {
-                type: 'bar',
-                data: { labels: top.map(x=>x[0]), datasets: [{ data: top.map(x=>x[1]), backgroundColor: '#6366f1', borderRadius: 6 }] },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
-            });
+            const ctxTop = document.getElementById('sopTopPartChart');
+            if(ctxTop) {
+                sopCharts.top = new Chart(ctxTop.getContext('2d'), {
+                    type: 'bar',
+                    data: { labels: top.map(x=>x[0]), datasets: [{ data: top.map(x=>x[1]), backgroundColor: '#6366f1', borderRadius: 6 }] },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+                });
+            }
 
             let tiba=0, boTot=0, boTiba=0, boPend=0;
             filteredSopData.forEach(i => {
                 const hasETA = !!i['ETA B/O']?.trim(), hasAct = !!i['Aktual Kedatangan']?.trim();
                 if(hasAct) tiba++; if(hasETA) { boTot++; hasAct ? boTiba++ : boPend++; }
             });
-            document.getElementById('sop-stat-total').innerText = filteredSopData.length;
-            document.getElementById('sop-stat-suplai').innerText = tiba;
-            document.getElementById('sop-stat-total-bo').innerText = boTot;
-            document.getElementById('sop-stat-bo-suplai').innerText = boTiba;
+            
+            if(document.getElementById('sop-stat-total')) document.getElementById('sop-stat-total').innerText = filteredSopData.length;
+            if(document.getElementById('sop-stat-suplai')) document.getElementById('sop-stat-suplai').innerText = tiba;
+            if(document.getElementById('sop-stat-total-bo')) document.getElementById('sop-stat-total-bo').innerText = boTot;
+            if(document.getElementById('sop-stat-bo-suplai')) document.getElementById('sop-stat-bo-suplai').innerText = boTiba;
 
-            const ctxRatio = document.getElementById('sopSupplyRatioChart').getContext('2d');
-            sopCharts.ratio = new Chart(ctxRatio, {
-                type: 'doughnut',
-                data: { labels: ['BO Tiba', 'BO Pending', 'Direct'], datasets: [{ data: [boTiba, boPend, Math.max(0, tiba-boTiba)], backgroundColor: ['#6366f1', '#ef4444', '#10b981'], borderWeight: 0 }] },
-                options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 9 } } } } }
-            });
+            const ctxRatio = document.getElementById('sopSupplyRatioChart');
+            if(ctxRatio) {
+                sopCharts.ratio = new Chart(ctxRatio.getContext('2d'), {
+                    type: 'doughnut',
+                    data: { labels: ['BO Tiba', 'BO Pending', 'Direct'], datasets: [{ data: [boTiba, boPend, Math.max(0, tiba-boTiba)], backgroundColor: ['#6366f1', '#ef4444', '#10b981'], borderWeight: 0 }] },
+                    options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 9 } } } } }
+                });
+            }
 
             let ltTot=0, ltCnt=0, ltMax=0; const ltD=[], ltL=[];
             filteredSopData.forEach(i => {
@@ -1171,15 +1202,17 @@
                 }
             });
             
-            document.getElementById('sop-avg-lt').innerText = ltCnt ? (ltTot/ltCnt).toFixed(1)+'d' : '0d';
-            document.getElementById('sop-max-lt').innerText = ltMax+'d';
+            if(document.getElementById('sop-avg-lt')) document.getElementById('sop-avg-lt').innerText = ltCnt ? (ltTot/ltCnt).toFixed(1)+'d' : '0d';
+            if(document.getElementById('sop-max-lt')) document.getElementById('sop-max-lt').innerText = ltMax+'d';
             
-            const ctxLt = document.getElementById('sopLeadTimeChart').getContext('2d');
-            sopCharts.lt = new Chart(ctxLt, {
-                type: 'bar',
-                data: { labels: ltL.slice(0,15), datasets: [{ data: ltD.slice(0,15), backgroundColor: '#ef4444', borderRadius: 4 }] },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
-            });
+            const ctxLt = document.getElementById('sopLeadTimeChart');
+            if(ctxLt) {
+                sopCharts.lt = new Chart(ctxLt.getContext('2d'), {
+                    type: 'bar',
+                    data: { labels: ltL.slice(0,15), datasets: [{ data: ltD.slice(0,15), backgroundColor: '#ef4444', borderRadius: 4 }] },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+                });
+            }
         }
 
         function showSopDetail(idx) {
@@ -1227,13 +1260,17 @@
         function openSopKPIModal(st, title) {
             const list = st ? filteredSopData.filter(i => i['Status Part'].toUpperCase().includes(st.toUpperCase())) : filteredSopData;
             document.getElementById('sopKpiModalTitle').innerText = title;
-            document.getElementById('sopKpiModalTableBody').innerHTML = list.map(i => `
-                <tr class="hover:bg-slate-50 transition-colors">
-                    <td class="px-4 py-3 font-mono text-[10px] font-bold text-slate-700">${i['Code'] || '-'}</td>
-                    <td class="px-4 py-3 font-bold text-slate-700">${i['Nama SA'] || '-'}</td>
-                    <td class="px-4 py-3 font-bold text-indigo-600">${i['No Kendaraan'] || '-'}</td>
-                    <td class="px-4 py-3"><span class="px-2 py-0.5 rounded text-[9px] font-bold border ${getSopStatusColor(i['Status Part'])}">${i['Status Part'] || '-'}</span></td>
-                </tr>`).join('');
+            document.getElementById('sopKpiModalTableBody').innerHTML = list.map(i => {
+                const partsFormatted = i.items.map(it => `<span class="block text-[11px]"><strong class="text-indigo-600 font-mono">${it['Nomor Part']}</strong> - ${it['Nama Part']} <span class="text-slate-500 font-bold">(Qty: ${it['Qty']})</span></span>`).join('');
+                return `
+                    <tr class="hover:bg-slate-50 transition-colors">
+                        <td class="px-4 py-3 font-mono text-[10px] font-bold text-slate-700">${i['Code'] || '-'}</td>
+                        <td class="px-4 py-3 font-bold text-slate-700">${i['Nama SA'] || '-'}</td>
+                        <td class="px-4 py-3 font-bold text-indigo-600">${i['No Kendaraan'] || '-'}</td>
+                        <td class="px-4 py-3">${partsFormatted}</td>
+                        <td class="px-4 py-3"><span class="px-2 py-0.5 rounded text-[9px] font-bold border ${getSopStatusColor(i['Status Part'])}">${i['Status Part'] || '-'}</span></td>
+                    </tr>`;
+            }).join('');
             document.getElementById('sopKpiModal').classList.remove('hidden');
         }
 
