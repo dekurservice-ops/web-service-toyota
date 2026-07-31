@@ -146,7 +146,7 @@
                     <h3 id="kpiShowRate" class="text-2xl font-bold mt-2 text-indigo-600">-%</h3>
                 </div>
 
-                <!-- KPI CARD BOOKING ON CALL (Hanya Menghitung yang Ada Tanggal BOC) -->
+                <!-- KPI CARD BARU: BOOKING ON CALL (BOC) -->
                 <div onclick="openBookingModal('BOOKING ON CALL')" class="kpi-card bg-slate-900 p-4 rounded-2xl border border-slate-800 shadow-sm text-white">
                     <div class="flex items-center justify-between text-slate-400">
                         <span class="text-[10px] font-bold uppercase tracking-wider">Booking On Call</span>
@@ -548,7 +548,7 @@
                 const nopol = getVal(row, ['Nomor Polisi', 'No Polisi', 'No Pol', 'Nopol']) || '-';
                 const sumber = getVal(row, ['Sumber Data', 'Sumber', 'Media']) || 'Lainnya';
                 const tglService = getVal(row, ['Service Tanggal', 'Tgl Service', 'Tanggal Service', 'Tanggal']) || '-';
-                const tglBoc = getVal(row, ['Tanggal BOC', 'Tgl BOC', 'BOC']) || '';
+                const tglBoc = getVal(row, ['Tanggal BOC', 'Tgl BOC', 'BOC']) || '-';
                 const mraVal = getVal(row, ['Nama MRA', 'MRA', 'Nama Mra']);
                 const mra = mraVal !== '' ? mraVal : 'Unassigned';
                 const caiVal = getVal(row, ['CAI', 'Status Kedatangan', 'Status']).toUpperCase();
@@ -608,8 +608,8 @@
             const belumDatang = filteredBookingData.filter(d => d.status === 'BELUM DATANG').length;
             const showRate = totalBooking > 0 ? ((totalDatang / totalBooking) * 100).toFixed(1) : 0;
             
-            // Booking On Call (BOC) secara eksklusif hanya menghitung yang memiliki Tanggal BOC ada isinya dan bukan '-'
-            const bookingOnCall = filteredBookingData.filter(d => d.tglBoc && d.tglBoc !== '-' && d.tglBoc.trim() !== '').length;
+            // Hitung Booking On Call (BOC) yang memiliki Tanggal BOC valid (tidak kosong / '-')
+            const bookingOnCall = filteredBookingData.filter(d => d.tglBoc && d.tglBoc !== '-' && d.tglBoc !== '').length;
 
             document.getElementById('kpiTotalBooking').textContent = totalBooking.toLocaleString('id-ID');
             document.getElementById('kpiTotalDatang').textContent = totalDatang.toLocaleString('id-ID');
@@ -753,7 +753,7 @@
 
         function openBookingModal(type) {
             if (type === 'BOOKING ON CALL') {
-                const listBoc = filteredBookingData.filter(d => d.tglBoc && d.tglBoc !== '-' && d.tglBoc.trim() !== '');
+                const listBoc = filteredBookingData.filter(d => d.tglBoc && d.tglBoc !== '-' && d.tglBoc !== '');
                 document.getElementById('bookingModalTitle').textContent = 'Detail KPI: BOOKING ON CALL (BOC)';
                 document.getElementById('bookingModalSubtitle').textContent = 'Daftar transaksi berdasarkan Tanggal BOC';
                 const thead = document.getElementById('bookingModalTableHeader');
