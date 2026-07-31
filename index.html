@@ -146,7 +146,6 @@
                     <h3 id="kpiShowRate" class="text-2xl font-bold mt-2 text-indigo-600">-%</h3>
                 </div>
 
-                <!-- KPI CARD BARU: BOOKING ON CALL (BOC) -->
                 <div onclick="openBookingModal('BOOKING ON CALL')" class="kpi-card bg-slate-900 p-4 rounded-2xl border border-slate-800 shadow-sm text-white">
                     <div class="flex items-center justify-between text-slate-400">
                         <span class="text-[10px] font-bold uppercase tracking-wider">Booking On Call</span>
@@ -548,7 +547,7 @@
                 const nopol = getVal(row, ['Nomor Polisi', 'No Polisi', 'No Pol', 'Nopol']) || '-';
                 const sumber = getVal(row, ['Sumber Data', 'Sumber', 'Media']) || 'Lainnya';
                 const tglService = getVal(row, ['Service Tanggal', 'Tgl Service', 'Tanggal Service', 'Tanggal']) || '-';
-                const tglBoc = getVal(row, ['Tanggal BOC', 'Tgl BOC', 'BOC']) || '-';
+                const tglBoc = getVal(row, ['Tanggal BOC', 'Tgl BOC', 'BOC']) || '';
                 const mraVal = getVal(row, ['Nama MRA', 'MRA', 'Nama Mra']);
                 const mra = mraVal !== '' ? mraVal : 'Unassigned';
                 const caiVal = getVal(row, ['CAI', 'Status Kedatangan', 'Status']).toUpperCase();
@@ -576,6 +575,13 @@
         }
 
         function applyBookingFilters() {
+            updateBookingKPIs();
+            renderTrendChart();
+            renderSumberDataChart();
+            renderMraLeaderboard();
+        }
+
+        function updateBookingKPIs() {
             const startDateVal = document.getElementById('startDate').value;
             const endDateVal = document.getElementById('endDate').value;
             const selectedMra = document.getElementById('filterMra').value;
@@ -583,7 +589,8 @@
             const startLimit = startDateVal ? new Date(startDateVal + 'T00:00:00') : null;
             const endLimit = endDateVal ? new Date(endDateVal + 'T23:59:59') : null;
 
-            filteredBookingData = rawBookingData.filter(item => {
+            // Filter umum berdasarkan Service Tanggal & MRA untuk KPI selain BOC
+            const filteredGeneral = rawBookingData.filter(item => {
                 if (selectedMra !== 'ALL' && item.mra !== selectedMra) return false;
                 if (startLimit || endLimit) {
                     const itemDate = parseDate(item.tglService);
@@ -595,28 +602,39 @@
                 return true;
             });
 
-            updateBookingKPIs();
-            renderTrendChart();
-            renderSumberDataChart();
-            renderMraLeaderboard();
-        }
+            filteredBookingData = filteredGeneral; // Simpan untuk chart & leaderboard
 
-        function updateBookingKPIs() {
-            const totalBooking = filteredBookingData.length;
-            const totalDatang = filteredBookingData.filter(d => d.status === 'DATANG').length;
-            const tidakDatang = filteredBookingData.filter(d => d.status === 'TIDAK DATANG').length;
-            const belumDatang = filteredBookingData.filter(d => d.status === 'BELUM DATANG').length;
+            const totalBooking = filteredGeneral.length;
+            const totalDatang = filteredGeneral.filter(d => d.status === 'DATANG').length;
+            const tidakDatang = filteredGeneral.filter(d => d.status === 'TIDAK DATANG').length;
+            const belumDatang = filteredGeneral.filter(d => d.status === 'BELUM DATANG').length;
             const showRate = totalBooking > 0 ? ((totalDatang / totalBooking) * 100).toFixed(1) : 0;
             
-            // Hitung Booking On Call (BOC) yang memiliki Tanggal BOC valid (tidak kosong / '-')
-            const bookingOnCall = filteredBookingData.filter(d => d.tglBoc && d.tglBoc !== '-' && d.tglBoc !== '').length;
+            // Filter Khusus BOC: Mengikuti Tanggal BOC dan MRA
+            const bookingOnCallCount = rawBookingData.filter(item => {
+                if (selectedMra !== 'ALL' && item.mra !== selectedMra) return false;
+                const bocStr = String(item.tglBoc || '').trim();
+                const isValidBoc = bocStr !== '' && bocStr !== '-' && bocStr.toLowerCase() !== 'undefined' && bocStr.toLowerCase() !== 'null';
+                if (!isValidBoc) return false;
+
+                if (startLimit || endLimit) {
+                    const bocDate = parseDate(item.tglBoc);
+                    if (bocDate) {
+                        if (startLimit && bocDate < startLimit) return false;
+                        if (endLimit && bocDate > endLimit) return false;
+                    } else {
+                        return false;
+                    }
+                }
+                return true;
+            }).length;
 
             document.getElementById('kpiTotalBooking').textContent = totalBooking.toLocaleString('id-ID');
             document.getElementById('kpiTotalDatang').textContent = totalDatang.toLocaleString('id-ID');
             document.getElementById('kpiTidakDatang').textContent = tidakDatang.toLocaleString('id-ID');
             document.getElementById('kpiBelumDatang').textContent = belumDatang.toLocaleString('id-ID');
             document.getElementById('kpiShowRate').textContent = `${showRate}%`;
-            document.getElementById('kpiBookingOnCall').textContent = bookingOnCall.toLocaleString('id-ID');
+            document.getElementById('kpiBookingOnCall').textContent = bookingOnCallCount.toLocaleString('id-ID');
         }
 
         function renderTrendChart() {
@@ -753,9 +771,32 @@
 
         function openBookingModal(type) {
             if (type === 'BOOKING ON CALL') {
-                const listBoc = filteredBookingData.filter(d => d.tglBoc && d.tglBoc !== '-' && d.tglBoc !== '');
+                const startDateVal = document.getElementById('startDate').value;
+                const endDateVal = document.getElementById('endDate').value;
+                const selectedMra = document.getElementById('filterMra').value;
+                const startLimit = startDateVal ? new Date(startDateVal + 'T00:00:00') : null;
+                const endLimit = endDateVal ? new Date(endDateVal + 'T23:59:59') : null;
+
+                const listBoc = rawBookingData.filter(item => {
+                    if (selectedMra !== 'ALL' && item.mra !== selectedMra) return false;
+                    const bocStr = String(item.tglBoc || '').trim();
+                    const isValidBoc = bocStr !== '' && bocStr !== '-' && bocStr.toLowerCase() !== 'undefined' && bocStr.toLowerCase() !== 'null';
+                    if (!isValidBoc) return false;
+
+                    if (startLimit || endLimit) {
+                        const bocDate = parseDate(item.tglBoc);
+                        if (bocDate) {
+                            if (startLimit && bocDate < startLimit) return false;
+                            if (endLimit && bocDate > endLimit) return false;
+                        } else {
+                            return false;
+                        }
+                    }
+                    return true;
+                });
+
                 document.getElementById('bookingModalTitle').textContent = 'Detail KPI: BOOKING ON CALL (BOC)';
-                document.getElementById('bookingModalSubtitle').textContent = 'Daftar transaksi berdasarkan Tanggal BOC';
+                document.getElementById('bookingModalSubtitle').textContent = 'Daftar transaksi berdasarkan Tanggal BOC & Rentang Filter';
                 const thead = document.getElementById('bookingModalTableHeader');
                 const tbody = document.getElementById('bookingModalTableBody');
                 thead.innerHTML = `<tr><th class="py-3 px-4 text-left">Nomor Polisi</th><th class="py-3 px-4 text-left">Tanggal BOC</th><th class="py-3 px-4 text-left">Tanggal Service</th><th class="py-3 px-4 text-left">MRA</th><th class="py-3 px-4 text-left">Sumber Data</th></tr>`;
