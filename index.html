@@ -19,6 +19,7 @@
         .kpi-card { transition: all 0.2s ease-in-out; cursor: pointer; }
         .kpi-card:hover { transform: translateY(-3px); }
         .chart-container { position: relative; height: 260px; width: 100%; }
+        .truncate-part { display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 antialiased min-h-screen flex flex-col">
@@ -298,7 +299,7 @@
             <section class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
                 <div>
                     <label class="text-[10px] font-bold text-slate-500 uppercase mb-1 block">Pencarian</label>
-                    <input type="text" id="sop-search" placeholder="Code / No Pol / Part..." class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-red-500 outline-none text-xs font-semibold">
+                    <input type="text" id="sop-search" placeholder="Code / No Pol..." class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-red-500 outline-none text-xs font-semibold">
                 </div>
                 <div>
                     <label class="text-[10px] font-bold text-slate-500 uppercase mb-1 block">Service Advisor</label>
@@ -368,7 +369,7 @@
                 <div class="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
                     <div>
                         <h3 class="font-bold text-slate-800 text-sm uppercase tracking-tight">Main Board Data SOP (Grouped by Code)</h3>
-                        <p class="text-[11px] text-slate-400 mt-0.5">Menampilkan rincian No Part, Nama Part & Qty dari Sheet Detail Parts yang terhubung</p>
+                        <p class="text-[11px] text-slate-400 mt-0.5">Klik baris tabel untuk melihat rincian suku cadang lengkap</p>
                     </div>
                     <span id="sop-data-count" class="text-xs font-bold bg-white border border-slate-200 text-slate-600 px-3 py-1 rounded-full">0 Records</span>
                 </div>
@@ -379,7 +380,6 @@
                                 <th class="px-4 py-4 bg-slate-100">Code</th>
                                 <th class="px-4 py-4 bg-slate-100">SA</th>
                                 <th class="px-4 py-4 bg-slate-100">No Kendaraan</th>
-                                <th class="px-4 py-4 bg-slate-100">No Part & Nama Part (Qty)</th>
                                 <th class="px-4 py-4 bg-slate-100">Tgl Order</th>
                                 <th class="px-4 py-4 bg-slate-100">Status</th>
                                 <th class="px-4 py-4 text-center bg-slate-100">Aksi</th>
@@ -429,7 +429,7 @@
             <div class="p-6 overflow-y-auto flex-1">
                 <table class="w-full text-left text-xs border-collapse">
                     <thead class="bg-slate-50 text-slate-600 font-bold uppercase text-[9px] sticky top-0 border-b border-slate-200 z-10">
-                        <tr><th class="px-4 py-3">Code</th><th class="px-4 py-3">SA</th><th class="px-4 py-3">No Kendaraan</th><th class="px-4 py-3">Rincian Part (Qty)</th><th class="px-4 py-3">Status</th></tr>
+                        <tr><th class="px-4 py-3">Code</th><th class="px-4 py-3">SA</th><th class="px-4 py-3">No Kendaraan</th><th class="px-4 py-3">Status</th></tr>
                     </thead>
                     <tbody id="sopKpiModalTableBody" class="divide-y divide-slate-100"></tbody>
                 </table>
@@ -959,7 +959,7 @@
         function closeBookingModal() { document.getElementById('bookingModal').classList.add('hidden'); }
 
 
-        // ================= SPECIAL ORDER PART (SOP) LOGIC (MATRIX MAPPING) =================
+        // ================= SPECIAL ORDER PART (SOP) LOGIC =================
         function groupSopByCodeMatrix(masterRows, detailRows) {
             const detailMap = {};
             
@@ -971,11 +971,11 @@
                     if (!code || code.toLowerCase() === 'code') continue;
                     
                     if (!detailMap[code]) detailMap[code] = [];
-                    // Mengambil data berdasarkan Code sebagai relasi utama
+                    // Mapping akurat: Kolom B (Index 1) = No Part, Kolom C (Index 2) = Qty, Kolom D (Index 3) = Nama Part
                     detailMap[code].push({
-                        'Nomor Part': String(r[1] || '').trim(),
-                        'Nama Part': String(r[2] || '').trim(),
-                        'Qty': String(r[3] || '1').trim()
+                        'No Part': String(r[1] || '').trim(),
+                        'Qty': String(r[2] || '1').trim(),
+                        'Nama Part': String(r[3] || '').trim()
                     });
                 }
             }
@@ -991,9 +991,9 @@
                     let items = detailMap[code];
                     if (!items || items.length === 0) {
                         items = [{
-                            'Nomor Part': '-',
-                            'Nama Part': '-',
-                            'Qty': '1'
+                            'No Part': '-',
+                            'Qty': '1',
+                            'Nama Part': '-'
                         }];
                     }
 
@@ -1059,7 +1059,7 @@
                 const codeMatch = String(i['Code'] || '').toLowerCase().includes(search);
                 const vehicleMatch = String(i['No Kendaraan'] || '').toLowerCase().includes(search);
                 const partMatch = i.items.some(it => 
-                    String(it['Nomor Part']).toLowerCase().includes(search) || 
+                    String(it['No Part']).toLowerCase().includes(search) || 
                     String(it['Nama Part']).toLowerCase().includes(search)
                 );
                 const matchesSearch = !search || codeMatch || vehicleMatch || partMatch;
@@ -1151,13 +1151,11 @@
             if(!tbody) return;
             
             tbody.innerHTML = filteredSopData.map((i, idx) => {
-                const partsFormatted = i.items.map(it => `<span class="block text-[11px]"><strong class="text-indigo-600 font-mono">${it['Nomor Part']}</strong> - ${it['Nama Part']} <span class="text-slate-500 font-bold">(Qty: ${it['Qty']})</span></span>`).join('');
                 return `
                     <tr class="hover:bg-slate-50 transition-colors cursor-pointer" onclick="showSopDetail(${idx})">
                         <td class="px-4 py-4 font-mono text-slate-700 text-[11px] font-bold">${i['Code'] || '-'}</td>
                         <td class="px-4 py-4 font-bold text-slate-800">${i['Nama SA'] || '-'}</td>
                         <td class="px-4 py-4 font-bold text-indigo-600">${i['No Kendaraan'] || '-'}</td>
-                        <td class="px-4 py-4">${partsFormatted}</td>
                         <td class="px-4 py-4 text-slate-500 font-medium">${i['Tanggal Order'] || '-'}</td>
                         <td class="px-4 py-4"><span class="px-2.5 py-1 rounded-full text-[10px] font-bold border ${getSopStatusColor(i['Status Part'])}">${i['Status Part'] || '-'}</span></td>
                         <td class="px-4 py-4 text-center text-slate-400 hover:text-indigo-600"><i data-lucide="eye" class="w-4 h-4 mx-auto"></i></td>
@@ -1172,7 +1170,7 @@
             const partMap = {};
             filteredSopData.forEach(i => { 
                 i.items.forEach(it => {
-                    const p = (it['Nomor Part'] || '').trim(); 
+                    const p = (it['No Part'] || '').trim(); 
                     const q = parseInt(it['Qty']) || 1;
                     if(p && p !== '-') partMap[p] = (partMap[p] || 0) + q; 
                 });
@@ -1231,7 +1229,7 @@
                         const d = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
                         ltTot += d; ltCnt++; 
                         if(d > ltMax) ltMax = d;
-                        if(d > 3) { ltD.push(d); ltL.push(i['Code'] || 'N/A'); }
+                        ltD.push(d); ltL.push(i['Code'] || 'N/A');
                     }
                 }
             });
@@ -1253,7 +1251,7 @@
             const i = filteredSopData[idx];
             const partsListHtml = i.items.map(it => `
                 <div class="bg-white p-2.5 rounded-xl border border-slate-200 mb-2 shadow-sm">
-                    <p class="text-slate-800 font-semibold text-xs mt-0.5 uppercase"><strong class="font-mono text-indigo-600">${it['Nomor Part'] || '-'}</strong> - ${it['Nama Part'] || '-'}</p>
+                    <p class="text-slate-800 font-semibold text-xs mt-0.5 truncate-part" title="${it['No Part'] || '-'} - ${it['Nama Part'] || '-'}"><strong class="font-mono text-indigo-600">${it['No Part'] || '-'}</strong> - ${it['Nama Part'] || '-'}</p>
                     <p class="text-[10px] text-slate-500 mt-1 font-bold">Qty: <span class="text-indigo-600">${it['Qty'] || '1'}</span></p>
                 </div>
             `).join('');
@@ -1264,9 +1262,9 @@
                         <p class="text-[9px] font-bold text-slate-400 uppercase mb-1">Code Order</p>
                         <p class="font-mono text-indigo-600 font-bold text-sm">${i['Code'] || '-'}</p>
                     </div>
-                    <div class="col-span-2 bg-slate-100/70 p-3 rounded-2xl max-h-48 overflow-y-auto">
-                        <p class="text-[9px] font-bold text-slate-400 uppercase mb-2">Daftar Suku Cadang (No Part - Nama Part (Qty))</p>
-                        ${partsListHtml}
+                    <div class="col-span-2 bg-slate-100/70 p-3 rounded-2xl max-h-52 overflow-y-auto">
+                        <p class="text-[9px] font-bold text-slate-400 uppercase mb-2">Daftar Suku Cadang (No Part - Nama Part - Qty)</p>
+                        <div class="space-y-1">${partsListHtml}</div>
                     </div>
                     <div class="bg-slate-50 p-3 rounded-2xl">
                         <p class="text-[9px] font-bold text-slate-400 uppercase mb-1">Service Advisor</p>
@@ -1302,17 +1300,15 @@
 
             document.getElementById('sopKpiModalTitle').innerText = title;
             document.getElementById('sopKpiModalTableBody').innerHTML = list.map(i => {
-                const partsFormatted = i.items.map(it => `<span class="block text-[11px]"><strong>${it['Nomor Part']}</strong> - ${it['Nama Part']} <span class="text-slate-500 font-bold">(Qty: ${it['Qty']})</span></span>`).join('');
                 return `
                     <tr class="hover:bg-slate-50 transition-colors">
                         <td class="px-4 py-3 font-mono text-[10px] font-bold text-slate-700">${i['Code'] || '-'}</td>
                         <td class="px-4 py-3 font-bold text-slate-700">${i['Nama SA'] || '-'}</td>
                         <td class="px-4 py-3 font-bold text-indigo-600">${i['No Kendaraan'] || '-'}</td>
-                        <td class="px-4 py-3">${partsFormatted}</td>
                         <td class="px-4 py-3"><span class="px-2 py-0.5 rounded text-[9px] font-bold border ${getSopStatusColor(i['Status Part'])}">${i['Status Part'] || '-'}</span></td>
                     </tr>`;
             }).join('');
-            document.getElementById('sopKpiModal').classList.add('hidden');
+            document.getElementById('sopKpiModal').classList.remove('hidden');
         }
 
         function closeSopKPIModal() { document.getElementById('sopKpiModal').classList.add('hidden'); }
