@@ -105,7 +105,7 @@
                 </div>
             </section>
 
-            <!-- KPI CARDS: Urutan: BOC > Total Booking > Total Datang > Tidak Datang > Belum Datang > Show Rate -->
+            <!-- KPI CARDS -->
             <section class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3.5">
                 <div onclick="openBookingModal('BOOKING ON CALL')" class="kpi-card bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
                     <div class="flex items-center justify-between text-purple-600">
@@ -244,7 +244,7 @@
         <!-- VIEW 2: SPECIAL ORDER PART (SOP) -->
         <!-- ========================================== -->
         <div id="view-sop" class="hidden space-y-6">
-            <!-- KPI CARDS SOP: Total Order > Sedang Order > Back Order > Ready pasang > Konfirmasi > Terpasang -->
+            <!-- KPI CARDS SOP -->
             <section class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3.5">
                 <div onclick="openSopKPIModal('', 'Semua Order Part')" class="kpi-card bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
                     <div class="flex items-center justify-between text-slate-500">
@@ -363,7 +363,7 @@
                 </div>
             </section>
 
-            <!-- MAIN BOARD DATA SOP DENGAN FREEZE HEADER & PENCARIAN BERDASARKAN CODE -->
+            <!-- MAIN BOARD DATA SOP -->
             <section class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
                 <div class="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
                     <div>
@@ -452,13 +452,11 @@
     <!-- SCRIPTS -->
     <script>
         const CSV_BOOKING_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRgLQ8hj-ab5ZOJu31Z1d2gyWxeYNxl4BXHjXYZSq9eaAAnURBkcv61joIaU0Qpj-7G-eQ-yV2uGAIz/pub?gid=0&single=true&output=csv';
-        // URL CSV untuk Sheet Master Order & Detail Part (menggunakan gid=1427841437 untuk Detail Part sesuai referensi spreadsheet)
         const CSV_SOP_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTIDLFkByyO5KJDw2vLnF2kxcj1lSoDEeN_Hw9fnYOEnmXvuZuzynN1ncnaGsudHALaj-DR0nzMHB0j/pub?gid=0&single=true&output=csv';
         const CSV_DETAIL_PART_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTIDLFkByyO5KJDw2vLnF2kxcj1lSoDEeN_Hw9fnYOEnmXvuZuzynN1ncnaGsudHALaj-DR0nzMHB0j/pub?gid=1427841437&single=true&output=csv';
 
         let rawBookingData = [], filteredBookingData = [];
         let trendChartInstance = null, sumberChartInstance = null, bocPerMraChartInstance = null;
-        
         let rawSopMasterData = [], rawDetailPartData = [], groupedSopData = [], filteredSopData = [], sopCharts = {};
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -672,19 +670,14 @@
             const pctTotalBookingVsBoc = bookingOnCallCount > 0 ? ((totalBooking / bookingOnCallCount) * 100).toFixed(1) : 0;
 
             document.getElementById('kpiBookingOnCall').textContent = bookingOnCallCount.toLocaleString('id-ID');
-
             document.getElementById('kpiTotalBooking').textContent = totalBooking.toLocaleString('id-ID');
             document.getElementById('pctTotalBookingVsBoc').textContent = `${pctTotalBookingVsBoc}% dari BOC`;
-
             document.getElementById('kpiTotalDatang').textContent = totalDatang.toLocaleString('id-ID');
             document.getElementById('pctDatangVsBooking').textContent = `${pctDatang}% dari Total Booking`;
-
             document.getElementById('kpiTidakDatang').textContent = tidakDatang.toLocaleString('id-ID');
             document.getElementById('pctTidakDatangVsBooking').textContent = `${pctTidakDatang}% dari Total Booking`;
-
             document.getElementById('kpiBelumDatang').textContent = belumDatang.toLocaleString('id-ID');
             document.getElementById('pctBelumDatangVsBooking').textContent = `${pctBelumDatang}% dari Total Booking`;
-
             document.getElementById('kpiShowRate').textContent = `${showRate}%`;
         }
 
@@ -813,18 +806,8 @@
                 data: {
                     labels: sortedMras,
                     datasets: [
-                        {
-                            label: 'Total Booking On Call (BOC)',
-                            data: totalBocData,
-                            backgroundColor: '#334155',
-                            borderRadius: 6
-                        },
-                        {
-                            label: 'BOC Sudah Datang',
-                            data: datangBocData,
-                            backgroundColor: '#10b981',
-                            borderRadius: 6
-                        }
+                        { label: 'Total Booking On Call (BOC)', data: totalBocData, backgroundColor: '#334155', borderRadius: 6 },
+                        { label: 'BOC Sudah Datang', data: datangBocData, backgroundColor: '#10b981', borderRadius: 6 }
                     ]
                 },
                 options: {
@@ -976,27 +959,25 @@
 
         // ================= SPECIAL ORDER PART (SOP) LOGIC =================
         function groupSopByCode(masterData, detailData) {
-            // Mengambil rincian part dari sheet Detail Part dengan mencocokkan 'Code'
             const detailMap = {};
             if (detailData && detailData.length > 0) {
                 detailData.forEach(row => {
-                    const code = (row['Code'] || '').trim();
+                    const code = (row['Code'] || row['Kode'] || '').trim();
                     if (!code) return;
                     if (!detailMap[code]) detailMap[code] = [];
                     detailMap[code].push({
-                        'Nomor Part': row['Nomor Part'] || '',
-                        'Nama Part': row['Nama Part'] || '',
-                        'Qty': row['Qty'] || '1'
+                        'Nomor Part': row['Nomor Part'] || row['Part Number'] || '',
+                        'Nama Part': row['Nama Part'] || row['Part Name'] || '',
+                        'Qty': row['Qty'] || row['Quantity'] || '1'
                     });
                 });
             }
 
             const map = {};
             masterData.forEach(row => {
-                const code = (row['Code'] || '').trim();
+                const code = (row['Code'] || row['Kode'] || '').trim();
                 if (!code) return;
                 
-                // Ambil items dari sheet Detail Part jika tersedia, fallback ke row Master Order jika tidak ada
                 let items = detailMap[code];
                 if (!items || items.length === 0) {
                     items = [{
@@ -1009,14 +990,14 @@
                 if (!map[code]) {
                     map[code] = {
                         Code: code,
-                        'Nama SA': row['Nama SA'] || '',
-                        'No Kendaraan': row['No Kendaraan'] || '',
-                        'Tanggal Order': row['Tanggal Order'] || '',
+                        'Nama SA': row['Nama SA'] || row['SA'] || '',
+                        'No Kendaraan': row['No Kendaraan'] || row['No Polisi'] || '',
+                        'Tanggal Order': row['Tanggal Order'] || row['Tgl Order'] || '',
                         'Tipe Order': row['Tipe Order'] || '',
                         'ETA B/O': row['ETA B/O'] || '',
                         'Aktual Kedatangan': row['Aktual Kedatangan'] || '',
                         'Tanggal Pasang': row['Tanggal Pasang'] || '',
-                        'Status Part': (row['Status Part'] || '').trim(),
+                        'Status Part': (row['Status Part'] || row['Status'] || '').trim(),
                         items: items
                     };
                 }
@@ -1053,7 +1034,6 @@
             const end = document.getElementById('sop-filter-end').value;
 
             filteredSopData = groupedSopData.filter(i => {
-                // Pencarian Main Board SOP berdasarkan Code (serta mencakup No Pol atau detail part jika diperlukan)
                 const codeMatch = String(i['Code'] || '').toLowerCase().includes(search);
                 const vehicleMatch = String(i['No Kendaraan'] || '').toLowerCase().includes(search);
                 const partMatch = i.items.some(it => 
