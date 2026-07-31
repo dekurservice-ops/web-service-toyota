@@ -971,6 +971,7 @@
                     if (!code || code.toLowerCase() === 'code') continue;
                     
                     if (!detailMap[code]) detailMap[code] = [];
+                    // Mengambil data berdasarkan Code sebagai relasi utama
                     detailMap[code].push({
                         'Nomor Part': String(r[1] || '').trim(),
                         'Nama Part': String(r[2] || '').trim(),
@@ -1311,7 +1312,7 @@
                         <td class="px-4 py-3"><span class="px-2 py-0.5 rounded text-[9px] font-bold border ${getSopStatusColor(i['Status Part'])}">${i['Status Part'] || '-'}</span></td>
                     </tr>`;
             }).join('');
-            document.getElementById('sopKpiModal').classList.remove('hidden');
+            document.getElementById('sopKpiModal').classList.add('hidden');
         }
 
         function closeSopKPIModal() { document.getElementById('sopKpiModal').classList.add('hidden'); }
