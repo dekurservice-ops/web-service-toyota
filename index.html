@@ -188,6 +188,20 @@
                 </div>
             </section>
 
+            <!-- CHART BARU: BOC PER MRA -->
+            <section class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <h3 class="font-bold text-slate-800 text-sm">Analisa Booking On Call (BOC) Per MRA</h3>
+                        <p class="text-xs text-slate-400">Distribusi jumlah Booking On Call berdasarkan masing-masing MRA</p>
+                    </div>
+                    <div class="p-2 bg-slate-100 text-slate-700 rounded-xl"><i data-lucide="bar-chart" class="w-4 h-4"></i></div>
+                </div>
+                <div class="relative min-h-[260px]">
+                    <canvas id="bocPerMraChart"></canvas>
+                </div>
+            </section>
+
             <section class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
                 <div class="p-5 border-b border-slate-100 flex items-center justify-between">
                     <div>
@@ -429,7 +443,7 @@
         const CSV_SOP_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTIDLFkByyO5KJDw2vLnF2kxcj1lSoDEeN_Hw9fnYOEnmXvuZuzynN1ncnaGsudHALaj-DR0nzMHB0j/pub?gid=0&single=true&output=csv';
 
         let rawBookingData = [], filteredBookingData = [];
-        let trendChartInstance = null, sumberChartInstance = null;
+        let trendChartInstance = null, sumberChartInstance = null, bocPerMraChartInstance = null;
         
         let rawSopData = [], groupedSopData = [], filteredSopData = [], sopCharts = {};
 
@@ -578,6 +592,7 @@
             updateBookingKPIs();
             renderTrendChart();
             renderSumberDataChart();
+            renderBocPerMraChart();
             renderMraLeaderboard();
         }
 
@@ -589,7 +604,6 @@
             const startLimit = startDateVal ? new Date(startDateVal + 'T00:00:00') : null;
             const endLimit = endDateVal ? new Date(endDateVal + 'T23:59:59') : null;
 
-            // Filter umum berdasarkan Service Tanggal & MRA untuk KPI selain BOC
             const filteredGeneral = rawBookingData.filter(item => {
                 if (selectedMra !== 'ALL' && item.mra !== selectedMra) return false;
                 if (startLimit || endLimit) {
@@ -602,7 +616,7 @@
                 return true;
             });
 
-            filteredBookingData = filteredGeneral; // Simpan untuk chart & leaderboard
+            filteredBookingData = filteredGeneral;
 
             const totalBooking = filteredGeneral.length;
             const totalDatang = filteredGeneral.filter(d => d.status === 'DATANG').length;
@@ -610,7 +624,6 @@
             const belumDatang = filteredGeneral.filter(d => d.status === 'BELUM DATANG').length;
             const showRate = totalBooking > 0 ? ((totalDatang / totalBooking) * 100).toFixed(1) : 0;
             
-            // Filter Khusus BOC: Mengikuti Tanggal BOC dan MRA
             const bookingOnCallCount = rawBookingData.filter(item => {
                 if (selectedMra !== 'ALL' && item.mra !== selectedMra) return false;
                 const bocStr = String(item.tglBoc || '').trim();
@@ -711,6 +724,62 @@
                     indexAxis: 'y', responsive: true, maintainAspectRatio: false,
                     plugins: { legend: { display: false } },
                     scales: { x: { beginAtZero: true, ticks: { precision: 0 } }, y: { grid: { display: false } } }
+                }
+            });
+        }
+
+        // FUNGSI RENDER CHART BOC PER MRA
+        function renderBocPerMraChart() {
+            const startDateVal = document.getElementById('startDate').value;
+            const endDateVal = document.getElementById('endDate').value;
+            const selectedMra = document.getElementById('filterMra').value;
+            const startLimit = startDateVal ? new Date(startDateVal + 'T00:00:00') : null;
+            const endLimit = endDateVal ? new Date(endDateVal + 'T23:59:59') : null;
+
+            const bocCounts = {};
+            rawBookingData.forEach(item => {
+                if (selectedMra !== 'ALL' && item.mra !== selectedMra) return;
+                const bocStr = String(item.tglBoc || '').trim();
+                const isValidBoc = bocStr !== '' && bocStr !== '-' && bocStr.toLowerCase() !== 'undefined' && bocStr.toLowerCase() !== 'null';
+                if (!isValidBoc) return;
+
+                if (startLimit || endLimit) {
+                    const bocDate = parseDate(item.tglBoc);
+                    if (bocDate) {
+                        if (startLimit && bocDate < startLimit) return;
+                        if (endLimit && bocDate > endLimit) return;
+                    } else {
+                        return;
+                    }
+                }
+
+                const mraName = item.mra;
+                if (mraName && mravVal !== '-') {
+                    bocCounts[mraName] = (bocCounts[mraName] || 0) + 1;
+                }
+            });
+
+            const sortedMras = Object.keys(bocCounts).sort((a,b) => bocCounts[b] - bocCounts[a]);
+            const counts = sortedMras.map(m => bocCounts[m]);
+
+            if (bocPerMraChartInstance) bocPerMraChartInstance.destroy();
+
+            const ctx = document.getElementById('bocPerMraChart').getContext('2d');
+            bocPerMraChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: sortedMras,
+                    datasets: [{
+                        label: 'Booking On Call (BOC)',
+                        data: counts,
+                        backgroundColor: '#0f172a',
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { x: { grid: { display: false } }, y: { beginAtZero: true, ticks: { precision: 0 } } }
                 }
             });
         }
