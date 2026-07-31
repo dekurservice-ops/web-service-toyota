@@ -453,7 +453,7 @@
     <script>
         const CSV_BOOKING_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRgLQ8hj-ab5ZOJu31Z1d2gyWxeYNxl4BXHjXYZSq9eaAAnURBkcv61joIaU0Qpj-7G-eQ-yV2uGAIz/pub?gid=0&single=true&output=csv';
         const CSV_SOP_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTIDLFkByyO5KJDw2vLnF2kxcj1lSoDEeN_Hw9fnYOEnmXvuZuzynN1ncnaGsudHALaj-DR0nzMHB0j/pub?gid=0&single=true&output=csv';
-        const CSV_DETAIL_PART_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTIDLFkByyO5KJDw2vLnF2kxcj1lSoDEeN_Hw9fnYOEnmXvuZuzynN1ncnaGsudHALaj-DR0nzMHB0j/pub?gid=1427841437&single=true&output=csv';
+        const CSV_DETAIL_PART_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTIDLFkByyO5KJDw2vLnF2kxcj1lSoDEeN_Hw9fnYOEnmXvuZuzynN1ncnaGsudHALaj-DR0nzMHB0j/pub?gid=539769690&single=true&output=csv';
 
         let rawBookingData = [], filteredBookingData = [];
         let trendChartInstance = null, sumberChartInstance = null, bocPerMraChartInstance = null;
@@ -961,7 +961,6 @@
         function groupSopByCodeMatrix(masterRows, detailRows) {
             const detailMap = {};
             
-            // Pemetaan baris Detail Parts berdasarkan indeks kolom aktual
             if (detailRows && detailRows.length > 1) {
                 for (let i = 1; i < detailRows.length; i++) {
                     const r = detailRows[i];
@@ -979,7 +978,6 @@
             }
 
             const map = {};
-            // Pemetaan Master Order berdasarkan indeks kolom absolut (Kolom A=0, B=1, C=2, D=3, E=4, F=5, G=6, H=7, I=8)
             if (masterRows && masterRows.length > 1) {
                 for (let i = 1; i < masterRows.length; i++) {
                     const r = masterRows[i];
