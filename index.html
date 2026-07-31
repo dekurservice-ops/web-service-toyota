@@ -368,7 +368,7 @@
                 <div class="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
                     <div>
                         <h3 class="font-bold text-slate-800 text-sm uppercase tracking-tight">Main Board Data SOP (Grouped by Code)</h3>
-                        <p class="text-[11px] text-slate-400 mt-0.5">Menampilkan rincian No Part, Nama Part & Qty dari Sheet Detail Parts</p>
+                        <p class="text-[11px] text-slate-400 mt-0.5">Menampilkan rincian No Part, Nama Part & Qty dari Sheet Detail Parts yang terhubung</p>
                     </div>
                     <span id="sop-data-count" class="text-xs font-bold bg-white border border-slate-200 text-slate-600 px-3 py-1 rounded-full">0 Records</span>
                 </div>
@@ -959,16 +959,17 @@
         function closeBookingModal() { document.getElementById('bookingModal').classList.add('hidden'); }
 
 
-        // ================= SPECIAL ORDER PART (SOP) LOGIC (MATRIX BASED) =================
+        // ================= SPECIAL ORDER PART (SOP) LOGIC (MATRIX MAPPING) =================
         function groupSopByCodeMatrix(masterRows, detailRows) {
             const detailMap = {};
             
-            if (detailRows && detailRows.length > 1) {
-                for (let i = 1; i < detailRows.length; i++) {
+            if (detailRows && detailRows.length > 0) {
+                // Lewati baris header jika ada (indeks 0), atau proses seluruh baris yang memiliki nilai Code valid
+                for (let i = 0; i < detailRows.length; i++) {
                     const r = detailRows[i];
                     if (!r || !r[0]) continue;
                     const code = String(r[0]).trim();
-                    if (!code) continue;
+                    if (!code || code.toLowerCase() === 'code') continue;
                     
                     if (!detailMap[code]) detailMap[code] = [];
                     detailMap[code].push({
@@ -987,12 +988,13 @@
                     const code = String(r[0]).trim();
                     if (!code) continue;
 
+                    // Ambil detail part dari Detail Parts, jika tidak ada fallback ke kolom master row jika tersedia
                     let items = detailMap[code];
                     if (!items || items.length === 0) {
                         items = [{
-                            'Nomor Part': String(r[1] || '').trim(),
-                            'Nama Part': String(r[2] || '').trim(),
-                            'Qty': '1'
+                            'Nomor Part': String(r[9] || '-').trim(),
+                            'Nama Part': String(r[10] || '-').trim(),
+                            'Qty': String(r[11] || '1').trim()
                         }];
                     }
 
@@ -1066,7 +1068,6 @@
                 const matchesSA = !sa || i['Nama SA'] === sa;
                 const matchesStatus = !status || i['Status Part'].toUpperCase().includes(status.toUpperCase());
                 
-                // Analisa dan filter murni menggunakan Tanggal Order
                 let matchesDate = true;
                 if (start || end) {
                     const d = parseSopDateString(i['Tanggal Order']);
@@ -1168,10 +1169,25 @@
                 });
             }
 
-            let tiba=0, boTot=0, boTiba=0, boPend=0;
+            // Perbaikan Analisa Suplai Ratio: Kalkulasi inklusif multi-kolom terisi
+            let tiba = 0, boTot = 0, boTiba = 0, boPend = 0;
             filteredSopData.forEach(i => {
-                const hasETA = !!i['ETA B/O']?.trim(), hasAct = !!i['Aktual Kedatangan']?.trim();
-                if(hasAct) tiba++; if(hasETA) { boTot++; hasAct ? boTiba++ : boPend++; }
+                const etaVal = String(i['ETA B/O'] || '').trim();
+                const actVal = String(i['Aktual Kedatangan'] || '').trim();
+                const statusVal = String(i['Status Part'] || '').toUpperCase();
+
+                const isTiba = actVal !== '' && actVal !== '-' || statusVal.includes('TERPASANG') || statusVal.includes('TUNGGU PEMASANGAN');
+                const isBo = etaVal !== '' && etaVal !== '-' || statusVal.includes('B/O');
+
+                if (isTiba) tiba++;
+                if (isBo) {
+                    boTot++;
+                    if (isTiba) {
+                        boTiba++;
+                    } else {
+                        boPend++;
+                    }
+                }
             });
             
             if(document.getElementById('sop-stat-total')) document.getElementById('sop-stat-total').innerText = filteredSopData.length;
