@@ -517,24 +517,24 @@
                 }),
                 new Promise(resolve => {
                     Papa.parse(`${CSV_SOP_URL}&_t=${Date.now()}`, {
-                        download: true, header: true, skipEmptyLines: true,
+                        download: true, header: false, skipEmptyLines: true,
                         complete: function(results) {
-                            rawSopMasterData = results.data;
+                            rawSopMasterData = results.data; // Menggunakan array matrix baris mentah
                             resolve();
                         }
                     });
                 }),
                 new Promise(resolve => {
                     Papa.parse(`${CSV_DETAIL_PART_URL}&_t=${Date.now()}`, {
-                        download: true, header: true, skipEmptyLines: true,
+                        download: true, header: false, skipEmptyLines: true,
                         complete: function(results) {
-                            rawDetailPartData = results.data;
+                            rawDetailPartData = results.data; // Menggunakan array matrix baris mentah
                             resolve();
                         }
                     });
                 })
             ]).then(() => {
-                groupedSopData = groupSopByCode(rawSopMasterData, rawDetailPartData);
+                groupedSopData = groupSopByCodeMatrix(rawSopMasterData, rawDetailPartData);
                 populateSopSAFilter();
                 applySopFilters();
 
@@ -957,62 +957,61 @@
         function closeBookingModal() { document.getElementById('bookingModal').classList.add('hidden'); }
 
 
-        // ================= SPECIAL ORDER PART (SOP) LOGIC =================
-        function getFlexibleVal(row, possibleKeys) {
-            const keys = Object.keys(row);
-            for (let pk of possibleKeys) {
-                const found = keys.find(k => k.trim().toLowerCase() === pk.toLowerCase());
-                if (found !== undefined && row[found] !== null && row[found] !== '') {
-                    return String(row[found]).trim();
-                }
-            }
-            return '';
-        }
-
-        function groupSopByCode(masterData, detailData) {
+        // ================= SPECIAL ORDER PART (SOP) LOGIC (MATRIX BASED) =================
+        function groupSopByCodeMatrix(masterRows, detailRows) {
             const detailMap = {};
-            if (detailData && detailData.length > 0) {
-                detailData.forEach(row => {
-                    const code = getFlexibleVal(row, ['Code', 'Kode', 'No', '__EMPTY']);
-                    if (!code) return;
+            
+            // Mapping Sheet Detail Parts (Berdasarkan indeks kolom mentah: Code di Col 0, No Part di Col 1, Nama Part di Col 2, Qty di Col 3)
+            if (detailRows && detailRows.length > 1) {
+                for (let i = 1; i < detailRows.length; i++) {
+                    const r = detailRows[i];
+                    if (!r || !r[0]) continue;
+                    const code = String(r[0]).trim();
+                    if (!code) continue;
+                    
                     if (!detailMap[code]) detailMap[code] = [];
                     detailMap[code].push({
-                        'Nomor Part': getFlexibleVal(row, ['Nomor Part', 'Part Number', 'No Part', '__EMPTY_1']),
-                        'Nama Part': getFlexibleVal(row, ['Nama Part', 'Part Name', 'Description', '__EMPTY_2']),
-                        'Qty': getFlexibleVal(row, ['Qty', 'Quantity', 'Jumlah', '__EMPTY_3']) || '1'
+                        'Nomor Part': String(r[1] || '').trim(),
+                        'Nama Part': String(r[2] || '').trim(),
+                        'Qty': String(r[3] || '1').trim()
                     });
-                });
+                }
             }
 
             const map = {};
-            masterData.forEach(row => {
-                const code = getFlexibleVal(row, ['Code', 'Kode', 'No', '__EMPTY']);
-                if (!code) return;
-                
-                let items = detailMap[code];
-                if (!items || items.length === 0) {
-                    items = [{
-                        'Nomor Part': getFlexibleVal(row, ['Nomor Part', 'Part Number', '__EMPTY_2']),
-                        'Nama Part': getFlexibleVal(row, ['Nama Part', 'Part Name', '__EMPTY_4']),
-                        'Qty': getFlexibleVal(row, ['Qty', 'Quantity', '__EMPTY_5']) || '1'
-                    }];
-                }
+            // Mapping Sheet Master Order (Berdasarkan indeks kolom mentah sesuai gambar screenshot Google Sheets Anda)
+            if (masterRows && masterRows.length > 1) {
+                for (let i = 1; i < masterRows.length; i++) {
+                    const r = masterRows[i];
+                    if (!r || !r[0]) continue;
+                    const code = String(r[0]).trim();
+                    if (!code) continue;
 
-                if (!map[code]) {
-                    map[code] = {
-                        Code: code,
-                        'Nama SA': getFlexibleVal(row, ['Nama SA', 'SA', 'Service Advisor', '__EMPTY_1']),
-                        'No Kendaraan': getFlexibleVal(row, ['No Kendaraan', 'No Polisi', 'Nopol', '__EMPTY_2']),
-                        'Tanggal Order': getFlexibleVal(row, ['Tanggal Order', 'Tgl Order', '__EMPTY_3']),
-                        'Tipe Order': getFlexibleVal(row, ['Tipe Order', 'Type']),
-                        'ETA B/O': getFlexibleVal(row, ['ETA B/O', 'ETA']),
-                        'Aktual Kedatangan': getFlexibleVal(row, ['Aktual Kedatangan', 'Kedatangan']),
-                        'Tanggal Pasang': getFlexibleVal(row, ['Tanggal Pasang', 'Tgl Pasang']),
-                        'Status Part': getFlexibleVal(row, ['Status Part', 'Status', '__EMPTY_7']),
-                        items: items
-                    };
+                    let items = detailMap[code];
+                    if (!items || items.length === 0) {
+                        items = [{
+                            'Nomor Part': String(r[1] || '').trim(),
+                            'Nama Part': String(r[2] || '').trim(),
+                            'Qty': '1'
+                        }];
+                    }
+
+                    if (!map[code]) {
+                        map[code] = {
+                            Code: code,
+                            'Nama SA': String(r[1] || '').trim(),
+                            'No Kendaraan': String(r[2] || '').trim(),
+                            'Tanggal Order': String(r[3] || '').trim(),
+                            'Tipe Order': String(r[4] || '').trim(),
+                            'ETA B/O': String(r[5] || '').trim(),
+                            'Aktual Kedatangan': String(r[6] || '').trim(),
+                            'Tanggal Pasang': String(r[7] || '').trim(),
+                            'Status Part': String(r[8] || '').trim(),
+                            items: items
+                        };
+                    }
                 }
-            });
+            }
             return Object.values(map);
         }
 
@@ -1054,7 +1053,7 @@
                 const matchesSearch = !search || codeMatch || vehicleMatch || partMatch;
 
                 const matchesSA = !sa || i['Nama SA'] === sa;
-                const matchesStatus = !status || i['Status Part'].toUpperCase() === status.toUpperCase();
+                const matchesStatus = !status || i['Status Part'].toUpperCase().includes(status.toUpperCase());
                 let matchesDate = true;
                 if (start || end) {
                     const d = parseSopDateString(i['Tanggal Order']);
