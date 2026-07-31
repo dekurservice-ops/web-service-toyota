@@ -270,7 +270,7 @@
                     <h3 id="sop-kpi-bo" class="text-2xl font-bold mt-2">0</h3>
                 </div>
 
-                <div onclick="openSopKPIModal('Tunggu Pemasangan', 'Order Tunggu Pasang')" class="kpi-card bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
+                <div onclick="openSopKPIModal('TUNGGU PASANG', 'Order Ready Pasang')" class="kpi-card bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
                     <div class="flex items-center justify-between text-blue-600">
                         <span class="text-[10px] font-bold uppercase tracking-wider">Ready Pasang</span>
                         <div class="p-1.5 bg-blue-50 text-blue-600 rounded-lg"><i data-lucide="clock" class="w-4 h-4"></i></div>
@@ -311,7 +311,7 @@
                         <option value="SEDANG ORDER">SEDANG ORDER</option>
                         <option value="B/O">B/O</option>
                         <option value="Konfirmasi Jadwal">Konfirmasi Jadwal</option>
-                        <option value="Tunggu Pemasangan">Tunggu Pemasangan</option>
+                        <option value="TUNGGU PASANG">TUNGGU PASANG</option>
                         <option value="Terpasang">Terpasang</option>
                     </select>
                 </div>
@@ -964,7 +964,6 @@
             const detailMap = {};
             
             if (detailRows && detailRows.length > 0) {
-                // Lewati baris header jika ada (indeks 0), atau proses seluruh baris yang memiliki nilai Code valid
                 for (let i = 0; i < detailRows.length; i++) {
                     const r = detailRows[i];
                     if (!r || !r[0]) continue;
@@ -972,6 +971,7 @@
                     if (!code || code.toLowerCase() === 'code') continue;
                     
                     if (!detailMap[code]) detailMap[code] = [];
+                    // Mengambil Indeks Kolom yang benar dari sheet Detail Parts: Kolom 1 (No Part), Kolom 2 (Nama Part), Kolom 3 (Qty)
                     detailMap[code].push({
                         'Nomor Part': String(r[1] || '').trim(),
                         'Nama Part': String(r[2] || '').trim(),
@@ -988,13 +988,12 @@
                     const code = String(r[0]).trim();
                     if (!code) continue;
 
-                    // Ambil detail part dari Detail Parts, jika tidak ada fallback ke kolom master row jika tersedia
                     let items = detailMap[code];
                     if (!items || items.length === 0) {
                         items = [{
-                            'Nomor Part': String(r[9] || '-').trim(),
-                            'Nama Part': String(r[10] || '-').trim(),
-                            'Qty': String(r[11] || '1').trim()
+                            'Nomor Part': '-',
+                            'Nama Part': '-',
+                            'Qty': '1'
                         }];
                     }
 
@@ -1066,7 +1065,18 @@
                 const matchesSearch = !search || codeMatch || vehicleMatch || partMatch;
 
                 const matchesSA = !sa || i['Nama SA'] === sa;
-                const matchesStatus = !status || i['Status Part'].toUpperCase().includes(status.toUpperCase());
+                
+                // Menyamakan penanganan status untuk mencakup "TUNGGU PASANG" dan "Tunggu Pemasangan"
+                let matchesStatus = true;
+                if (status) {
+                    const itemStatus = i['Status Part'].toUpperCase();
+                    const filterStatusUpper = status.toUpperCase();
+                    if (filterStatusUpper.includes('TUNGGU PASANG') || filterStatusUpper.includes('TUNGGU PEMASANGAN')) {
+                        matchesStatus = itemStatus.includes('TUNGGU') || itemStatus.includes('PASANG');
+                    } else {
+                        matchesStatus = itemStatus.includes(filterStatusUpper);
+                    }
+                }
                 
                 let matchesDate = true;
                 if (start || end) {
@@ -1098,12 +1108,22 @@
         }
 
         function renderSopKPIs() {
-            const getLen = (st) => filteredSopData.filter(i => i['Status Part'].toUpperCase().includes(st.toUpperCase())).length;
+            const getLen = (st) => {
+                const upperSt = st.toUpperCase();
+                return filteredSopData.filter(i => {
+                    const itemStatus = i['Status Part'].toUpperCase();
+                    if (upperSt.includes('TUNGGU PASANG') || upperSt.includes('TUNGGU PEMASANGAN')) {
+                        return itemStatus.includes('TUNGGU') || itemStatus.includes('PASANG');
+                    }
+                    return itemStatus.includes(upperSt);
+                }).length;
+            };
+
             const counts = { 
                 total: filteredSopData.length, 
                 sedang: getLen('SEDANG ORDER'),
                 bo: getLen('B/O'), 
-                pasang: getLen('Tunggu Pemasangan'), 
+                pasang: getLen('TUNGGU PASANG'), 
                 konf: getLen('Konfirmasi Jadwal'), 
                 terpasang: getLen('Terpasang') 
             };
@@ -1122,7 +1142,7 @@
             if (statusUpper.includes('SEDANG ORDER')) return 'bg-purple-50 text-purple-600 border-purple-200';
             if (statusUpper.includes('B/O')) return 'bg-red-50 text-red-600 border-red-200';
             if (statusUpper.includes('KONFIRMASI JADWAL')) return 'bg-amber-50 text-amber-600 border-amber-200';
-            if (statusUpper.includes('TUNGGU PEMASANGAN')) return 'bg-blue-50 text-blue-600 border-blue-200';
+            if (statusUpper.includes('TUNGGU') || statusUpper.includes('PASANG')) return 'bg-blue-50 text-blue-600 border-blue-200';
             if (statusUpper.includes('TERPASANG')) return 'bg-emerald-50 text-emerald-600 border-emerald-200';
             return 'bg-slate-100 text-slate-500 border-slate-200';
         }
@@ -1169,14 +1189,13 @@
                 });
             }
 
-            // Perbaikan Analisa Suplai Ratio: Kalkulasi inklusif multi-kolom terisi
             let tiba = 0, boTot = 0, boTiba = 0, boPend = 0;
             filteredSopData.forEach(i => {
                 const etaVal = String(i['ETA B/O'] || '').trim();
                 const actVal = String(i['Aktual Kedatangan'] || '').trim();
                 const statusVal = String(i['Status Part'] || '').toUpperCase();
 
-                const isTiba = actVal !== '' && actVal !== '-' || statusVal.includes('TERPASANG') || statusVal.includes('TUNGGU PEMASANGAN');
+                const isTiba = actVal !== '' && actVal !== '-' || statusVal.includes('TERPASANG') || statusVal.includes('TUNGGU') || statusVal.includes('PASANG');
                 const isBo = etaVal !== '' && etaVal !== '-' || statusVal.includes('B/O');
 
                 if (isTiba) tiba++;
@@ -1274,7 +1293,15 @@
         function closeSopDetailModal() { document.getElementById('sopDetailModal').classList.add('hidden'); }
 
         function openSopKPIModal(st, title) {
-            const list = st ? filteredSopData.filter(i => i['Status Part'].toUpperCase().includes(st.toUpperCase())) : filteredSopData;
+            const upperSt = st.toUpperCase();
+            const list = st ? filteredSopData.filter(i => {
+                const itemStatus = i['Status Part'].toUpperCase();
+                if (upperSt.includes('TUNGGU') || upperSt.includes('PASANG')) {
+                    return itemStatus.includes('TUNGGU') || itemStatus.includes('PASANG');
+                }
+                return itemStatus.includes(upperSt);
+            }) : filteredSopData;
+
             document.getElementById('sopKpiModalTitle').innerText = title;
             document.getElementById('sopKpiModalTableBody').innerHTML = list.map(i => {
                 const partsFormatted = i.items.map(it => `<span class="block text-[11px]"><strong class="text-indigo-600 font-mono">${it['Nomor Part']}</strong> - ${it['Nama Part']} <span class="text-slate-500 font-bold">(Qty: ${it['Qty']})</span></span>`).join('');
