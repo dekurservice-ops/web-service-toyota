@@ -69,7 +69,7 @@
             </div>
             <div class="flex items-center gap-3">
                 <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping hidden sm:block"></span>
-                <span id="last-sync-tag" class="text-xs text-slate-400 italic hidden sm:inline">Sync Active</span>
+                <span id="last-sync-tag" class="text-xs text-slate-400 italic hidden sm:inline">Sync Manual</span>
                 <button onclick="fetchAllData()" class="flex items-center gap-2 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 px-3 py-2 rounded-xl transition-colors">
                     <i data-lucide="refresh-cw" class="w-3.5 h-3.5" id="refreshIcon"></i>
                     <span class="hidden sm:inline">Refresh Data</span>
@@ -113,7 +113,7 @@
                         <div class="p-1.5 bg-purple-50 text-purple-600 rounded-lg"><i data-lucide="phone-call" class="w-4 h-4"></i></div>
                     </div>
                     <h3 id="kpiBookingOnCall" class="text-2xl font-bold mt-2 text-purple-600">-</h3>
-                    <p id="pctBocVsTotal" class="text-[10px] text-slate-400 mt-1 font-medium">-% dari Total Booking</p>
+                    <p class="text-[10px] text-transparent mt-1 select-none">-</p>
                 </div>
 
                 <div onclick="openBookingModal('TOTAL BOOKING')" class="kpi-card bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
@@ -122,7 +122,7 @@
                         <div class="p-1.5 bg-blue-50 text-blue-600 rounded-lg"><i data-lucide="calendar" class="w-4 h-4"></i></div>
                     </div>
                     <h3 id="kpiTotalBooking" class="text-2xl font-bold mt-2 text-slate-900">-</h3>
-                    <p class="text-[10px] text-transparent mt-1 select-none">-</p>
+                    <p id="pctTotalBookingVsBoc" class="text-[10px] text-slate-400 mt-1 font-medium">-% dari BOC</p>
                 </div>
 
                 <div onclick="openBookingModal('TOTAL DATANG')" class="kpi-card bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
@@ -195,7 +195,7 @@
                 </div>
             </section>
 
-            <!-- ANALISA BOC (DIPERBAIKI & DITAMBAHKAN BOC YANG SUDAH DATANG) -->
+            <!-- ANALISA BOC -->
             <section class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col">
                 <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
                     <div>
@@ -463,7 +463,6 @@
         document.addEventListener('DOMContentLoaded', () => {
             lucide.createIcons();
             fetchAllData();
-            setInterval(fetchAllData, 30000);
 
             ['sop-search', 'sop-filter-sa', 'sop-filter-status', 'sop-filter-start', 'sop-filter-end'].forEach(id => {
                 document.getElementById(id).addEventListener('input', applySopFilters);
@@ -659,12 +658,12 @@
                 return true;
             }).length;
 
-            const pctBoc = totalBooking > 0 ? ((bookingOnCallCount / totalBooking) * 100).toFixed(1) : 0;
+            const pctTotalBookingVsBoc = bookingOnCallCount > 0 ? ((totalBooking / bookingOnCallCount) * 100).toFixed(1) : 0;
 
             document.getElementById('kpiBookingOnCall').textContent = bookingOnCallCount.toLocaleString('id-ID');
-            document.getElementById('pctBocVsTotal').textContent = `${pctBoc}% dari Total Booking`;
 
             document.getElementById('kpiTotalBooking').textContent = totalBooking.toLocaleString('id-ID');
+            document.getElementById('pctTotalBookingVsBoc').textContent = `${pctTotalBookingVsBoc}% dari BOC`;
 
             document.getElementById('kpiTotalDatang').textContent = totalDatang.toLocaleString('id-ID');
             document.getElementById('pctDatangVsBooking').textContent = `${pctDatang}% dari Total Booking`;
