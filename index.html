@@ -958,46 +958,57 @@
 
 
         // ================= SPECIAL ORDER PART (SOP) LOGIC =================
+        function getFlexibleVal(row, possibleKeys) {
+            const keys = Object.keys(row);
+            for (let pk of possibleKeys) {
+                const found = keys.find(k => k.trim().toLowerCase() === pk.toLowerCase());
+                if (found !== undefined && row[found] !== null && row[found] !== '') {
+                    return String(row[found]).trim();
+                }
+            }
+            return '';
+        }
+
         function groupSopByCode(masterData, detailData) {
             const detailMap = {};
             if (detailData && detailData.length > 0) {
                 detailData.forEach(row => {
-                    const code = (row['Code'] || row['Kode'] || '').trim();
+                    const code = getFlexibleVal(row, ['Code', 'Kode', 'No', '__EMPTY']);
                     if (!code) return;
                     if (!detailMap[code]) detailMap[code] = [];
                     detailMap[code].push({
-                        'Nomor Part': row['Nomor Part'] || row['Part Number'] || '',
-                        'Nama Part': row['Nama Part'] || row['Part Name'] || '',
-                        'Qty': row['Qty'] || row['Quantity'] || '1'
+                        'Nomor Part': getFlexibleVal(row, ['Nomor Part', 'Part Number', 'No Part', '__EMPTY_1']),
+                        'Nama Part': getFlexibleVal(row, ['Nama Part', 'Part Name', 'Description', '__EMPTY_2']),
+                        'Qty': getFlexibleVal(row, ['Qty', 'Quantity', 'Jumlah', '__EMPTY_3']) || '1'
                     });
                 });
             }
 
             const map = {};
             masterData.forEach(row => {
-                const code = (row['Code'] || row['Kode'] || '').trim();
+                const code = getFlexibleVal(row, ['Code', 'Kode', 'No', '__EMPTY']);
                 if (!code) return;
                 
                 let items = detailMap[code];
                 if (!items || items.length === 0) {
                     items = [{
-                        'Nomor Part': row['Nomor Part'] || '',
-                        'Nama Part': row['Nama Part'] || '',
-                        'Qty': row['Qty'] || '1'
+                        'Nomor Part': getFlexibleVal(row, ['Nomor Part', 'Part Number', '__EMPTY_2']),
+                        'Nama Part': getFlexibleVal(row, ['Nama Part', 'Part Name', '__EMPTY_4']),
+                        'Qty': getFlexibleVal(row, ['Qty', 'Quantity', '__EMPTY_5']) || '1'
                     }];
                 }
 
                 if (!map[code]) {
                     map[code] = {
                         Code: code,
-                        'Nama SA': row['Nama SA'] || row['SA'] || '',
-                        'No Kendaraan': row['No Kendaraan'] || row['No Polisi'] || '',
-                        'Tanggal Order': row['Tanggal Order'] || row['Tgl Order'] || '',
-                        'Tipe Order': row['Tipe Order'] || '',
-                        'ETA B/O': row['ETA B/O'] || '',
-                        'Aktual Kedatangan': row['Aktual Kedatangan'] || '',
-                        'Tanggal Pasang': row['Tanggal Pasang'] || '',
-                        'Status Part': (row['Status Part'] || row['Status'] || '').trim(),
+                        'Nama SA': getFlexibleVal(row, ['Nama SA', 'SA', 'Service Advisor', '__EMPTY_1']),
+                        'No Kendaraan': getFlexibleVal(row, ['No Kendaraan', 'No Polisi', 'Nopol', '__EMPTY_2']),
+                        'Tanggal Order': getFlexibleVal(row, ['Tanggal Order', 'Tgl Order', '__EMPTY_3']),
+                        'Tipe Order': getFlexibleVal(row, ['Tipe Order', 'Type']),
+                        'ETA B/O': getFlexibleVal(row, ['ETA B/O', 'ETA']),
+                        'Aktual Kedatangan': getFlexibleVal(row, ['Aktual Kedatangan', 'Kedatangan']),
+                        'Tanggal Pasang': getFlexibleVal(row, ['Tanggal Pasang', 'Tgl Pasang']),
+                        'Status Part': getFlexibleVal(row, ['Status Part', 'Status', '__EMPTY_7']),
                         items: items
                     };
                 }
@@ -1067,7 +1078,7 @@
         }
 
         function renderSopKPIs() {
-            const getLen = (st) => filteredSopData.filter(i => i['Status Part'].toUpperCase() === st.toUpperCase()).length;
+            const getLen = (st) => filteredSopData.filter(i => i['Status Part'].toUpperCase().includes(st.toUpperCase())).length;
             const counts = { 
                 total: filteredSopData.length, 
                 sedang: getLen('SEDANG ORDER'),
@@ -1217,7 +1228,7 @@
         function closeSopDetailModal() { document.getElementById('sopDetailModal').classList.add('hidden'); }
 
         function openSopKPIModal(st, title) {
-            const list = st ? filteredSopData.filter(i => i['Status Part'].toUpperCase() === st.toUpperCase()) : filteredSopData;
+            const list = st ? filteredSopData.filter(i => i['Status Part'].toUpperCase().includes(st.toUpperCase())) : filteredSopData;
             document.getElementById('sopKpiModalTitle').innerText = title;
             document.getElementById('sopKpiModalTableBody').innerHTML = list.map(i => `
                 <tr class="hover:bg-slate-50 transition-colors">
