@@ -519,7 +519,7 @@
                     Papa.parse(`${CSV_SOP_URL}&_t=${Date.now()}`, {
                         download: true, header: false, skipEmptyLines: true,
                         complete: function(results) {
-                            rawSopMasterData = results.data; // Menggunakan array matrix baris mentah
+                            rawSopMasterData = results.data;
                             resolve();
                         }
                     });
@@ -528,7 +528,7 @@
                     Papa.parse(`${CSV_DETAIL_PART_URL}&_t=${Date.now()}`, {
                         download: true, header: false, skipEmptyLines: true,
                         complete: function(results) {
-                            rawDetailPartData = results.data; // Menggunakan array matrix baris mentah
+                            rawDetailPartData = results.data;
                             resolve();
                         }
                     });
@@ -961,7 +961,7 @@
         function groupSopByCodeMatrix(masterRows, detailRows) {
             const detailMap = {};
             
-            // Mapping Sheet Detail Parts (Berdasarkan indeks kolom mentah: Code di Col 0, No Part di Col 1, Nama Part di Col 2, Qty di Col 3)
+            // Pemetaan baris Detail Parts berdasarkan indeks kolom aktual
             if (detailRows && detailRows.length > 1) {
                 for (let i = 1; i < detailRows.length; i++) {
                     const r = detailRows[i];
@@ -979,7 +979,7 @@
             }
 
             const map = {};
-            // Mapping Sheet Master Order (Berdasarkan indeks kolom mentah sesuai gambar screenshot Google Sheets Anda)
+            // Pemetaan Master Order berdasarkan indeks kolom absolut (Kolom A=0, B=1, C=2, D=3, E=4, F=5, G=6, H=7, I=8)
             if (masterRows && masterRows.length > 1) {
                 for (let i = 1; i < masterRows.length; i++) {
                     const r = masterRows[i];
@@ -990,8 +990,8 @@
                     let items = detailMap[code];
                     if (!items || items.length === 0) {
                         items = [{
-                            'Nomor Part': String(r[1] || '').trim(),
-                            'Nama Part': String(r[2] || '').trim(),
+                            'Nomor Part': '-',
+                            'Nama Part': '-',
                             'Qty': '1'
                         }];
                     }
@@ -1130,7 +1130,7 @@
                 i.items.forEach(it => {
                     const p = (it['Nomor Part'] || '').trim(); 
                     const q = parseInt(it['Qty']) || 1;
-                    if(p) partMap[p] = (partMap[p] || 0) + q; 
+                    if(p && p !== '-') partMap[p] = (partMap[p] || 0) + q; 
                 });
             });
             const top = Object.entries(partMap).sort((a,b)=>b[1]-a[1]).slice(0,10);
