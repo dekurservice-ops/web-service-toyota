@@ -188,7 +188,7 @@
                 </div>
             </section>
 
-            <!-- CHART BARU: BOC PER MRA -->
+            <!-- CHART BOC PER MRA -->
             <section class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col">
                 <div class="flex items-center justify-between mb-4">
                     <div>
@@ -728,7 +728,7 @@
             });
         }
 
-        // FUNGSI RENDER CHART BOC PER MRA
+        // FUNGSI RENDER CHART BOC PER MRA YANG DIPERBAIKI SECARA AKURAT
         function renderBocPerMraChart() {
             const startDateVal = document.getElementById('startDate').value;
             const endDateVal = document.getElementById('endDate').value;
@@ -754,7 +754,7 @@
                 }
 
                 const mraName = item.mra;
-                if (mraName && mravVal !== '-') {
+                if (mraName && mraName !== '-' && mraName !== 'Unassigned') {
                     bocCounts[mraName] = (bocCounts[mraName] || 0) + 1;
                 }
             });
@@ -770,7 +770,7 @@
                 data: {
                     labels: sortedMras,
                     datasets: [{
-                        label: 'Booking On Call (BOC)',
+                        label: 'Jumlah Booking On Call (BOC)',
                         data: counts,
                         backgroundColor: '#0f172a',
                         borderRadius: 6
