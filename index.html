@@ -81,9 +81,7 @@
 
     <main class="flex-1 max-w-[1600px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
         
-        <!-- ========================================== -->
         <!-- VIEW 1: BOOKING ANALYTICS -->
-        <!-- ========================================== -->
         <div id="view-booking" class="space-y-6">
             <section class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row gap-4 items-stretch md:items-center justify-between">
                 <div class="flex items-center gap-2 text-slate-700 font-semibold text-sm">
@@ -240,12 +238,8 @@
             </section>
         </div>
 
-
-        <!-- ========================================== -->
         <!-- VIEW 2: SPECIAL ORDER PART (SOP) -->
-        <!-- ========================================== -->
         <div id="view-sop" class="hidden space-y-6">
-            <!-- KPI CARDS SOP -->
             <section class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3.5">
                 <div onclick="openSopKPIModal('', 'Semua Order Part')" class="kpi-card bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
                     <div class="flex items-center justify-between text-slate-500">
@@ -505,9 +499,12 @@
             const refreshIcon = document.getElementById('refreshIcon');
             if(refreshIcon) refreshIcon.classList.add('animate-spin');
             
+            // Menggunakan timestamp cache-busting agar Vercel/GitHub tidak menyajikan data lama
+            const cacheBuster = `&_t=${Date.now()}`;
+
             Promise.all([
                 new Promise(resolve => {
-                    Papa.parse(`${CSV_BOOKING_URL}&_t=${Date.now()}`, {
+                    Papa.parse(CSV_BOOKING_URL + cacheBuster, {
                         download: true, header: true, skipEmptyLines: true,
                         complete: function(results) {
                             rawBookingData = processBookingData(results.data);
@@ -518,7 +515,7 @@
                     });
                 }),
                 new Promise(resolve => {
-                    Papa.parse(`${CSV_SOP_URL}&_t=${Date.now()}`, {
+                    Papa.parse(CSV_SOP_URL + cacheBuster, {
                         download: true, header: false, skipEmptyLines: true,
                         complete: function(results) {
                             rawSopMasterData = results.data;
@@ -527,7 +524,7 @@
                     });
                 }),
                 new Promise(resolve => {
-                    Papa.parse(`${CSV_DETAIL_PART_URL}&_t=${Date.now()}`, {
+                    Papa.parse(CSV_DETAIL_PART_URL + cacheBuster, {
                         download: true, header: false, skipEmptyLines: true,
                         complete: function(results) {
                             rawDetailPartData = results.data;
@@ -591,17 +588,16 @@
                 
                 const caiVal = getVal(row, ['CAI', 'Status Kedatangan', 'Status']).toUpperCase();
 
-                // Perbaikan Logika Status: 
-                // Jika data kosong, '-', atau N/A, ditetapkan sebagai 'BELUM DIKONFIRMASI' (bukan dipukul rata sebagai 'BELUM DATANG')
-                let status = 'BELUM DATANG';
-                if (!caiVal || caiVal === '-' || caiVal === 'N/A' || caiVal === '') {
-                    status = 'BELUM DIKONFIRMASI';
-                } else if (caiVal.includes('BELUM')) {
+                // Pengaman ketat: Tangkap string "KOSONG" atau data kosong dari sheets agar tidak salah masuk kategori
+                let status = 'BELUM DIKONFIRMASI';
+                if (caiVal.includes('BELUM')) {
                     status = 'BELUM DATANG';
                 } else if (caiVal.includes('TIDAK') || caiVal.includes('CANCEL') || caiVal.includes('BATAL')) {
                     status = 'TIDAK DATANG';
                 } else if (caiVal.includes('DATANG') || caiVal.includes('DATAN') || caiVal === 'SBE' || caiVal === 'GRP') {
                     status = 'DATANG';
+                } else if (caiVal === 'KOSONG' || caiVal === '' || caiVal === '-') {
+                    status = 'BELUM DIKONFIRMASI';
                 }
 
                 return { nopol, sumber, tglService, tglBoc, mra, status };
@@ -651,10 +647,10 @@
 
             filteredBookingData = filteredGeneral;
 
-            const totalBooking = filteredGeneral.length;
+            const totalBooking = filteredGeneral.filter(d => d.status !== 'BELUM DIKONFIRMASI').length;
             const totalDatang = filteredGeneral.filter(d => d.status === 'DATANG').length;
             const tidakDatang = filteredGeneral.filter(d => d.status === 'TIDAK DATANG').length;
-            const belumDatang = filteredGeneral.filter(d => d.status === 'BELUM DATANG' || d.status === 'BELUM DIKONFIRMASI').length;
+            const belumDatang = filteredGeneral.filter(d => d.status === 'BELUM DATANG').length;
             
             const showRate = totalBooking > 0 ? ((totalDatang / totalBooking) * 100).toFixed(1) : 0;
             const pctDatang = totalBooking > 0 ? ((totalDatang / totalBooking) * 100).toFixed(1) : 0;
@@ -699,6 +695,7 @@
             const groupMap = {};
 
             filteredBookingData.forEach(item => {
+                if (item.status === 'BELUM DIKONFIRMASI') return;
                 const pDate = parseDate(item.tglService);
                 if (!pDate) return;
 
@@ -723,7 +720,7 @@
                 }
                 if (item.status === 'DATANG') groupMap[groupKey].DATANG++;
                 else if (item.status === 'TIDAK DATANG') groupMap[groupKey]['TIDAK DATANG']++;
-                else groupMap[groupKey]['BELUM DATANG']++;
+                else if (item.status === 'BELUM DATANG') groupMap[groupKey]['BELUM DATANG']++;
             });
 
             const sortedKeys = Object.keys(groupMap).sort();
@@ -742,7 +739,7 @@
                     datasets: [
                         { label: 'Datang', data: datangData, borderColor: '#10b981', backgroundColor: '#10b98120', tension: 0.3, fill: true },
                         { label: 'Tidak Datang', data: tidakDatangData, borderColor: '#ef4444', backgroundColor: '#ef444420', tension: 0.3, fill: true },
-                        { label: 'Belum Datang/Konfirmasi', data: belumDatangData, borderColor: '#f59e0b', backgroundColor: '#f59e0b20', tension: 0.3, fill: true }
+                        { label: 'Belum Datang', data: belumDatangData, borderColor: '#f59e0b', backgroundColor: '#f59e0b20', tension: 0.3, fill: true }
                     ]
                 },
                 options: {
@@ -755,7 +752,10 @@
 
         function renderSumberDataChart() {
             const counts = {};
-            filteredBookingData.forEach(item => { counts[item.sumber] = (counts[item.sumber] || 0) + 1; });
+            filteredBookingData.forEach(item => {
+                if (item.status === 'BELUM DIKONFIRMASI') return;
+                counts[item.sumber] = (counts[item.sumber] || 0) + 1;
+            });
             const sortedKeys = Object.keys(counts).sort((a,b) => counts[b] - counts[a]).slice(0, 7);
             const dataVals = sortedKeys.map(k => counts[k]);
 
@@ -835,12 +835,13 @@
         function renderMraLeaderboard() {
             const mraStats = {};
             filteredBookingData.forEach(item => {
+                if (item.status === 'BELUM DIKONFIRMASI') return;
                 const name = item.mra;
                 if (!mraStats[name]) mraStats[name] = { total: 0, datang: 0, tidak: 0, belum: 0 };
                 mraStats[name].total++;
                 if (item.status === 'DATANG') mraStats[name].datang++;
                 else if (item.status === 'TIDAK DATANG') mraStats[name].tidak++;
-                else mraStats[name].belum++;
+                else if (item.status === 'BELUM DATANG') mraStats[name].belum++;
             });
 
             const sortedMra = Object.keys(mraStats).map(name => {
@@ -881,13 +882,9 @@
         }
 
         function openMraModal(mraName, statusType) {
-            let list = filteredBookingData.filter(d => d.mra === mraName);
+            let list = filteredBookingData.filter(d => d.mra === mraName && d.status !== 'BELUM DIKONFIRMASI');
             if (statusType !== 'ALL') {
-                if (statusType === 'BELUM DATANG') {
-                    list = list.filter(d => d.status === 'BELUM DATANG' || d.status === 'BELUM DIKONFIRMASI');
-                } else {
-                    list = list.filter(d => d.status === statusType);
-                }
+                list = list.filter(d => d.status === statusType);
             }
             openBookingModalCustom(`Detail MRA: ${mraName} (${statusType})`, `Menampilkan rincian nopol unit untuk MRA ${mraName}`, list);
         }
@@ -942,10 +939,10 @@
                 return;
             }
 
-            let list = filteredBookingData;
-            if (type === 'TOTAL DATANG') list = filteredBookingData.filter(d => d.status === 'DATANG');
-            else if (type === 'TIDAK DATANG') list = filteredBookingData.filter(d => d.status === 'TIDAK DATANG');
-            else if (type === 'BELUM DATANG') list = filteredBookingData.filter(d => d.status === 'BELUM DATANG' || d.status === 'BELUM DIKONFIRMASI');
+            let list = filteredBookingData.filter(d => d.status !== 'BELUM DIKONFIRMASI');
+            if (type === 'TOTAL DATANG') list = list.filter(d => d.status === 'DATANG');
+            else if (type === 'TIDAK DATANG') list = list.filter(d => d.status === 'TIDAK DATANG');
+            else if (type === 'BELUM DATANG') list = list.filter(d => d.status === 'BELUM DATANG');
 
             openBookingModalCustom(`Detail KPI: ${type}`, `Menampilkan daftar rincian kendaraan (${type})`, list);
         }
