@@ -553,7 +553,6 @@
             if (!row) return '';
             const rowKeys = Object.keys(row);
             for (let key of keys) {
-                // Pencarian key yang dinormalisasi untuk toleransi spasi & huruf kapital/kecil
                 const found = rowKeys.find(k => k.trim().toLowerCase().replace(/\s+/g, '') === key.toLowerCase().replace(/\s+/g, ''));
                 if (found && row[found] !== undefined && row[found] !== null) {
                     return String(row[found]).trim();
@@ -587,16 +586,23 @@
                 const tglService = getVal(row, ['Service Tanggal', 'Tgl Service', 'Tanggal Service', 'Tanggal']) || '-';
                 const tglBoc = getVal(row, ['Tanggal BOC', 'Tgl BOC', 'BOC']) || '';
                 
-                // Variasi pencarian diperluas untuk mencegah data tak bernama jatuh ke 'Unassigned'
                 const mraVal = getVal(row, ['Nama MRA', 'MRA', 'Nama Mra', 'Nama Sales MRA', 'Sales MRA']);
                 const mra = (mraVal !== '' && mraVal !== '-') ? mraVal : 'Unassigned';
                 
                 const caiVal = getVal(row, ['CAI', 'Status Kedatangan', 'Status']).toUpperCase();
 
+                // Perbaikan Logika Status: 
+                // Jika data kosong, '-', atau N/A, ditetapkan sebagai 'BELUM DIKONFIRMASI' (bukan dipukul rata sebagai 'BELUM DATANG')
                 let status = 'BELUM DATANG';
-                if (caiVal.includes('BELUM')) status = 'BELUM DATANG';
-                else if (caiVal.includes('TIDAK') || caiVal.includes('CANCEL') || caiVal.includes('BATAL')) status = 'TIDAK DATANG';
-                else if (caiVal.includes('DATANG') || caiVal.includes('DATAN') || caiVal === 'SBE' || caiVal === 'GRP') status = 'DATANG';
+                if (!caiVal || caiVal === '-' || caiVal === 'N/A' || caiVal === '') {
+                    status = 'BELUM DIKONFIRMASI';
+                } else if (caiVal.includes('BELUM')) {
+                    status = 'BELUM DATANG';
+                } else if (caiVal.includes('TIDAK') || caiVal.includes('CANCEL') || caiVal.includes('BATAL')) {
+                    status = 'TIDAK DATANG';
+                } else if (caiVal.includes('DATANG') || caiVal.includes('DATAN') || caiVal === 'SBE' || caiVal === 'GRP') {
+                    status = 'DATANG';
+                }
 
                 return { nopol, sumber, tglService, tglBoc, mra, status };
             });
@@ -648,7 +654,7 @@
             const totalBooking = filteredGeneral.length;
             const totalDatang = filteredGeneral.filter(d => d.status === 'DATANG').length;
             const tidakDatang = filteredGeneral.filter(d => d.status === 'TIDAK DATANG').length;
-            const belumDatang = filteredGeneral.filter(d => d.status === 'BELUM DATANG').length;
+            const belumDatang = filteredGeneral.filter(d => d.status === 'BELUM DATANG' || d.status === 'BELUM DIKONFIRMASI').length;
             
             const showRate = totalBooking > 0 ? ((totalDatang / totalBooking) * 100).toFixed(1) : 0;
             const pctDatang = totalBooking > 0 ? ((totalDatang / totalBooking) * 100).toFixed(1) : 0;
@@ -715,7 +721,9 @@
                 if (!groupMap[groupKey]) {
                     groupMap[groupKey] = { label: displayLabel, DATANG: 0, 'TIDAK DATANG': 0, 'BELUM DATANG': 0 };
                 }
-                if (groupMap[groupKey][item.status] !== undefined) groupMap[groupKey][item.status]++;
+                if (item.status === 'DATANG') groupMap[groupKey].DATANG++;
+                else if (item.status === 'TIDAK DATANG') groupMap[groupKey]['TIDAK DATANG']++;
+                else groupMap[groupKey]['BELUM DATANG']++;
             });
 
             const sortedKeys = Object.keys(groupMap).sort();
@@ -734,7 +742,7 @@
                     datasets: [
                         { label: 'Datang', data: datangData, borderColor: '#10b981', backgroundColor: '#10b98120', tension: 0.3, fill: true },
                         { label: 'Tidak Datang', data: tidakDatangData, borderColor: '#ef4444', backgroundColor: '#ef444420', tension: 0.3, fill: true },
-                        { label: 'Belum Datang', data: belumDatangData, borderColor: '#f59e0b', backgroundColor: '#f59e0b20', tension: 0.3, fill: true }
+                        { label: 'Belum Datang/Konfirmasi', data: belumDatangData, borderColor: '#f59e0b', backgroundColor: '#f59e0b20', tension: 0.3, fill: true }
                     ]
                 },
                 options: {
@@ -874,7 +882,13 @@
 
         function openMraModal(mraName, statusType) {
             let list = filteredBookingData.filter(d => d.mra === mraName);
-            if (statusType !== 'ALL') list = list.filter(d => d.status === statusType);
+            if (statusType !== 'ALL') {
+                if (statusType === 'BELUM DATANG') {
+                    list = list.filter(d => d.status === 'BELUM DATANG' || d.status === 'BELUM DIKONFIRMASI');
+                } else {
+                    list = list.filter(d => d.status === statusType);
+                }
+            }
             openBookingModalCustom(`Detail MRA: ${mraName} (${statusType})`, `Menampilkan rincian nopol unit untuk MRA ${mraName}`, list);
         }
 
@@ -931,7 +945,7 @@
             let list = filteredBookingData;
             if (type === 'TOTAL DATANG') list = filteredBookingData.filter(d => d.status === 'DATANG');
             else if (type === 'TIDAK DATANG') list = filteredBookingData.filter(d => d.status === 'TIDAK DATANG');
-            else if (type === 'BELUM DATANG') list = filteredBookingData.filter(d => d.status === 'BELUM DATANG');
+            else if (type === 'BELUM DATANG') list = filteredBookingData.filter(d => d.status === 'BELUM DATANG' || d.status === 'BELUM DIKONFIRMASI');
 
             openBookingModalCustom(`Detail KPI: ${type}`, `Menampilkan daftar rincian kendaraan (${type})`, list);
         }
@@ -1273,7 +1287,7 @@
                         <p class="text-[9px] font-bold text-slate-400 uppercase mb-1">Service Advisor</p>
                         <p class="font-bold text-slate-800">${i['Nama SA'] || '-'}</p>
                     </div>
-                    <div class="bg-slate-50 perhatikan-saja bg-slate-50 p-3 rounded-2xl">
+                    <div class="bg-slate-50 p-3 rounded-2xl">
                         <p class="text-[9px] font-bold text-slate-400 uppercase mb-1">No Polisi</p>
                         <p class="font-bold text-indigo-600 uppercase">${i['No Kendaraan'] || '-'}</p>
                     </div>
