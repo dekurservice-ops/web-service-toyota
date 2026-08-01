@@ -499,7 +499,6 @@
             const refreshIcon = document.getElementById('refreshIcon');
             if(refreshIcon) refreshIcon.classList.add('animate-spin');
             
-            // Menggunakan timestamp cache-busting agar Vercel/GitHub tidak menyajikan data lama
             const cacheBuster = `&_t=${Date.now()}`;
 
             Promise.all([
@@ -588,7 +587,6 @@
                 
                 const caiVal = getVal(row, ['CAI', 'Status Kedatangan', 'Status']).toUpperCase();
 
-                // Pengaman ketat: Tangkap string "KOSONG" atau data kosong dari sheets agar tidak salah masuk kategori
                 let status = 'BELUM DIKONFIRMASI';
                 if (caiVal.includes('BELUM')) {
                     status = 'BELUM DATANG';
@@ -982,8 +980,10 @@
                 for (let i = 0; i < detailRows.length; i++) {
                     const r = detailRows[i];
                     if (!r || !r[0]) continue;
-                    const code = String(r[0]).trim();
-                    if (!code || code.toLowerCase() === 'code') continue;
+                    
+                    // Gunakan sanitasi .trim().toUpperCase() agar stabil mengatasi spasi / huruf beda
+                    const code = String(r[0]).trim().toUpperCase();
+                    if (!code || code === 'CODE') continue;
                     
                     if (!detailMap[code]) detailMap[code] = [];
                     detailMap[code].push({
@@ -999,10 +999,12 @@
                 for (let i = 1; i < masterRows.length; i++) {
                     const r = masterRows[i];
                     if (!r || !r[0]) continue;
-                    const code = String(r[0]).trim();
-                    if (!code) continue;
+                    
+                    const originalCode = String(r[0]).trim();
+                    const lookupCode = originalCode.toUpperCase();
+                    if (!lookupCode) continue;
 
-                    let items = detailMap[code];
+                    let items = detailMap[lookupCode];
                     if (!items || items.length === 0) {
                         items = [{
                             'No Part': '-',
@@ -1011,9 +1013,9 @@
                         }];
                     }
 
-                    if (!map[code]) {
-                        map[code] = {
-                            Code: code,
+                    if (!map[lookupCode]) {
+                        map[lookupCode] = {
+                            Code: originalCode,
                             'Nama SA': String(r[1] || '').trim(),
                             'No Kendaraan': String(r[2] || '').trim(),
                             'Tanggal Order': String(r[3] || '').trim(),
