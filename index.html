@@ -20,9 +20,6 @@
         .kpi-card:hover { transform: translateY(-3px); }
         .chart-container { position: relative; height: 260px; width: 100%; }
         .truncate-part { display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; }
-        
-        /* Revenue Specific Style */
-        .rev-growth-tag { font-size: 0.65rem; font-weight: 700; display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 9999px; margin-top: 0.5rem; }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 antialiased min-h-screen flex flex-col">
@@ -56,11 +53,6 @@
                 <i data-lucide="package-check" class="w-5 h-5"></i>
                 <span>Special Order Part</span>
             </button>
-            <!-- MENU BARU: REVENUE -->
-            <button id="nav-revenue" onclick="switchView('revenue')" class="w-full flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-slate-50 font-semibold rounded-xl transition-all">
-                <i data-lucide="banknote" class="w-5 h-5"></i>
-                <span>Pendapatan Bengkel</span>
-            </button>
         </nav>
     </aside>
 
@@ -81,7 +73,7 @@
                 <span id="last-sync-tag" class="text-xs text-slate-400 italic hidden sm:inline">Manual Sync</span>
                 <button onclick="fetchAllData()" class="flex items-center gap-2 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 px-3 py-2 rounded-xl transition-colors">
                     <i data-lucide="refresh-cw" class="w-3.5 h-3.5" id="refreshIcon"></i>
-                    <span class="hidden sm:inline">Refresh All Data</span>
+                    <span class="hidden sm:inline">Refresh Data</span>
                 </button>
             </div>
         </div>
@@ -393,84 +385,9 @@
             </section>
         </div>
 
-        <!-- ================= VIEW 3: PENDAPATAN BENGKEL (NEW) ================= -->
-        <div id="view-revenue" class="hidden space-y-8">
-            <header class="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-                <div class="flex flex-wrap items-center gap-4 bg-white p-5 rounded-3xl shadow-sm border border-slate-200">
-                    <div class="flex flex-col">
-                        <label class="text-[10px] font-bold text-slate-400 mb-1 uppercase tracking-widest">Service Advisor</label>
-                        <select id="rev-saFilter" onchange="updateRevenueDashboard()" class="border border-slate-200 rounded-xl px-4 py-2 text-sm font-bold text-slate-700 bg-slate-50 outline-none">
-                            <option value="ALL">Semua Advisor</option>
-                        </select>
-                    </div>
-                    <div class="flex flex-col border-l pl-4 border-slate-200">
-                        <label class="text-[10px] font-bold text-blue-600 mb-1 uppercase tracking-widest">Periode P1 (Utama)</label>
-                        <div class="flex items-center gap-2">
-                            <input type="date" id="rev-s1" value="2025-06-01" onchange="updateRevenueDashboard()" class="border rounded-xl px-3 py-1.5 text-xs font-bold text-slate-600">
-                            <input type="date" id="rev-e1" value="2025-06-30" onchange="updateRevenueDashboard()" class="border rounded-xl px-3 py-1.5 text-xs font-bold text-slate-600">
-                        </div>
-                    </div>
-                    <div class="flex flex-col border-l pl-4 border-slate-200">
-                        <label class="text-[10px] font-bold text-slate-400 mb-1 uppercase tracking-widest">Pembanding (P2)</label>
-                        <div class="flex items-center gap-2">
-                            <input type="date" id="rev-s2" value="2026-06-01" onchange="updateRevenueDashboard()" class="border rounded-xl px-3 py-1.5 text-xs font-bold text-slate-600">
-                            <input type="date" id="rev-e2" value="2026-06-30" onchange="updateRevenueDashboard()" class="border rounded-xl px-3 py-1.5 text-xs font-bold text-slate-600">
-                        </div>
-                    </div>
-                </div>
-            </header>
-
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-8">
-                <div class="lg:col-span-3 flex flex-col gap-3">
-                    <h2 class="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1 mb-1">Financial KPIs</h2>
-                    <div class="bg-white p-5 rounded-2xl border-l-4 border-emerald-500 shadow-sm kpi-card" onclick="openRevenueModal('jasa', 'Total Jasa')">
-                        <p class="text-[10px] font-bold text-emerald-600 uppercase">Total Jasa</p>
-                        <h3 class="text-xl font-bold" id="rev-kpi-jasa">Rp 0</h3>
-                        <div id="rev-grow-jasa" class="rev-growth-tag"></div>
-                    </div>
-                    <div class="bg-white p-5 rounded-2xl border-l-4 border-amber-500 shadow-sm kpi-card" onclick="openRevenueModal('part', 'Total Part')">
-                        <p class="text-[10px] font-bold text-amber-600 uppercase">Total Part</p>
-                        <h3 class="text-xl font-bold" id="rev-kpi-part">Rp 0</h3>
-                        <div id="rev-grow-part" class="rev-growth-tag"></div>
-                    </div>
-                    <div class="bg-slate-900 p-5 rounded-2xl shadow-xl relative overflow-hidden kpi-card" onclick="openRevenueModal('dpp', 'Net DPP Revenue')">
-                        <div class="relative z-10">
-                            <p class="text-[10px] font-bold text-blue-400 uppercase tracking-widest mb-1">Total Net DPP</p>
-                            <h3 class="text-2xl font-black text-white" id="rev-kpi-dpp">Rp 0</h3>
-                            <div id="rev-grow-dpp" class="rev-growth-tag text-white"></div>
-                        </div>
-                        <i data-lucide="wallet" class="absolute -right-4 -bottom-4 w-24 h-24 text-white opacity-10 rotate-12"></i>
-                    </div>
-                </div>
-                <div class="lg:col-span-9 bg-white p-6 rounded-2xl border border-slate-200">
-                    <h3 class="font-bold text-xs uppercase mb-8">Tren Harian P1 vs P2 (DPP)</h3>
-                    <div class="h-[320px]"><canvas id="revTrendChart"></canvas></div>
-                </div>
-            </div>
-
-            <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
-                <div class="p-6 border-b border-slate-100 flex justify-between items-center">
-                    <h3 class="font-black text-slate-800 uppercase text-sm tracking-tighter">SA Performance Leaderboard</h3>
-                </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left text-sm" id="revMainTable">
-                        <thead>
-                            <tr class="bg-slate-50 text-slate-500 uppercase text-[10px] font-bold tracking-widest border-y">
-                                <th class="px-8 py-5">Advisor Name</th>
-                                <th class="px-8 py-5 text-right">Jasa Umum</th>
-                                <th class="px-8 py-5 text-right">Penjualan Part</th>
-                                <th class="px-8 py-5 text-right">Net DPP Revenue</th>
-                            </tr>
-                        </thead>
-                        <tbody id="revLeaderboardBody" class="divide-y divide-slate-100"></tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
     </main>
 
-    <!-- ORIGINAL MODALS -->
+    <!-- MODALS -->
     <div id="bookingModal" class="fixed inset-0 bg-slate-900/60 z-50 hidden flex items-center justify-center p-3 sm:p-4 backdrop-blur-sm">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden">
             <div class="p-4 sm:p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50">
@@ -527,39 +444,15 @@
         </div>
     </div>
 
-    <!-- NEW MODAL FOR REVENUE -->
-    <div id="revKpiModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-md hidden items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden">
-            <div class="px-8 py-6 border-b flex justify-between items-center bg-slate-50">
-                <h3 id="revModalTitle" class="text-xl font-black text-slate-800">Detail Metrik</h3>
-                <button onclick="closeRevModal()" class="text-slate-400 hover:text-rose-500"><i data-lucide="x" class="w-8 h-8"></i></button>
-            </div>
-            <div class="p-8 max-h-[60vh] overflow-y-auto">
-                <table class="w-full text-left">
-                    <thead>
-                        <tr class="text-[10px] font-black text-slate-400 uppercase tracking-widest border-b">
-                            <th class="pb-4">Advisor</th><th class="pb-4 text-right">P1 (Utama)</th><th class="pb-4 text-right">P2 (Banding)</th><th class="pb-4 text-right">Growth</th>
-                        </tr>
-                    </thead>
-                    <tbody id="revModalTableBody" class="divide-y divide-slate-50"></tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
+    <!-- SCRIPTS -->
     <script>
         const CSV_BOOKING_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRgLQ8hj-ab5ZOJu31Z1d2gyWxeYNxl4BXHjXYZSq9eaAAnURBkcv61joIaU0Qpj-7G-eQ-yV2uGAIz/pub?gid=0&single=true&output=csv';
         const CSV_SOP_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTIDLFkByyO5KJDw2vLnF2kxcj1lSoDEeN_Hw9fnYOEnmXvuZuzynN1ncnaGsudHALaj-DR0nzMHB0j/pub?gid=0&single=true&output=csv';
         const CSV_DETAIL_PART_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTIDLFkByyO5KJDw2vLnF2kxcj1lSoDEeN_Hw9fnYOEnmXvuZuzynN1ncnaGsudHALaj-DR0nzMHB0j/pub?gid=539769690&single=true&output=csv';
-        const CSV_REVENUE_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSJZFlXUlafjoXxaloZYYNXCBFTUAhtSSgb7c5rdLYxPoE3DRt6HTg6J-aIhOPg44xQs3VeZP1-3yuV/pub?gid=0&single=true&output=csv";
 
         let rawBookingData = [], filteredBookingData = [];
         let trendChartInstance = null, sumberChartInstance = null, bocPerMraChartInstance = null;
         let rawSopMasterData = [], rawDetailPartData = [], groupedSopData = [], filteredSopData = [], sopCharts = {};
-        
-        // Revenue States
-        let rawRevenueData = [];
-        let revTrendChartInstance = null;
 
         document.addEventListener('DOMContentLoaded', () => {
             lucide.createIcons();
@@ -574,35 +467,25 @@
         function switchView(viewName) {
             const bookingView = document.getElementById('view-booking');
             const sopView = document.getElementById('view-sop');
-            const revenueView = document.getElementById('view-revenue');
-            
             const navBooking = document.getElementById('nav-booking');
             const navSop = document.getElementById('nav-sop');
-            const navRevenue = document.getElementById('nav-revenue');
-            
             const pageTitle = document.getElementById('page-title');
             const pageSubtitle = document.getElementById('page-subtitle');
 
-            // Reset all
-            [bookingView, sopView, revenueView].forEach(v => v.classList.add('hidden'));
-            [navBooking, navSop, navRevenue].forEach(n => n.className = "w-full flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-slate-50 font-semibold rounded-xl transition-all");
-
             if (viewName === 'booking') {
                 bookingView.classList.remove('hidden');
+                sopView.classList.add('hidden');
                 navBooking.className = "w-full flex items-center gap-3 px-4 py-3 bg-red-50 text-red-600 font-semibold rounded-xl transition-all";
+                navSop.className = "w-full flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-slate-50 font-semibold rounded-xl transition-all";
                 pageTitle.textContent = "Astrido Karawang Booking Analytics";
                 pageSubtitle.textContent = "Monitoring Kedatangan & Performance Booking MRA";
-            } else if (viewName === 'sop') {
+            } else {
+                bookingView.classList.add('hidden');
                 sopView.classList.remove('hidden');
                 navSop.className = "w-full flex items-center gap-3 px-4 py-3 bg-red-50 text-red-600 font-semibold rounded-xl transition-all";
+                navBooking.className = "w-full flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-slate-50 font-semibold rounded-xl transition-all";
                 pageTitle.textContent = "Astrido Karawang Special Order Part";
                 pageSubtitle.textContent = "Monitoring Pesanan Suku Cadang Khusus";
-            } else if (viewName === 'revenue') {
-                revenueView.classList.remove('hidden');
-                navRevenue.className = "w-full flex items-center gap-3 px-4 py-3 bg-red-50 text-red-600 font-semibold rounded-xl transition-all";
-                pageTitle.textContent = "Astrido Karawang Pendapatan Bengkel";
-                pageSubtitle.textContent = "Financial Analytics & Advisor Performance";
-                updateRevenueDashboard();
             }
             toggleSidebar();
         }
@@ -647,18 +530,11 @@
                             resolve();
                         }
                     });
-                }),
-                new Promise(resolve => {
-                    fetch(CSV_REVENUE_URL + cacheBuster).then(r => r.text()).then(text => {
-                        parseRevenueCSV(text);
-                        resolve();
-                    });
                 })
             ]).then(() => {
                 groupedSopData = groupSopByCodeMatrix(rawSopMasterData, rawDetailPartData);
                 populateSopSAFilter();
                 applySopFilters();
-                updateRevenueDashboard();
 
                 if(refreshIcon) refreshIcon.classList.remove('animate-spin');
                 const el = document.getElementById('last-sync-tag');
@@ -668,137 +544,7 @@
             });
         }
 
-        // ================= REVENUE LOGIC (NEW) =================
-        function cleanRevNum(val) {
-            if (!val) return 0;
-            const cleaned = String(val).replace(/[^0-9\-]/g, '');
-            return parseFloat(cleaned) || 0;
-        }
-
-        function parseRevenueCSV(text) {
-            const lines = text.split('\n');
-            const monthMap = { 'Jan': '01', 'Feb': '02', 'Mar': '03', 'Apr': '04', 'May': '05', 'Mei': '05', 'Jun': '06', 'Jul': '07', 'Agu': '08', 'Aug': '08', 'Sep': '09', 'Okt': '10', 'Oct': '10', 'Nov': '11', 'Des': '12', 'Dec': '12' };
-            
-            rawRevenueData = [];
-            for (let i = 1; i < lines.length; i++) {
-                const line = lines[i].trim();
-                if (!line) continue;
-                const col = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(v => v.replace(/^"|"$/g, '').trim());
-                if (col.length < 10) continue;
-                
-                const dateParts = col[1].split(/[\-\s]+/);
-                const day = (dateParts[0] || '1').padStart(2, '0');
-                const month = monthMap[dateParts[1]?.substring(0,3)] || '06';
-                let year = dateParts[2] || '2025'; if (year.length === 2) year = "20" + year;
-
-                rawRevenueData.push({
-                    sa: col[0].trim(),
-                    date: `${year}-${month}-${day}`,
-                    jasa: cleanRevNum(col[2]) + cleanRevNum(col[3]),
-                    part: cleanRevNum(col[4]),
-                    oli: cleanRevNum(col[5]),
-                    bahan: cleanRevNum(col[6]),
-                    sublet: cleanRevNum(col[7]),
-                    dpp: cleanRevNum(col[9])
-                });
-            }
-            const saList = [...new Set(rawRevenueData.map(d => d.sa))].sort();
-            const select = document.getElementById('rev-saFilter');
-            select.innerHTML = '<option value="ALL">Semua Advisor</option>' + saList.map(sa => `<option value="${sa}">${sa}</option>`).join('');
-        }
-
-        function updateRevenueDashboard() {
-            if (!rawRevenueData.length) return;
-            const sa = document.getElementById('rev-saFilter').value;
-            const s1 = document.getElementById('rev-s1').value;
-            const e1 = document.getElementById('rev-e1').value;
-            const s2 = document.getElementById('rev-s2').value;
-            const e2 = document.getElementById('rev-e2').value;
-
-            const filterFn = (start, end) => rawRevenueData.filter(d => (sa === 'ALL' || d.sa === sa) && d.date >= start && d.date <= end);
-            const dataP1 = filterFn(s1, e1);
-            const dataP2 = filterFn(s2, e2);
-
-            const getSums = (arr) => arr.reduce((acc, c) => ({
-                jasa: acc.jasa + c.jasa, part: acc.part + c.part, dpp: acc.dpp + c.dpp
-            }), { jasa: 0, part: 0, dpp: 0 });
-
-            const t1 = getSums(dataP1);
-            const t2 = getSums(dataP2);
-
-            const formatIDR = (v) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(v);
-
-            document.getElementById('rev-kpi-jasa').innerText = formatIDR(t1.jasa);
-            document.getElementById('rev-kpi-part').innerText = formatIDR(t1.part);
-            document.getElementById('rev-kpi-dpp').innerText = formatIDR(t1.dpp);
-
-            const calcGrowth = (v1, v2, id) => {
-                const el = document.getElementById(id);
-                if (!v2) { el.innerText = '--'; el.className = "rev-growth-tag bg-slate-100 text-slate-400"; return; }
-                const p = ((v1 - v2) / v2 * 100).toFixed(1);
-                el.innerText = (p >= 0 ? '↑ ' : '↓ ') + Math.abs(p) + '%';
-                el.className = "rev-growth-tag " + (p >= 0 ? "bg-emerald-50 text-emerald-600" : "bg-rose-50 text-rose-600");
-            };
-
-            calcGrowth(t1.jasa, t2.jasa, 'rev-grow-jasa');
-            calcGrowth(t1.part, t2.part, 'rev-grow-part');
-            calcGrowth(t1.dpp, t2.dpp, 'rev-grow-dpp');
-
-            // Chart
-            const getMap = (arr) => arr.reduce((acc, c) => { acc[c.date] = (acc[c.date] || 0) + c.dpp; return acc; }, {});
-            const m1 = getMap(dataP1); const m2 = getMap(dataP2);
-            const dates = [...new Set([...Object.keys(m1), ...Object.keys(m2)])].sort();
-            
-            if (revTrendChartInstance) revTrendChartInstance.destroy();
-            revTrendChartInstance = new Chart(document.getElementById('revTrendChart'), {
-                type: 'line',
-                data: {
-                    labels: dates.map(d => d.split('-')[2]),
-                    datasets: [
-                        { label: 'P1', borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.05)', data: dates.map(d => m1[d] || 0), fill: true, tension: 0.4 },
-                        { label: 'P2', borderColor: '#cbd5e1', borderDash: [5, 5], data: dates.map(d => m2[d] || 0), tension: 0.4 }
-                    ]
-                },
-                options: { responsive: true, maintainAspectRatio: false }
-            });
-
-            // Table
-            const saList = [...new Set(rawRevenueData.map(d => d.sa))].sort();
-            document.getElementById('revLeaderboardBody').innerHTML = saList.map(name => {
-                const items = dataP1.filter(d => d.sa === name);
-                const s = getSums(items);
-                if (s.dpp === 0) return '';
-                return `<tr><td class="px-8 py-5 font-bold">${name}</td><td class="px-8 py-5 text-right font-medium text-slate-500">${formatIDR(s.jasa)}</td><td class="px-8 py-5 text-right font-medium text-slate-500">${formatIDR(s.part)}</td><td class="px-8 py-5 text-right font-black text-slate-900">${formatIDR(s.dpp)}</td></tr>`;
-            }).join('');
-        }
-
-        function openRevenueModal(key, label) {
-            document.getElementById('revModalTitle').innerText = label;
-            const saList = [...new Set(rawRevenueData.map(d => d.sa))].sort();
-            const s1 = document.getElementById('rev-s1').value;
-            const e1 = document.getElementById('rev-e1').value;
-            const s2 = document.getElementById('rev-s2').value;
-            const e2 = document.getElementById('rev-e2').value;
-            
-            const formatIDR = (v) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(v);
-
-            document.getElementById('revModalTableBody').innerHTML = saList.map(sa => {
-                const v1 = rawRevenueData.filter(d => d.sa === sa && d.date >= s1 && d.date <= e1).reduce((s, c) => s + c[key], 0);
-                const v2 = rawRevenueData.filter(d => d.sa === sa && d.date >= s2 && d.date <= e2).reduce((s, c) => s + c[key], 0);
-                if(v1 === 0 && v2 === 0) return '';
-                const p = v2 ? (((v1 - v2) / v2) * 100).toFixed(1) : 0;
-                return `<tr><td class="py-4 font-bold text-slate-700">${sa}</td><td class="py-4 text-right font-bold text-slate-900">${formatIDR(v1)}</td><td class="py-4 text-right text-slate-400 font-medium">${formatIDR(v2)}</td><td class="py-4 text-right font-bold ${p >= 0 ? 'text-emerald-600' : 'text-rose-600'}">${p}%</td></tr>`;
-            }).join('');
-            document.getElementById('revKpiModal').classList.remove('hidden');
-            document.getElementById('revKpiModal').classList.add('flex');
-        }
-
-        function closeRevModal() {
-            document.getElementById('revKpiModal').classList.add('hidden');
-            document.getElementById('revKpiModal').classList.remove('flex');
-        }
-
-        // ================= ORIGINAL BOOKING LOGIC =================
+        // ================= BOOKING LOGIC =================
         function getVal(row, keys) {
             if (!row) return '';
             const rowKeys = Object.keys(row);
@@ -835,8 +581,10 @@
                 const sumber = getVal(row, ['Sumber Data', 'Sumber', 'Media']) || 'Lainnya';
                 const tglService = getVal(row, ['Service Tanggal', 'Tgl Service', 'Tanggal Service', 'Tanggal']) || '-';
                 const tglBoc = getVal(row, ['Tanggal BOC', 'Tgl BOC', 'BOC']) || '';
+                
                 const mraVal = getVal(row, ['Nama MRA', 'MRA', 'Nama Mra', 'Nama Sales MRA', 'Sales MRA']);
                 const mra = (mraVal !== '' && mraVal !== '-') ? mraVal : 'Unassigned';
+                
                 const caiVal = getVal(row, ['CAI', 'Status Kedatangan', 'Status']).toUpperCase();
 
                 let status = 'BELUM DIKONFIRMASI';
@@ -849,6 +597,7 @@
                 } else if (caiVal === 'KOSONG' || caiVal === '' || caiVal === '-') {
                     status = 'BELUM DIKONFIRMASI';
                 }
+
                 return { nopol, sumber, tglService, tglBoc, mra, status };
             });
         }
@@ -878,6 +627,7 @@
             const startDateVal = document.getElementById('startDate').value;
             const endDateVal = document.getElementById('endDate').value;
             const selectedMra = document.getElementById('filterMra').value;
+
             const startLimit = startDateVal ? new Date(startDateVal + 'T00:00:00') : null;
             const endLimit = endDateVal ? new Date(endDateVal + 'T23:59:59') : null;
 
@@ -894,36 +644,46 @@
             });
 
             filteredBookingData = filteredGeneral;
+
             const totalBooking = filteredGeneral.filter(d => d.status !== 'BELUM DIKONFIRMASI').length;
             const totalDatang = filteredGeneral.filter(d => d.status === 'DATANG').length;
             const tidakDatang = filteredGeneral.filter(d => d.status === 'TIDAK DATANG').length;
             const belumDatang = filteredGeneral.filter(d => d.status === 'BELUM DATANG').length;
             
             const showRate = totalBooking > 0 ? ((totalDatang / totalBooking) * 100).toFixed(1) : 0;
+            const pctDatang = totalBooking > 0 ? ((totalDatang / totalBooking) * 100).toFixed(1) : 0;
+            const pctTidakDatang = totalBooking > 0 ? ((tidakDatang / totalBooking) * 100).toFixed(1) : 0;
+            const pctBelumDatang = totalBooking > 0 ? ((belumDatang / totalBooking) * 100).toFixed(1) : 0;
+            
             const bookingOnCallCount = rawBookingData.filter(item => {
                 if (selectedMra !== 'ALL' && item.mra !== selectedMra) return false;
                 const bocStr = String(item.tglBoc || '').trim();
                 const isValidBoc = bocStr !== '' && bocStr !== '-' && bocStr.toLowerCase() !== 'undefined' && bocStr.toLowerCase() !== 'null';
                 if (!isValidBoc) return false;
+
                 if (startLimit || endLimit) {
                     const bocDate = parseDate(item.tglBoc);
                     if (bocDate) {
                         if (startLimit && bocDate < startLimit) return false;
                         if (endLimit && bocDate > endLimit) return false;
-                    } else return false;
+                    } else {
+                        return false;
+                    }
                 }
                 return true;
             }).length;
 
+            const pctTotalBookingVsBoc = bookingOnCallCount > 0 ? ((totalBooking / bookingOnCallCount) * 100).toFixed(1) : 0;
+
             document.getElementById('kpiBookingOnCall').textContent = bookingOnCallCount.toLocaleString('id-ID');
             document.getElementById('kpiTotalBooking').textContent = totalBooking.toLocaleString('id-ID');
-            document.getElementById('pctTotalBookingVsBoc').textContent = `${bookingOnCallCount > 0 ? ((totalBooking/bookingOnCallCount)*100).toFixed(1) : 0}% dari BOC`;
+            document.getElementById('pctTotalBookingVsBoc').textContent = `${pctTotalBookingVsBoc}% dari BOC`;
             document.getElementById('kpiTotalDatang').textContent = totalDatang.toLocaleString('id-ID');
-            document.getElementById('pctDatangVsBooking').textContent = `${totalBooking > 0 ? ((totalDatang/totalBooking)*100).toFixed(1) : 0}% dari Total Booking`;
+            document.getElementById('pctDatangVsBooking').textContent = `${pctDatang}% dari Total Booking`;
             document.getElementById('kpiTidakDatang').textContent = tidakDatang.toLocaleString('id-ID');
-            document.getElementById('pctTidakDatangVsBooking').textContent = `${totalBooking > 0 ? ((tidakDatang/totalBooking)*100).toFixed(1) : 0}% dari Total Booking`;
+            document.getElementById('pctTidakDatangVsBooking').textContent = `${pctTidakDatang}% dari Total Booking`;
             document.getElementById('kpiBelumDatang').textContent = belumDatang.toLocaleString('id-ID');
-            document.getElementById('pctBelumDatangVsBooking').textContent = `${totalBooking > 0 ? ((belumDatang/totalBooking)*100).toFixed(1) : 0}% dari Total Booking`;
+            document.getElementById('pctBelumDatangVsBooking').textContent = `${pctBelumDatang}% dari Total Booking`;
             document.getElementById('kpiShowRate').textContent = `${showRate}%`;
         }
 
@@ -936,6 +696,7 @@
                 if (item.status === 'BELUM DIKONFIRMASI') return;
                 const pDate = parseDate(item.tglService);
                 if (!pDate) return;
+
                 let groupKey = '', displayLabel = '';
                 if (granularity === 'monthly') {
                     groupKey = `${pDate.getFullYear()}-${String(pDate.getMonth() + 1).padStart(2, '0')}`;
@@ -951,36 +712,62 @@
                     groupKey = `${pDate.getFullYear()}-${String(pDate.getMonth() + 1).padStart(2, '0')}-${String(pDate.getDate()).padStart(2, '0')}`;
                     displayLabel = `${String(pDate.getDate()).padStart(2, '0')} ${monthsShort[pDate.getMonth()]}`;
                 }
-                if (!groupMap[groupKey]) groupMap[groupKey] = { label: displayLabel, DATANG: 0, 'TIDAK DATANG': 0, 'BELUM DATANG': 0 };
+
+                if (!groupMap[groupKey]) {
+                    groupMap[groupKey] = { label: displayLabel, DATANG: 0, 'TIDAK DATANG': 0, 'BELUM DATANG': 0 };
+                }
                 if (item.status === 'DATANG') groupMap[groupKey].DATANG++;
                 else if (item.status === 'TIDAK DATANG') groupMap[groupKey]['TIDAK DATANG']++;
                 else if (item.status === 'BELUM DATANG') groupMap[groupKey]['BELUM DATANG']++;
             });
 
             const sortedKeys = Object.keys(groupMap).sort();
+            const labels = sortedKeys.map(k => groupMap[k].label);
+            const datangData = sortedKeys.map(k => groupMap[k].DATANG);
+            const tidakDatangData = sortedKeys.map(k => groupMap[k]['TIDAK DATANG']);
+            const belumDatangData = sortedKeys.map(k => groupMap[k]['BELUM DATANG']);
+
             if (trendChartInstance) trendChartInstance.destroy();
-            trendChartInstance = new Chart(document.getElementById('trendChart').getContext('2d'), {
+
+            const ctx = document.getElementById('trendChart').getContext('2d');
+            trendChartInstance = new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: sortedKeys.map(k => groupMap[k].label),
+                    labels,
                     datasets: [
-                        { label: 'Datang', data: sortedKeys.map(k => groupMap[k].DATANG), borderColor: '#10b981', backgroundColor: '#10b98120', tension: 0.3, fill: true },
-                        { label: 'Tidak Datang', data: sortedKeys.map(k => groupMap[k]['TIDAK DATANG']), borderColor: '#ef4444', backgroundColor: '#ef444420', tension: 0.3, fill: true }
+                        { label: 'Datang', data: datangData, borderColor: '#10b981', backgroundColor: '#10b98120', tension: 0.3, fill: true },
+                        { label: 'Tidak Datang', data: tidakDatangData, borderColor: '#ef4444', backgroundColor: '#ef444420', tension: 0.3, fill: true },
+                        { label: 'Belum Datang', data: belumDatangData, borderColor: '#f59e0b', backgroundColor: '#f59e0b20', tension: 0.3, fill: true }
                     ]
                 },
-                options: { responsive: true, maintainAspectRatio: false }
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { position: 'top', labels: { boxWidth: 12, font: { size: 11 } } } },
+                    scales: { x: { grid: { display: false } }, y: { beginAtZero: true, ticks: { precision: 0 } } }
+                }
             });
         }
 
         function renderSumberDataChart() {
             const counts = {};
-            filteredBookingData.forEach(item => { if (item.status !== 'BELUM DIKONFIRMASI') counts[item.sumber] = (counts[item.sumber] || 0) + 1; });
+            filteredBookingData.forEach(item => {
+                if (item.status === 'BELUM DIKONFIRMASI') return;
+                counts[item.sumber] = (counts[item.sumber] || 0) + 1;
+            });
             const sortedKeys = Object.keys(counts).sort((a,b) => counts[b] - counts[a]).slice(0, 7);
+            const dataVals = sortedKeys.map(k => counts[k]);
+
             if (sumberChartInstance) sumberChartInstance.destroy();
-            sumberChartInstance = new Chart(document.getElementById('sumberDataChart').getContext('2d'), {
+
+            const ctx = document.getElementById('sumberDataChart').getContext('2d');
+            sumberChartInstance = new Chart(ctx, {
                 type: 'bar',
-                data: { labels: sortedKeys, datasets: [{ label: 'Total Booking', data: sortedKeys.map(k => counts[k]), backgroundColor: '#3b82f6', borderRadius: 6 }] },
-                options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false }
+                data: { labels: sortedKeys, datasets: [{ label: 'Total Booking', data: dataVals, backgroundColor: '#3b82f6', borderRadius: 6 }] },
+                options: {
+                    indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { x: { beginAtZero: true, ticks: { precision: 0 } }, y: { grid: { display: false } } }
+                }
             });
         }
 
@@ -999,32 +786,47 @@
                 const bocStr = String(item.tglBoc || '').trim();
                 const isValidBoc = bocStr !== '' && bocStr !== '-' && bocStr.toLowerCase() !== 'undefined' && bocStr.toLowerCase() !== 'null';
                 if (!isValidBoc) return;
+
                 if (startLimit || endLimit) {
                     const bocDate = parseDate(item.tglBoc);
                     if (bocDate) {
                         if (startLimit && bocDate < startLimit) return;
                         if (endLimit && bocDate > endLimit) return;
-                    } else return;
+                    } else {
+                        return;
+                    }
                 }
+
                 const mraName = item.mra;
                 if (mraName && mraName !== '-' && mraName !== 'Unassigned') {
                     bocTotalMap[mraName] = (bocTotalMap[mraName] || 0) + 1;
-                    if (item.status === 'DATANG') bocDatangMap[mraName] = (bocDatangMap[mraName] || 0) + 1;
+                    if (item.status === 'DATANG') {
+                        bocDatangMap[mraName] = (bocDatangMap[mraName] || 0) + 1;
+                    }
                 }
             });
 
             const sortedMras = Object.keys(bocTotalMap).sort((a,b) => bocTotalMap[b] - bocTotalMap[a]);
+            const totalBocData = sortedMras.map(m => bocTotalMap[m] || 0);
+            const datangBocData = sortedMras.map(m => bocDatangMap[m] || 0);
+
             if (bocPerMraChartInstance) bocPerMraChartInstance.destroy();
-            bocPerMraChartInstance = new Chart(document.getElementById('bocPerMraChart').getContext('2d'), {
+
+            const ctx = document.getElementById('bocPerMraChart').getContext('2d');
+            bocPerMraChartInstance = new Chart(ctx, {
                 type: 'bar',
                 data: {
                     labels: sortedMras,
                     datasets: [
-                        { label: 'Total BOC', data: sortedMras.map(m => bocTotalMap[m] || 0), backgroundColor: '#334155', borderRadius: 6 },
-                        { label: 'BOC Datang', data: sortedMras.map(m => bocDatangMap[m] || 0), backgroundColor: '#10b981', borderRadius: 6 }
+                        { label: 'Total Booking On Call (BOC)', data: totalBocData, backgroundColor: '#334155', borderRadius: 6 },
+                        { label: 'BOC Sudah Datang', data: datangBocData, backgroundColor: '#10b981', borderRadius: 6 }
                     ]
                 },
-                options: { responsive: true, maintainAspectRatio: false }
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { position: 'top', labels: { boxWidth: 12, font: { size: 11 } } } },
+                    scales: { x: { grid: { display: false } }, y: { beginAtZero: true, ticks: { precision: 0 } } }
+                }
             });
         }
 
@@ -1032,11 +834,12 @@
             const mraStats = {};
             filteredBookingData.forEach(item => {
                 if (item.status === 'BELUM DIKONFIRMASI') return;
-                if (!mraStats[item.mra]) mraStats[item.mra] = { total: 0, datang: 0, tidak: 0, belum: 0 };
-                mraStats[item.mra].total++;
-                if (item.status === 'DATANG') mraStats[item.mra].datang++;
-                else if (item.status === 'TIDAK DATANG') mraStats[item.mra].tidak++;
-                else if (item.status === 'BELUM DATANG') mraStats[item.mra].belum++;
+                const name = item.mra;
+                if (!mraStats[name]) mraStats[name] = { total: 0, datang: 0, tidak: 0, belum: 0 };
+                mraStats[name].total++;
+                if (item.status === 'DATANG') mraStats[name].datang++;
+                else if (item.status === 'TIDAK DATANG') mraStats[name].tidak++;
+                else if (item.status === 'BELUM DATANG') mraStats[name].belum++;
             });
 
             const sortedMra = Object.keys(mraStats).map(name => {
@@ -1046,150 +849,485 @@
                 return { name, ...mraStats[name], showRate: parseFloat(showRate) };
             }).sort((a,b) => b.showRate - a.showRate || b.total - a.total);
 
-            document.getElementById('mraTableBody').innerHTML = sortedMra.map((mra, index) => `
-                <tr class="hover:bg-slate-50">
-                    <td class="py-3 px-4 text-center font-bold">${index + 1}</td>
+            const tbody = document.getElementById('mraTableBody');
+            tbody.innerHTML = '';
+
+            if (sortedMra.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="py-6 text-center text-slate-400">Tidak ada data ditemukan</td></tr>`;
+                return;
+            }
+
+            sortedMra.forEach((mra, index) => {
+                let badgeClass = 'bg-red-50 text-red-600 border-red-200';
+                if (mra.showRate > 60) badgeClass = 'bg-emerald-50 text-emerald-600 border-emerald-200';
+                else if (mra.showRate >= 40) badgeClass = 'bg-amber-50 text-amber-600 border-amber-200';
+
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50 transition-colors";
+                tr.innerHTML = `
+                    <td class="py-3 px-4 text-center">
+                        <span class="inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold ${index === 0 ? 'bg-amber-100 text-amber-700' : index === 1 ? 'bg-slate-200 text-slate-700' : index === 2 ? 'bg-amber-800/10 text-amber-800' : 'text-slate-500'}">${index + 1}</span>
+                    </td>
                     <td class="py-3 px-4 font-bold text-slate-800">${mra.name}</td>
                     <td class="py-3 px-4 text-center font-bold text-blue-600 hover:underline cursor-pointer" onclick="openMraModal('${mra.name}', 'ALL')">${mra.total}</td>
                     <td class="py-3 px-4 text-center text-emerald-600 font-bold hover:underline cursor-pointer" onclick="openMraModal('${mra.name}', 'DATANG')">${mra.datang}</td>
-                    <td class="py-3 px-4 text-center text-rose-600 font-bold">${mra.tidak}</td>
-                    <td class="py-3 px-4 text-center text-amber-600 font-bold">${mra.belum}</td>
-                    <td class="py-3 px-4 text-center font-bold">${mra.showRate}%</td>
-                </tr>
-            `).join('');
+                    <td class="py-3 px-4 text-center text-rose-600 font-bold hover:underline cursor-pointer" onclick="openMraModal('${mra.name}', 'TIDAK DATANG')">${mra.tidak}</td>
+                    <td class="py-3 px-4 text-center text-amber-600 font-bold hover:underline cursor-pointer" onclick="openMraModal('${mra.name}', 'BELUM DATANG')">${mra.belum}</td>
+                    <td class="py-3 px-4 text-center"><span class="px-2.5 py-1 rounded-full text-xs font-bold border ${badgeClass}">${mra.showRate}%</span></td>
+                `;
+                tbody.appendChild(tr);
+            });
         }
 
         function openMraModal(mraName, statusType) {
             let list = filteredBookingData.filter(d => d.mra === mraName && d.status !== 'BELUM DIKONFIRMASI');
-            if (statusType !== 'ALL') list = list.filter(d => d.status === statusType);
-            openBookingModalCustom(`Detail MRA: ${mraName}`, `Status: ${statusType}`, list);
+            if (statusType !== 'ALL') {
+                list = list.filter(d => d.status === statusType);
+            }
+            openBookingModalCustom(`Detail MRA: ${mraName} (${statusType})`, `Menampilkan rincian nopol unit untuk MRA ${mraName}`, list);
         }
 
         function openBookingModal(type) {
-            // Logic khusus BOC modal asli
             if (type === 'BOOKING ON CALL') {
-                const bocList = rawBookingData.filter(item => {
+                const startDateVal = document.getElementById('startDate').value;
+                const endDateVal = document.getElementById('endDate').value;
+                const selectedMra = document.getElementById('filterMra').value;
+                const startLimit = startDateVal ? new Date(startDateVal + 'T00:00:00') : null;
+                const endLimit = endDateVal ? new Date(endDateVal + 'T23:59:59') : null;
+
+                const listBoc = rawBookingData.filter(item => {
+                    if (selectedMra !== 'ALL' && item.mra !== selectedMra) return false;
                     const bocStr = String(item.tglBoc || '').trim();
-                    return bocStr !== '' && bocStr !== '-' && bocStr.toLowerCase() !== 'undefined';
+                    const isValidBoc = bocStr !== '' && bocStr !== '-' && bocStr.toLowerCase() !== 'undefined' && bocStr.toLowerCase() !== 'null';
+                    if (!isValidBoc) return false;
+
+                    if (startLimit || endLimit) {
+                        const bocDate = parseDate(item.tglBoc);
+                        if (bocDate) {
+                            if (startLimit && bocDate < startLimit) return false;
+                            if (endLimit && bocDate > endLimit) return false;
+                        } else {
+                            return false;
+                        }
+                    }
+                    return true;
                 });
-                openBookingModalCustom('Detail BOC', 'Daftar transaksi BOC', bocList);
+
+                document.getElementById('bookingModalTitle').textContent = 'Detail KPI: BOOKING ON CALL (BOC)';
+                document.getElementById('bookingModalSubtitle').textContent = 'Daftar transaksi berdasarkan Tanggal BOC & Rentang Filter';
+                const thead = document.getElementById('bookingModalTableHeader');
+                const tbody = document.getElementById('bookingModalTableBody');
+                thead.innerHTML = `<tr><th class="py-3 px-4 text-left">Nomor Polisi</th><th class="py-3 px-4 text-left">Tanggal BOC</th><th class="py-3 px-4 text-left">Tanggal Service</th><th class="py-3 px-4 text-left">Status Kedatangan</th><th class="py-3 px-4 text-left">MRA</th><th class="py-3 px-4 text-left">Sumber Data</th></tr>`;
+                tbody.innerHTML = '';
+                if (listBoc.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="6" class="py-6 text-center text-slate-400">Tidak ada data unit ditemukan.</td></tr>`;
+                } else {
+                    listBoc.forEach(item => {
+                        let badgeColor = 'bg-amber-50 text-amber-600 border-amber-200';
+                        if (item.status === 'DATANG') badgeColor = 'bg-emerald-50 text-emerald-600 border-emerald-200';
+                        else if (item.status === 'TIDAK DATANG') badgeColor = 'bg-rose-50 text-rose-600 border-rose-200';
+                        const tr = document.createElement('tr');
+                        tr.className = "hover:bg-slate-50 transition-colors";
+                        tr.innerHTML = `<td class="py-2.5 px-4 font-bold text-slate-900">${item.nopol}</td><td class="py-2.5 px-4 font-semibold text-purple-600">${item.tglBoc}</td><td class="py-2.5 px-4 text-slate-600 font-medium">${item.tglService}</td><td class="py-2.5 px-4"><span class="px-2 py-0.5 rounded text-[10px] font-bold border ${badgeColor}">${item.status}</span></td><td class="py-2.5 px-4 font-medium text-slate-700">${item.mra}</td><td class="py-2.5 px-4 text-slate-500">${item.sumber}</td>`;
+                        tbody.appendChild(tr);
+                    });
+                }
+                document.getElementById('bookingModalRecordCount').textContent = `Total: ${listBoc.length} Record`;
+                document.getElementById('bookingModal').classList.remove('hidden');
                 return;
             }
+
             let list = filteredBookingData.filter(d => d.status !== 'BELUM DIKONFIRMASI');
             if (type === 'TOTAL DATANG') list = list.filter(d => d.status === 'DATANG');
-            openBookingModalCustom(type, `Rincian kendaraan`, list);
+            else if (type === 'TIDAK DATANG') list = list.filter(d => d.status === 'TIDAK DATANG');
+            else if (type === 'BELUM DATANG') list = list.filter(d => d.status === 'BELUM DATANG');
+
+            openBookingModalCustom(`Detail KPI: ${type}`, `Menampilkan daftar rincian kendaraan (${type})`, list);
         }
 
         function openBookingModalCustom(title, subtitle, list) {
             document.getElementById('bookingModalTitle').textContent = title;
             document.getElementById('bookingModalSubtitle').textContent = subtitle;
+            const thead = document.getElementById('bookingModalTableHeader');
             const tbody = document.getElementById('bookingModalTableBody');
-            document.getElementById('bookingModalTableHeader').innerHTML = `<tr><th class="py-3 px-4 text-left">Nopol</th><th class="py-3 px-4 text-left">Tgl Service</th><th class="py-3 px-4 text-left">Status</th><th class="py-3 px-4 text-left">MRA</th></tr>`;
-            tbody.innerHTML = list.map(item => `<tr><td class="py-2.5 px-4 font-bold">${item.nopol}</td><td class="py-2.5 px-4">${item.tglService}</td><td class="py-2.5 px-4">${item.status}</td><td class="py-2.5 px-4">${item.mra}</td></tr>`).join('');
+            thead.innerHTML = `<tr><th class="py-3 px-4 text-left">Nomor Polisi</th><th class="py-3 px-4 text-left">Tanggal Service</th><th class="py-3 px-4 text-left">Status Kedatangan</th><th class="py-3 px-4 text-left">MRA</th><th class="py-3 px-4 text-left">Sumber Data</th></tr>`;
+            tbody.innerHTML = '';
+            if (!list || list.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="py-6 text-center text-slate-400">Tidak ada data unit ditemukan.</td></tr>`;
+            } else {
+                list.forEach(item => {
+                    let badgeColor = 'bg-amber-50 text-amber-600 border-amber-200';
+                    if (item.status === 'DATANG') badgeColor = 'bg-emerald-50 text-emerald-600 border-emerald-200';
+                    else if (item.status === 'TIDAK DATANG') badgeColor = 'bg-rose-50 text-rose-600 border-rose-200';
+                    const tr = document.createElement('tr');
+                    tr.className = "hover:bg-slate-50 transition-colors";
+                    tr.innerHTML = `<td class="py-2.5 px-4 font-bold text-slate-900">${item.nopol}</td><td class="py-2.5 px-4 text-slate-600 font-medium">${item.tglService}</td><td class="py-2.5 px-4"><span class="px-2 py-0.5 rounded text-[10px] font-bold border ${badgeColor}">${item.status}</span></td><td class="py-2.5 px-4 font-medium text-slate-700">${item.mra}</td><td class="py-2.5 px-4 text-slate-500">${item.sumber}</td>`;
+                    tbody.appendChild(tr);
+                });
+            }
             document.getElementById('bookingModalRecordCount').textContent = `Total: ${list.length} Record`;
             document.getElementById('bookingModal').classList.remove('hidden');
         }
 
         function closeBookingModal() { document.getElementById('bookingModal').classList.add('hidden'); }
 
-        // ================= ORIGINAL SOP LOGIC =================
+
+        // ================= SPECIAL ORDER PART (SOP) LOGIC =================
         function groupSopByCodeMatrix(masterRows, detailRows) {
             const detailMap = {};
-            if (detailRows) {
-                detailRows.forEach(r => {
-                    if (!r || !r[0]) return;
+            
+            if (detailRows && detailRows.length > 0) {
+                for (let i = 0; i < detailRows.length; i++) {
+                    const r = detailRows[i];
+                    if (!r || !r[0]) continue;
+                    
+                    // Gunakan sanitasi .trim().toUpperCase() agar stabil mengatasi spasi / huruf beda
                     const code = String(r[0]).trim().toUpperCase();
+                    if (!code || code === 'CODE') continue;
+                    
                     if (!detailMap[code]) detailMap[code] = [];
-                    detailMap[code].push({ 'No Part': r[1], 'Qty': r[2], 'Nama Part': r[3] });
-                });
+                    detailMap[code].push({
+                        'No Part': String(r[1] || '').trim(),
+                        'Qty': String(r[2] || '1').trim(),
+                        'Nama Part': String(r[3] || '').trim()
+                    });
+                }
             }
+
             const map = {};
-            masterRows.slice(1).forEach(r => {
-                if (!r || !r[0]) return;
-                const c = String(r[0]).trim();
-                map[c.toUpperCase()] = { Code: c, 'Nama SA': r[1], 'No Kendaraan': r[2], 'Tanggal Order': r[3], 'Tipe Order': r[4], 'ETA B/O': r[5], 'Aktual Kedatangan': r[6], 'Tanggal Pasang': r[7], 'Status Part': r[8], items: detailMap[c.toUpperCase()] || [{ 'No Part': '-', 'Qty': 1, 'Nama Part': '-' }] };
-            });
+            if (masterRows && masterRows.length > 1) {
+                for (let i = 1; i < masterRows.length; i++) {
+                    const r = masterRows[i];
+                    if (!r || !r[0]) continue;
+                    
+                    const originalCode = String(r[0]).trim();
+                    const lookupCode = originalCode.toUpperCase();
+                    if (!lookupCode) continue;
+
+                    let items = detailMap[lookupCode];
+                    if (!items || items.length === 0) {
+                        items = [{
+                            'No Part': '-',
+                            'Qty': '1',
+                            'Nama Part': '-'
+                        }];
+                    }
+
+                    if (!map[lookupCode]) {
+                        map[lookupCode] = {
+                            Code: originalCode,
+                            'Nama SA': String(r[1] || '').trim(),
+                            'No Kendaraan': String(r[2] || '').trim(),
+                            'Tanggal Order': String(r[3] || '').trim(),
+                            'Tipe Order': String(r[4] || '').trim(),
+                            'ETA B/O': String(r[5] || '').trim(),
+                            'Aktual Kedatangan': String(r[6] || '').trim(),
+                            'Tanggal Pasang': String(r[7] || '').trim(),
+                            'Status Part': String(r[8] || '').trim(),
+                            items: items
+                        };
+                    }
+                }
+            }
             return Object.values(map);
         }
 
         function populateSopSAFilter() {
+            const select = document.getElementById('sop-filter-sa');
+            if(!select) return;
+            const current = select.value;
             const saList = [...new Set(groupedSopData.map(i => i['Nama SA']).filter(Boolean))].sort();
-            document.getElementById('sop-filter-sa').innerHTML = '<option value="">Semua SA</option>' + saList.map(sa => `<option value="${sa}">${sa}</option>`).join('');
+            select.innerHTML = '<option value="">Semua SA</option>';
+            saList.forEach(sa => {
+                const opt = document.createElement('option');
+                opt.value = sa; opt.textContent = sa;
+                if(sa === current) opt.selected = true;
+                select.appendChild(opt);
+            });
+        }
+
+        function parseSopDateString(str) {
+            if (!str) return null;
+            let cleaned = String(str).trim().replace(/\s+/g, ' ');
+            const parts = cleaned.split(/[-/\s]+/);
+            if (parts.length >= 3) {
+                const day = parseInt(parts[0], 10);
+                const monthStr = parts[1].toLowerCase();
+                let year = parseInt(parts[2], 10);
+                if (year < 100) year += 2000;
+                const months = { jan: 0, feb: 1, mar: 2, apr: 3, mei: 4, may: 4, jun: 5, jul: 6, agu: 7, aug: 7, sep: 8, okt: 9, oct: 9, nov: 10, des: 11, dec: 11 };
+                if (months[monthStr] !== undefined && !isNaN(day) && !isNaN(year)) {
+                    return new Date(year, months[monthStr], day);
+                }
+            }
+            const d = new Date(cleaned);
+            return isNaN(d.getTime()) ? null : d;
         }
 
         function applySopFilters() {
-            const q = document.getElementById('sop-search').value.toLowerCase();
-            const sa = document.getElementById('sop-filter-sa').value;
-            const st = document.getElementById('sop-filter-status').value;
+            const search = document.getElementById('sop-search')?.value.toLowerCase() || '';
+            const sa = document.getElementById('sop-filter-sa')?.value || '';
+            const status = document.getElementById('sop-filter-status')?.value || '';
+            const start = document.getElementById('sop-filter-start')?.value || '';
+            const end = document.getElementById('sop-filter-end')?.value || '';
+
             filteredSopData = groupedSopData.filter(i => {
-                const matchQ = !q || String(i.Code).toLowerCase().includes(q) || String(i['No Kendaraan']).toLowerCase().includes(q);
-                const matchSA = !sa || i['Nama SA'] === sa;
-                const matchST = !st || i['Status Part'].toUpperCase().includes(st.toUpperCase());
-                return matchQ && matchSA && matchST;
+                const codeMatch = String(i['Code'] || '').toLowerCase().includes(search);
+                const vehicleMatch = String(i['No Kendaraan'] || '').toLowerCase().includes(search);
+                const partMatch = i.items.some(it => 
+                    String(it['No Part']).toLowerCase().includes(search) || 
+                    String(it['Nama Part']).toLowerCase().includes(search)
+                );
+                const matchesSearch = !search || codeMatch || vehicleMatch || partMatch;
+
+                const matchesSA = !sa || i['Nama SA'] === sa;
+                
+                let matchesStatus = true;
+                if (status) {
+                    const itemStatus = i['Status Part'].toUpperCase();
+                    const filterStatusUpper = status.toUpperCase();
+                    if (filterStatusUpper.includes('TUNGGU PASANG')) {
+                        matchesStatus = itemStatus.includes('TUNGGU') || itemStatus.includes('PASANG');
+                    } else {
+                        matchesStatus = itemStatus.includes(filterStatusUpper);
+                    }
+                }
+                
+                let matchesDate = true;
+                if (start || end) {
+                    const d = parseSopDateString(i['Tanggal Order']);
+                    if (d) {
+                        if (start && d < new Date(start)) matchesDate = false;
+                        if (end) { 
+                            const ed = new Date(end); 
+                            ed.setHours(23,59,59); 
+                            if (d > ed) matchesDate = false; 
+                        }
+                    } else {
+                        matchesDate = false;
+                    }
+                }
+                return matchesSearch && matchesSA && matchesStatus && matchesDate;
             });
-            renderSopTable(); renderSopKPIs(); renderSopCharts();
-            document.getElementById('sop-data-count').innerText = `${filteredSopData.length} Records`;
+
+            filteredSopData.sort((a,b) => (parseSopDateString(b['Tanggal Order']) || 0) - (parseSopDateString(a['Tanggal Order']) || 0));
+            updateSopUI();
         }
 
-        function renderSopTable() {
-            document.getElementById('sop-table-body').innerHTML = filteredSopData.map((i, idx) => `
-                <tr class="hover:bg-slate-50 cursor-pointer" onclick="showSopDetail(${idx})">
-                    <td class="px-4 py-4 font-mono font-bold">${i.Code}</td>
-                    <td class="px-4 py-4 font-bold">${i['Nama SA']}</td>
-                    <td class="px-4 py-4 font-bold text-indigo-600">${i['No Kendaraan']}</td>
-                    <td class="px-4 py-4 text-slate-500">${i['Tanggal Order']}</td>
-                    <td class="px-4 py-4"><span class="px-2 py-1 rounded-full border text-[10px] font-bold">${i['Status Part']}</span></td>
-                    <td class="px-4 py-4 text-center text-slate-400"><i data-lucide="eye" class="w-4 h-4 mx-auto"></i></td>
-                </tr>
-            `).join('');
-            lucide.createIcons();
+        function updateSopUI() {
+            renderSopKPIs(); 
+            renderSopTable(); 
+            renderSopCharts();
+            const countEl = document.getElementById('sop-data-count');
+            if(countEl) countEl.innerText = `${filteredSopData.length} Records (Grouped)`;
         }
 
         function renderSopKPIs() {
-            const getLen = (s) => filteredSopData.filter(i => i['Status Part'].toUpperCase().includes(s.toUpperCase())).length;
-            document.getElementById('sop-kpi-total').innerText = filteredSopData.length;
-            document.getElementById('sop-kpi-sedang').innerText = getLen('SEDANG ORDER');
-            document.getElementById('sop-kpi-bo').innerText = getLen('B/O');
-            document.getElementById('sop-kpi-pasang').innerText = getLen('TUNGGU') + getLen('PASANG');
-            document.getElementById('sop-kpi-konfirmasi').innerText = getLen('KONFIRMASI');
-            document.getElementById('sop-kpi-terpasang').innerText = getLen('TERPASANG');
+            const getLen = (st) => {
+                const upperSt = st.toUpperCase();
+                return filteredSopData.filter(i => {
+                    const itemStatus = i['Status Part'].toUpperCase();
+                    if (upperSt.includes('TUNGGU PASANG')) {
+                        return itemStatus.includes('TUNGGU') || itemStatus.includes('PASANG');
+                    }
+                    return itemStatus.includes(upperSt);
+                }).length;
+            };
+
+            const counts = { 
+                total: filteredSopData.length, 
+                sedang: getLen('SEDANG ORDER'),
+                bo: getLen('B/O'), 
+                pasang: getLen('TUNGGU PASANG'), 
+                konf: getLen('Konfirmasi Jadwal'), 
+                terpasang: getLen('Terpasang') 
+            };
+            
+            if(document.getElementById('sop-kpi-total')) document.getElementById('sop-kpi-total').innerText = counts.total;
+            if(document.getElementById('sop-kpi-sedang')) document.getElementById('sop-kpi-sedang').innerText = counts.sedang;
+            if(document.getElementById('sop-kpi-bo')) document.getElementById('sop-kpi-bo').innerText = counts.bo;
+            if(document.getElementById('sop-kpi-pasang')) document.getElementById('sop-kpi-pasang').innerText = counts.pasang;
+            if(document.getElementById('sop-kpi-konfirmasi')) document.getElementById('sop-kpi-konfirmasi').innerText = counts.konf;
+            if(document.getElementById('sop-kpi-terpasang')) document.getElementById('sop-kpi-terpasang').innerText = counts.terpasang;
+        }
+
+        function getSopStatusColor(st) {
+            if(!st) return 'bg-slate-100 text-slate-500 border-slate-200';
+            const statusUpper = st.toUpperCase();
+            if (statusUpper.includes('SEDANG ORDER')) return 'bg-purple-50 text-purple-600 border-purple-200';
+            if (statusUpper.includes('B/O')) return 'bg-red-50 text-red-600 border-red-200';
+            if (statusUpper.includes('KONFIRMASI JADWAL')) return 'bg-amber-50 text-amber-600 border-amber-200';
+            if (statusUpper.includes('TUNGGU') || statusUpper.includes('PASANG')) return 'bg-blue-50 text-blue-600 border-blue-200';
+            if (statusUpper.includes('TERPASANG')) return 'bg-emerald-50 text-emerald-600 border-emerald-200';
+            return 'bg-slate-100 text-slate-500 border-slate-200';
+        }
+
+        function renderSopTable() {
+            const tbody = document.getElementById('sop-table-body');
+            if(!tbody) return;
+            
+            tbody.innerHTML = filteredSopData.map((i, idx) => {
+                return `
+                    <tr class="hover:bg-slate-50 transition-colors cursor-pointer" onclick="showSopDetail(${idx})">
+                        <td class="px-4 py-4 font-mono text-slate-700 text-[11px] font-bold">${i['Code'] || '-'}</td>
+                        <td class="px-4 py-4 font-bold text-slate-800">${i['Nama SA'] || '-'}</td>
+                        <td class="px-4 py-4 font-bold text-indigo-600">${i['No Kendaraan'] || '-'}</td>
+                        <td class="px-4 py-4 text-slate-500 font-medium">${i['Tanggal Order'] || '-'}</td>
+                        <td class="px-4 py-4"><span class="px-2.5 py-1 rounded-full text-[10px] font-bold border ${getSopStatusColor(i['Status Part'])}">${i['Status Part'] || '-'}</span></td>
+                        <td class="px-4 py-4 text-center text-slate-400 hover:text-indigo-600"><i data-lucide="eye" class="w-4 h-4 mx-auto"></i></td>
+                    </tr>`;
+            }).join('');
+            lucide.createIcons();
         }
 
         function renderSopCharts() {
             Object.values(sopCharts).forEach(c => c.destroy());
+            
             const partMap = {};
-            filteredSopData.forEach(i => i.items.forEach(it => { if(it['No Part'] !== '-') partMap[it['No Part']] = (partMap[it['No Part']] || 0) + 1; }));
-            const top = Object.entries(partMap).sort((a,b)=>b[1]-a[1]).slice(0,10);
-            sopCharts.top = new Chart(document.getElementById('sopTopPartChart').getContext('2d'), {
-                type: 'bar',
-                data: { labels: top.map(x=>x[0]), datasets: [{ data: top.map(x=>x[1]), backgroundColor: '#6366f1', borderRadius: 6 }] },
-                options: { responsive: true, maintainAspectRatio: false }
+            filteredSopData.forEach(i => { 
+                i.items.forEach(it => {
+                    const p = (it['No Part'] || '').trim(); 
+                    const q = parseInt(it['Qty']) || 1;
+                    if(p && p !== '-') partMap[p] = (partMap[p] || 0) + q; 
+                });
             });
+            const top = Object.entries(partMap).sort((a,b)=>b[1]-a[1]).slice(0,10);
+
+            const ctxTop = document.getElementById('sopTopPartChart');
+            if(ctxTop) {
+                sopCharts.top = new Chart(ctxTop.getContext('2d'), {
+                    type: 'bar',
+                    data: { labels: top.map(x=>x[0]), datasets: [{ data: top.map(x=>x[1]), backgroundColor: '#6366f1', borderRadius: 6 }] },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+                });
+            }
+
+            let tiba = 0, boTot = 0, boTiba = 0, boPend = 0;
+            filteredSopData.forEach(i => {
+                const etaVal = String(i['ETA B/O'] || '').trim();
+                const actVal = String(i['Aktual Kedatangan'] || '').trim();
+                const statusVal = String(i['Status Part'] || '').toUpperCase();
+
+                const isTiba = actVal !== '' && actVal !== '-' || statusVal.includes('TERPASANG') || statusVal.includes('TUNGGU') || statusVal.includes('PASANG');
+                const isBo = etaVal !== '' && etaVal !== '-' || statusVal.includes('B/O');
+
+                if (isTiba) tiba++;
+                if (isBo) {
+                    boTot++;
+                    if (isTiba) {
+                        boTiba++;
+                    } else {
+                        boPend++;
+                    }
+                }
+            });
+            
+            if(document.getElementById('sop-stat-total')) document.getElementById('sop-stat-total').innerText = filteredSopData.length;
+            if(document.getElementById('sop-stat-suplai')) document.getElementById('sop-stat-suplai').innerText = tiba;
+            if(document.getElementById('sop-stat-total-bo')) document.getElementById('sop-stat-total-bo').innerText = boTot;
+            if(document.getElementById('sop-stat-bo-suplai')) document.getElementById('sop-stat-bo-suplai').innerText = boTiba;
+
+            const ctxRatio = document.getElementById('sopSupplyRatioChart');
+            if(ctxRatio) {
+                sopCharts.ratio = new Chart(ctxRatio.getContext('2d'), {
+                    type: 'doughnut',
+                    data: { labels: ['BO Tiba', 'BO Pending', 'Direct'], datasets: [{ data: [boTiba, boPend, Math.max(0, tiba-boTiba)], backgroundColor: ['#6366f1', '#ef4444', '#10b981'], borderWeight: 0 }] },
+                    options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 9 } } } } }
+                });
+            }
+
+            let ltTot=0, ltCnt=0, ltMax=0; const ltD=[], ltL=[];
+            filteredSopData.forEach(i => {
+                const o = parseSopDateString(i['Tanggal Order']), a = parseSopDateString(i['Aktual Kedatangan']);
+                if(o && a) {
+                    const diffTime = a - o;
+                    if (diffTime >= 0) {
+                        const d = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                        ltTot += d; ltCnt++; 
+                        if(d > ltMax) ltMax = d;
+                        ltD.push(d); ltL.push(i['Code'] || 'N/A');
+                    }
+                }
+            });
+            
+            if(document.getElementById('sop-avg-lt')) document.getElementById('sop-avg-lt').innerText = ltCnt ? (ltTot/ltCnt).toFixed(1)+'d' : '0d';
+            if(document.getElementById('sop-max-lt')) document.getElementById('sop-max-lt').innerText = ltMax+'d';
+            
+            const ctxLt = document.getElementById('sopLeadTimeChart');
+            if(ctxLt) {
+                sopCharts.lt = new Chart(ctxLt.getContext('2d'), {
+                    type: 'bar',
+                    data: { labels: ltL.slice(0,15), datasets: [{ data: ltD.slice(0,15), backgroundColor: '#ef4444', borderRadius: 4 }] },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+                });
+            }
         }
 
         function showSopDetail(idx) {
             const i = filteredSopData[idx];
+            const partsListHtml = i.items.map(it => `
+                <div class="bg-white p-2.5 rounded-xl border border-slate-200 mb-2 shadow-sm">
+                    <p class="text-slate-800 font-semibold text-xs mt-0.5 truncate-part" title="${it['No Part'] || '-'} - ${it['Nama Part'] || '-'}"><strong class="font-mono text-indigo-600">${it['No Part'] || '-'}</strong> - ${it['Nama Part'] || '-'}</p>
+                    <p class="text-[10px] text-slate-500 mt-1 font-bold">Qty: <span class="text-indigo-600">${it['Qty'] || '1'}</span></p>
+                </div>
+            `).join('');
+
             document.getElementById('sopModalContent').innerHTML = `
                 <div class="grid grid-cols-2 gap-4 text-xs">
-                    <div class="col-span-2 bg-slate-50 p-4 rounded-xl text-center font-mono font-bold text-indigo-600 text-lg">${i.Code}</div>
-                    <div class="bg-slate-50 p-3 rounded-xl"><b>SA:</b> ${i['Nama SA']}</div>
-                    <div class="bg-slate-50 p-3 rounded-xl"><b>Nopol:</b> ${i['No Kendaraan']}</div>
-                    <div class="col-span-2"><b>Items:</b><br>${i.items.map(it => `- ${it['No Part']} | ${it['Nama Part']} (Qty: ${it.Qty})`).join('<br>')}</div>
+                    <div class="col-span-2 bg-slate-50 p-4 rounded-2xl border border-slate-100 text-center">
+                        <p class="text-[9px] font-bold text-slate-400 uppercase mb-1">Code Order</p>
+                        <p class="font-mono text-indigo-600 font-bold text-sm">${i['Code'] || '-'}</p>
+                    </div>
+                    <div class="col-span-2 bg-slate-100/70 p-3 rounded-2xl max-h-52 overflow-y-auto">
+                        <p class="text-[9px] font-bold text-slate-400 uppercase mb-2">Daftar Suku Cadang (No Part - Nama Part - Qty)</p>
+                        <div class="space-y-1">${partsListHtml}</div>
+                    </div>
+                    <div class="bg-slate-50 p-3 rounded-2xl">
+                        <p class="text-[9px] font-bold text-slate-400 uppercase mb-1">Service Advisor</p>
+                        <p class="font-bold text-slate-800">${i['Nama SA'] || '-'}</p>
+                    </div>
+                    <div class="bg-slate-50 p-3 rounded-2xl">
+                        <p class="text-[9px] font-bold text-slate-400 uppercase mb-1">No Polisi</p>
+                        <p class="font-bold text-indigo-600 uppercase">${i['No Kendaraan'] || '-'}</p>
+                    </div>
+                    <div class="space-y-3">
+                        <div><p class="text-[9px] font-bold text-slate-400 uppercase">Tgl Order</p><p class="font-semibold text-slate-700">${i['Tanggal Order'] || '-'}</p></div>
+                        <div><p class="text-[9px] font-bold text-slate-400 uppercase">Tgl Pasang</p><p class="font-semibold text-slate-700">${i['Tanggal Pasang'] || '-'}</p></div>
+                    </div>
+                    <div class="space-y-3">
+                        <div><p class="text-[9px] font-bold text-slate-400 uppercase">ETA B/O</p><p class="font-bold text-red-500">${i['ETA B/O'] || '-'}</p></div>
+                        <div><p class="text-[9px] font-bold text-slate-400 uppercase">Status</p><span class="px-2 py-0.5 rounded text-[9px] font-bold border ${getSopStatusColor(i['Status Part'])}">${i['Status Part'] || '-'}</span></div>
+                    </div>
                 </div>`;
             document.getElementById('sopDetailModal').classList.remove('hidden');
         }
 
         function closeSopDetailModal() { document.getElementById('sopDetailModal').classList.add('hidden'); }
-        function openSopKPIModal(st) { document.getElementById('sop-filter-status').value = st; applySopFilters(); }
+
+        function openSopKPIModal(st, title) {
+            const upperSt = st.toUpperCase();
+            const list = st ? filteredSopData.filter(i => {
+                const itemStatus = i['Status Part'].toUpperCase();
+                if (upperSt.includes('TUNGGU PASANG')) {
+                    return itemStatus.includes('TUNGGU') || itemStatus.includes('PASANG');
+                }
+                return itemStatus.includes(upperSt);
+            }) : filteredSopData;
+
+            document.getElementById('sopKpiModalTitle').innerText = title;
+            document.getElementById('sopKpiModalTableBody').innerHTML = list.map(i => {
+                return `
+                    <tr class="hover:bg-slate-50 transition-colors">
+                        <td class="px-4 py-3 font-mono text-[10px] font-bold text-slate-700">${i['Code'] || '-'}</td>
+                        <td class="px-4 py-3 font-bold text-slate-700">${i['Nama SA'] || '-'}</td>
+                        <td class="px-4 py-3 font-bold text-indigo-600">${i['No Kendaraan'] || '-'}</td>
+                        <td class="px-4 py-3"><span class="px-2 py-0.5 rounded text-[9px] font-bold border ${getSopStatusColor(i['Status Part'])}">${i['Status Part'] || '-'}</span></td>
+                    </tr>`;
+            }).join('');
+            document.getElementById('sopKpiModal').classList.remove('hidden');
+        }
+
         function closeSopKPIModal() { document.getElementById('sopKpiModal').classList.add('hidden'); }
     </script>
-
-    <!-- NEW REVENUE INPUTS (HIDDEN IN OTHER VIEWS) -->
-    <div id="rev-inputs" class="hidden">
-        <input type="date" id="rev-s1" value="2025-06-01">
-        <input type="date" id="rev-e1" value="2025-06-30">
-        <input type="date" id="rev-s2" value="2026-06-01">
-        <input type="date" id="rev-e2" value="2026-06-30">
-    </div>
 </body>
 </html>
