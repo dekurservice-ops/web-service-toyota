@@ -555,7 +555,7 @@
             if (!row) return '';
             const rowKeys = Object.keys(row);
             for (let key of keys) {
-                const found = rowKeys.find(k => k.trim().toLowerCase().replace(/\s+/g, '') === key.toLowerCase().replace(/\s+/g, ''));
+                const found = rowKeys.find(k => k.trim().toLowerCase().replace(/[\s>]+/g, '') === key.toLowerCase().replace(/[\s>]+/g, ''));
                 if (found && row[found] !== undefined && row[found] !== null) {
                     return String(row[found]).trim();
                 }
@@ -591,6 +591,7 @@
                 const mraVal = getVal(row, ['Nama MRA', 'MRA', 'Nama Mra', 'Nama Sales MRA', 'Sales MRA']);
                 const mra = (mraVal !== '' && mraVal !== '-') ? mraVal : 'Unassigned';
                 
+                // Pembacaan kolom CAI agar selaras dengan formula sheet Kolom J
                 const caiVal = getVal(row, ['CAI', 'Status Kedatangan', 'Status', Object.keys(row)[9] || '']).toUpperCase();
 
                 let status = 'BELUM DIKONFIRMASI';
@@ -604,7 +605,6 @@
                     status = 'BELUM DIKONFIRMASI';
                 }
 
-                // Ambil existing Resched jika ada di row CSV
                 const r1Chk = getVal(row, ['Resched 1', 'Resched1']) === 'TRUE' || getVal(row, ['Resched 1', 'Resched1']) === 'true';
                 const r1Dt = getVal(row, ['Resched 1 Tgl', 'Tgl 1', 'Resched1Tgl']) || '';
                 const r2Chk = getVal(row, ['Resched 2', 'Resched2']) === 'TRUE' || getVal(row, ['Resched 2', 'Resched2']) === 'true';
