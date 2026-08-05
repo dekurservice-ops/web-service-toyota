@@ -389,7 +389,7 @@
 
     <!-- MODALS -->
     <div id="bookingModal" class="fixed inset-0 bg-slate-900/60 z-50 hidden flex items-center justify-center p-3 sm:p-4 backdrop-blur-sm">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col overflow-hidden">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-[95vw] max-h-[90vh] flex flex-col overflow-hidden">
             <div class="p-4 sm:p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50">
                 <div>
                     <h3 id="bookingModalTitle" class="font-bold text-slate-900 text-base">Detail Data Booking</h3>
@@ -585,7 +585,8 @@
                 const mraVal = getVal(row, ['Nama MRA', 'MRA', 'Nama Mra', 'Nama Sales MRA', 'Sales MRA']);
                 const mra = (mraVal !== '' && mraVal !== '-') ? mraVal : 'Unassigned';
                 
-                const caiVal = getVal(row, ['CAI', 'Status Kedatangan', 'Status']).toUpperCase();
+                // Sinkronisasi status otomatis berdasarkan kolom J / CAI / Status Kedatangan
+                const caiVal = getVal(row, ['CAI', 'Status Kedatangan', 'Status', Object.keys(row)[9] || '']).toUpperCase();
 
                 let status = 'BELUM DIKONFIRMASI';
                 if (caiVal.includes('BELUM')) {
@@ -608,10 +609,14 @@
                     status,
                     resched1Checked: false,
                     resched1Date: '',
+                    resched1Locked: false,
                     resched2Checked: false,
                     resched2Date: '',
+                    resched2Locked: false,
                     resched3Checked: false,
-                    resched3Date: ''
+                    resched3Date: '',
+                    resched3Locked: false,
+                    remarks: ''
                 };
             });
         }
@@ -931,10 +936,10 @@
                 document.getElementById('bookingModalSubtitle').textContent = 'Daftar transaksi berdasarkan Tanggal BOC & Rentang Filter';
                 const thead = document.getElementById('bookingModalTableHeader');
                 const tbody = document.getElementById('bookingModalTableBody');
-                thead.innerHTML = `<tr><th class="py-3 px-3 text-left">Nomor Polisi</th><th class="py-3 px-3 text-left">Tanggal BOC</th><th class="py-3 px-3 text-left">Tanggal Service</th><th class="py-3 px-3 text-left">Status</th><th class="py-3 px-3 text-center">Resched 1</th><th class="py-3 px-3 text-center">Resched 2</th><th class="py-3 px-3 text-center">Resched 3</th></tr>`;
+                thead.innerHTML = `<tr><th class="py-3 px-2 text-left">Nomor Polisi</th><th class="py-3 px-2 text-left">Tgl BOC</th><th class="py-3 px-2 text-left">Tgl Service</th><th class="py-3 px-2 text-left">Status</th><th class="py-3 px-2 text-center">Resched 1</th><th class="py-3 px-2 text-center">Resched 2</th><th class="py-3 px-2 text-center">Resched 3</th><th class="py-3 px-2 text-left">Remarks</th></tr>`;
                 tbody.innerHTML = '';
                 if (listBoc.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="7" class="py-6 text-center text-slate-400">Tidak ada data unit ditemukan.</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="8" class="py-6 text-center text-slate-400">Tidak ada data unit ditemukan.</td></tr>`;
                 } else {
                     listBoc.forEach(item => {
                         tbody.appendChild(createBookingRow(item));
@@ -958,10 +963,10 @@
             document.getElementById('bookingModalSubtitle').textContent = subtitle;
             const thead = document.getElementById('bookingModalTableHeader');
             const tbody = document.getElementById('bookingModalTableBody');
-            thead.innerHTML = `<tr><th class="py-3 px-3 text-left">Nomor Polisi</th><th class="py-3 px-3 text-left">Tanggal Service</th><th class="py-3 px-3 text-left">Status</th><th class="py-3 px-3 text-center">Resched 1</th><th class="py-3 px-3 text-center">Resched 2</th><th class="py-3 px-3 text-center">Resched 3</th></tr>`;
+            thead.innerHTML = `<tr><th class="py-3 px-2 text-left">Nomor Polisi</th><th class="py-3 px-2 text-left">Tgl Service</th><th class="py-3 px-2 text-left">Status</th><th class="py-3 px-2 text-center">Resched 1</th><th class="py-3 px-2 text-center">Resched 2</th><th class="py-3 px-2 text-center">Resched 3</th><th class="py-3 px-2 text-left">Remarks</th></tr>`;
             tbody.innerHTML = '';
             if (!list || list.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" class="py-6 text-center text-slate-400">Tidak ada data unit ditemukan.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="7" class="py-6 text-center text-slate-400">Tidak ada data unit ditemukan.</td></tr>`;
             } else {
                 list.forEach(item => {
                     tbody.appendChild(createBookingRow(item));
@@ -984,12 +989,12 @@
             // Kolom Resched 1
             let r1Html = `<span class="text-slate-300 text-[10px] italic">-</span>`;
             if (isTidakDatang || item.resched1Checked || item.resched1Date) {
-                const chkDisabled = item.resched1Checked ? 'disabled' : '';
-                const dateDisabled = item.resched1Date ? 'disabled' : '';
+                const chkDisabled = item.resched1Locked ? 'disabled' : '';
+                const dateDisabled = item.resched1Locked ? 'disabled' : '';
                 r1Html = `
                     <div class="flex items-center justify-center gap-1.5">
                         <input type="checkbox" ${item.resched1Checked ? 'checked' : ''} ${chkDisabled} onchange="handleReschedCheck(${item.id}, 1, this.checked)" class="w-3.5 h-3.5 accent-red-600 cursor-pointer">
-                        <input type="date" value="${item.resched1Date}" ${dateDisabled} onchange="handleReschedDate(${item.id}, 1, this.value)" ${!item.resched1Checked ? 'disabled' : ''} class="bg-slate-50 border border-slate-200 rounded px-1.5 py-0.5 text-[11px] ${dateDisabled ? 'opacity-70 cursor-not-allowed' : ''}">
+                        <input type="date" value="${item.resched1Date}" ${dateDisabled} onchange="handleReschedDate(${item.id}, 1, this.value)" ${!item.resched1Checked ? 'disabled' : ''} class="bg-slate-50 border border-slate-200 rounded px-1.5 py-0.5 text-[11px] ${dateDisabled ? 'opacity-70 cursor-not-allowed bg-slate-100' : ''}">
                     </div>
                 `;
             }
@@ -998,12 +1003,12 @@
             let r2Html = `<span class="text-slate-300 text-[10px] italic">-</span>`;
             const r1Done = item.resched1Checked && item.resched1Date;
             if (r1Done && (isTidakDatang || item.resched2Checked || item.resched2Date)) {
-                const chkDisabled = item.resched2Checked ? 'disabled' : '';
-                const dateDisabled = item.resched2Date ? 'disabled' : '';
+                const chkDisabled = item.resched2Locked ? 'disabled' : '';
+                const dateDisabled = item.resched2Locked ? 'disabled' : '';
                 r2Html = `
                     <div class="flex items-center justify-center gap-1.5">
                         <input type="checkbox" ${item.resched2Checked ? 'checked' : ''} ${chkDisabled} onchange="handleReschedCheck(${item.id}, 2, this.checked)" class="w-3.5 h-3.5 accent-red-600 cursor-pointer">
-                        <input type="date" value="${item.resched2Date}" ${dateDisabled} onchange="handleReschedDate(${item.id}, 2, this.value)" ${!item.resched2Checked ? 'disabled' : ''} class="bg-slate-50 border border-slate-200 rounded px-1.5 py-0.5 text-[11px] ${dateDisabled ? 'opacity-70 cursor-not-allowed' : ''}">
+                        <input type="date" value="${item.resched2Date}" ${dateDisabled} onchange="handleReschedDate(${item.id}, 2, this.value)" ${!item.resched2Checked ? 'disabled' : ''} class="bg-slate-50 border border-slate-200 rounded px-1.5 py-0.5 text-[11px] ${dateDisabled ? 'opacity-70 cursor-not-allowed bg-slate-100' : ''}">
                     </div>
                 `;
             }
@@ -1012,24 +1017,46 @@
             let r3Html = `<span class="text-slate-300 text-[10px] italic">-</span>`;
             const r2Done = item.resched2Checked && item.resched2Date;
             if (r2Done && (isTidakDatang || item.resched3Checked || item.resched3Date)) {
-                const chkDisabled = item.resched3Checked ? 'disabled' : '';
-                const dateDisabled = item.resched3Date ? 'disabled' : '';
+                const chkDisabled = item.resched3Locked ? 'disabled' : '';
+                const dateDisabled = item.resched3Locked ? 'disabled' : '';
                 r3Html = `
                     <div class="flex items-center justify-center gap-1.5">
                         <input type="checkbox" ${item.resched3Checked ? 'checked' : ''} ${chkDisabled} onchange="handleReschedCheck(${item.id}, 3, this.checked)" class="w-3.5 h-3.5 accent-red-600 cursor-pointer">
-                        <input type="date" value="${item.resched3Date}" ${dateDisabled} onchange="handleReschedDate(${item.id}, 3, this.value)" ${!item.resched3Checked ? 'disabled' : ''} class="bg-slate-50 border border-slate-200 rounded px-1.5 py-0.5 text-[11px] ${dateDisabled ? 'opacity-70 cursor-not-allowed' : ''}">
+                        <input type="date" value="${item.resched3Date}" ${dateDisabled} onchange="handleReschedDate(${item.id}, 3, this.value)" ${!item.resched3Checked ? 'disabled' : ''} class="bg-slate-50 border border-slate-200 rounded px-1.5 py-0.5 text-[11px] ${dateDisabled ? 'opacity-70 cursor-not-allowed bg-slate-100' : ''}">
                     </div>
                 `;
             }
 
-            tr.innerHTML = `
-                <td class="py-2.5 px-3 font-bold text-slate-900">${item.nopol}</td>
-                <td class="py-2.5 px-3 text-slate-600 font-medium">${item.tglService}</td>
-                <td class="py-2.5 px-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold border ${badgeColor}">${item.status}</span></td>
-                <td class="py-2.5 px-3 text-center">${r1Html}</td>
-                <td class="py-2.5 px-3 text-center">${r2Html}</td>
-                <td class="py-2.5 px-3 text-center">${r3Html}</td>
-            `;
+            // Kolom Remarks (Terbuka ketika Resched 1 tercentang dan tanggal terisi)
+            let remarksHtml = `<span class="text-slate-300 text-[10px] italic">-</span>`;
+            if (r1Done) {
+                remarksHtml = `<input type="text" value="${item.remarks || ''}" oninput="handleRemarksInput(${item.id}, this.value)" placeholder="Ketik remarks..." class="bg-slate-50 border border-slate-200 rounded px-2 py-1 text-[11px] w-full focus:outline-none focus:ring-1 focus:ring-red-500 font-medium">`;
+            }
+
+            const isBocModal = document.getElementById('bookingModalTitle').textContent.includes('BOOKING ON CALL');
+
+            if (isBocModal) {
+                tr.innerHTML = `
+                    <td class="py-2.5 px-2 font-bold text-slate-900">${item.nopol}</td>
+                    <td class="py-2.5 px-2 font-semibold text-purple-600">${item.tglBoc}</td>
+                    <td class="py-2.5 px-2 text-slate-600 font-medium">${item.tglService}</td>
+                    <td class="py-2.5 px-2"><span class="px-2 py-0.5 rounded text-[10px] font-bold border ${badgeColor}">${item.status}</span></td>
+                    <td class="py-2.5 px-2 text-center">${r1Html}</td>
+                    <td class="py-2.5 px-2 text-center">${r2Html}</td>
+                    <td class="py-2.5 px-2 text-center">${r3Html}</td>
+                    <td class="py-2.5 px-2">${remarksHtml}</td>
+                `;
+            } else {
+                tr.innerHTML = `
+                    <td class="py-2.5 px-2 font-bold text-slate-900">${item.nopol}</td>
+                    <td class="py-2.5 px-2 text-slate-600 font-medium">${item.tglService}</td>
+                    <td class="py-2.5 px-2"><span class="px-2 py-0.5 rounded text-[10px] font-bold border ${badgeColor}">${item.status}</span></td>
+                    <td class="py-2.5 px-2 text-center">${r1Html}</td>
+                    <td class="py-2.5 px-2 text-center">${r2Html}</td>
+                    <td class="py-2.5 px-2 text-center">${r3Html}</td>
+                    <td class="py-2.5 px-2">${remarksHtml}</td>
+                `;
+            }
             return tr;
         }
 
@@ -1048,32 +1075,41 @@
             const item = rawBookingData.find(d => d.id === id);
             if (!item) return;
 
-            if (level === 1) item.resched1Date = dateVal;
-            if (level === 2) item.resched2Date = dateVal;
-            if (level === 3) item.resched3Date = dateVal;
+            if (level === 1) {
+                item.resched1Date = dateVal;
+                if (item.resched1Checked && dateVal) item.resched1Locked = true; // Otomatis tersimpan dan terkunci
+            }
+            if (level === 2) {
+                item.resched2Date = dateVal;
+                if (item.resched2Checked && dateVal) item.resched2Locked = true;
+            }
+            if (level === 3) {
+                item.resched3Date = dateVal;
+                if (item.resched3Checked && dateVal) item.resched3Locked = true;
+            }
 
             refreshModalTableContent();
         }
 
+        function handleRemarksInput(id, val) {
+            const item = rawBookingData.find(d => d.id === id);
+            if (item) item.remarks = val;
+        }
+
         function refreshModalTableContent() {
-            // Memperbarui tampilan isi tabel di modal aktif secara dinamis tanpa menutup modal
             const title = document.getElementById('bookingModalTitle').textContent;
-            // Deteksi jenis modal berdasarkan judul
             if (title.includes('BOOKING ON CALL')) {
                 openBookingModal('BOOKING ON CALL');
             } else if (title.includes('Detail MRA:')) {
-                // Ekstraksi nama MRA & Status dari judul modal
                 const match = title.match(/Detail MRA: (.*?) \((.*?)\)/);
                 if (match) openMraModal(match[1], match[2]);
             } else {
-                // Untuk KPI cards umum
                 const typeMap = {
                     'Detail KPI: TOTAL DATANG': 'TOTAL DATANG',
                     'Detail KPI: TIDAK DATANG': 'TIDAK DATANG',
                     'Detail KPI: BELUM DATANG': 'BELUM DATANG',
                     'Detail KPI: SHOW RATE': 'SHOW RATE'
                 };
-                // Cari key jenis KPI
                 for (let key in typeMap) {
                     if (title.includes(typeMap[key])) {
                         openBookingModal(typeMap[key]);
