@@ -941,13 +941,14 @@
                 document.getElementById('bookingModalSubtitle').textContent = 'Daftar transaksi berdasarkan Tanggal BOC & Rentang Filter';
                 const thead = document.getElementById('bookingModalTableHeader');
                 const tbody = document.getElementById('bookingModalTableBody');
-                thead.innerHTML = `<tr><th class="py-3 px-2 text-left">Nomor Polisi</th><th class="py-3 px-2 text-left">Tgl BOC</th><th class="py-3 px-2 text-left">Tgl Service</th><th class="py-3 px-2 text-left">Status</th><th class="py-3 px-2 text-center">Resched 1</th><th class="py-3 px-2 text-center">Resched 2</th><th class="py-3 px-2 text-center">Resched 3</th><th class="py-3 px-2 text-left">Remarks</th></tr>`;
+                // Kolom MRA dimunculkan kembali
+                thead.innerHTML = `<tr><th class="py-3 px-2 text-left">Nomor Polisi</th><th class="py-3 px-2 text-left">Nama MRA</th><th class="py-3 px-2 text-left">Tgl BOC</th><th class="py-3 px-2 text-left">Tgl Service</th><th class="py-3 px-2 text-left">Status</th><th class="py-3 px-2 text-center">Resched 1</th><th class="py-3 px-2 text-center">Resched 2</th><th class="py-3 px-2 text-center">Resched 3</th><th class="py-3 px-2 text-left">Remarks</th></tr>`;
                 tbody.innerHTML = '';
                 if (listBoc.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="8" class="py-6 text-center text-slate-400">Tidak ada data unit ditemukan.</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="9" class="py-6 text-center text-slate-400">Tidak ada data unit ditemukan.</td></tr>`;
                 } else {
                     listBoc.forEach(item => {
-                        tbody.appendChild(createBookingRow(item));
+                        tbody.appendChild(createBookingRow(item, true));
                     });
                 }
                 document.getElementById('bookingModalRecordCount').textContent = `Total: ${listBoc.length} Record`;
@@ -968,20 +969,21 @@
             document.getElementById('bookingModalSubtitle').textContent = subtitle;
             const thead = document.getElementById('bookingModalTableHeader');
             const tbody = document.getElementById('bookingModalTableBody');
-            thead.innerHTML = `<tr><th class="py-3 px-2 text-left">Nomor Polisi</th><th class="py-3 px-2 text-left">Tgl Service</th><th class="py-3 px-2 text-left">Status</th><th class="py-3 px-2 text-center">Resched 1</th><th class="py-3 px-2 text-center">Resched 2</th><th class="py-3 px-2 text-center">Resched 3</th><th class="py-3 px-2 text-left">Remarks</th></tr>`;
+            // Kolom MRA dimunculkan kembali
+            thead.innerHTML = `<tr><th class="py-3 px-2 text-left">Nomor Polisi</th><th class="py-3 px-2 text-left">Nama MRA</th><th class="py-3 px-2 text-left">Tgl Service</th><th class="py-3 px-2 text-left">Status</th><th class="py-3 px-2 text-center">Resched 1</th><th class="py-3 px-2 text-center">Resched 2</th><th class="py-3 px-2 text-center">Resched 3</th><th class="py-3 px-2 text-left">Remarks</th></tr>`;
             tbody.innerHTML = '';
             if (!list || list.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="7" class="py-6 text-center text-slate-400">Tidak ada data unit ditemukan.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="8" class="py-6 text-center text-slate-400">Tidak ada data unit ditemukan.</td></tr>`;
             } else {
                 list.forEach(item => {
-                    tbody.appendChild(createBookingRow(item));
+                    tbody.appendChild(createBookingRow(item, false));
                 });
             }
             document.getElementById('bookingModalRecordCount').textContent = `Total: ${list.length} Record`;
             document.getElementById('bookingModal').classList.remove('hidden');
         }
 
-        function createBookingRow(item) {
+        function createBookingRow(item, isBocModal) {
             let badgeColor = 'bg-amber-50 text-amber-600 border-amber-200';
             if (item.status === 'DATANG') badgeColor = 'bg-emerald-50 text-emerald-600 border-emerald-200';
             else if (item.status === 'TIDAK DATANG') badgeColor = 'bg-rose-50 text-rose-600 border-rose-200';
@@ -1034,11 +1036,10 @@
                 remarksHtml = `<input type="text" value="${item.remarks || ''}" oninput="handleRemarksInput(${item.id}, this.value)" placeholder="Ketik remarks..." class="bg-slate-50 border border-slate-200 rounded px-2 py-1 text-[11px] w-full focus:outline-none focus:ring-1 focus:ring-red-500 font-medium">`;
             }
 
-            const isBocModal = document.getElementById('bookingModalTitle').textContent.includes('BOOKING ON CALL');
-
             if (isBocModal) {
                 tr.innerHTML = `
                     <td class="py-2.5 px-2 font-bold text-slate-900">${item.nopol}</td>
+                    <td class="py-2.5 px-2 font-bold text-slate-700">${item.mra}</td>
                     <td class="py-2.5 px-2 font-semibold text-purple-600">${item.tglBoc}</td>
                     <td class="py-2.5 px-2 text-slate-600 font-medium">${item.tglService}</td>
                     <td class="py-2.5 px-2"><span class="px-2 py-0.5 rounded text-[10px] font-bold border ${badgeColor}">${item.status}</span></td>
@@ -1050,6 +1051,7 @@
             } else {
                 tr.innerHTML = `
                     <td class="py-2.5 px-2 font-bold text-slate-900">${item.nopol}</td>
+                    <td class="py-2.5 px-2 font-bold text-slate-700">${item.mra}</td>
                     <td class="py-2.5 px-2 text-slate-600 font-medium">${item.tglService}</td>
                     <td class="py-2.5 px-2"><span class="px-2 py-0.5 rounded text-[10px] font-bold border ${badgeColor}">${item.status}</span></td>
                     <td class="py-2.5 px-2 text-center">${r1Html}</td>
@@ -1097,7 +1099,7 @@
             if (item) item.remarks = val;
         }
 
-        // Fungsi Simpan Perubahan ke Google Sheets (Terhubung ke Web App Anda)
+        // Fungsi Simpan Perubahan ke Google Sheets (Menggunakan text/plain agar tembus CORS)
         function saveChangesToSheet() {
             const btn = document.getElementById('saveChangesBtn');
             const indicator = document.getElementById('saveStatusIndicator');
@@ -1106,13 +1108,12 @@
             btn.innerHTML = `<i data-lucide="loader" class="w-4 h-4 animate-spin"></i> Menyimpan...`;
             
             const modifiedData = rawBookingData.filter(d => d.resched1Checked || d.resched2Checked || d.resched3Checked || d.remarks);
-
             const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwq8MjRiGxjuq3s14OlcN89n0zn1ZefhhD3tTK2z8fS7TO4kjYo6yhKBzLSo3UPkqy72w/exec'; 
 
             fetch(WEB_APP_URL, {
                 method: 'POST',
                 mode: 'no-cors',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                 body: JSON.stringify(modifiedData)
             })
             .then(() => {
