@@ -604,6 +604,15 @@
                     status = 'BELUM DIKONFIRMASI';
                 }
 
+                // Ambil existing Resched jika ada di row CSV
+                const r1Chk = getVal(row, ['Resched 1', 'Resched1']) === 'TRUE' || getVal(row, ['Resched 1', 'Resched1']) === 'true';
+                const r1Dt = getVal(row, ['Resched 1 Tgl', 'Tgl 1', 'Resched1Tgl']) || '';
+                const r2Chk = getVal(row, ['Resched 2', 'Resched2']) === 'TRUE' || getVal(row, ['Resched 2', 'Resched2']) === 'true';
+                const r2Dt = getVal(row, ['Resched 2 Tgl', 'Tgl 2', 'Resched2Tgl']) || '';
+                const r3Chk = getVal(row, ['Resched 3', 'Resched3']) === 'TRUE' || getVal(row, ['Resched 3', 'Resched3']) === 'true';
+                const r3Dt = getVal(row, ['Resched 3 Tgl', 'Tgl 3', 'Resched3Tgl']) || '';
+                const rem = getVal(row, ['Remarks', 'Keterangan', 'Note']) || '';
+
                 return { 
                     id: index, 
                     nopol, 
@@ -612,16 +621,16 @@
                     tglBoc, 
                     mra, 
                     status,
-                    resched1Checked: false,
-                    resched1Date: '',
-                    resched1Locked: false,
-                    resched2Checked: false,
-                    resched2Date: '',
-                    resched2Locked: false,
-                    resched3Checked: false,
-                    resched3Date: '',
-                    resched3Locked: false,
-                    remarks: ''
+                    resched1Checked: r1Chk,
+                    resched1Date: r1Dt,
+                    resched1Locked: r1Chk && r1Dt ? true : false,
+                    resched2Checked: r2Chk,
+                    resched2Date: r2Dt,
+                    resched2Locked: r2Chk && r2Dt ? true : false,
+                    resched3Checked: r3Chk,
+                    resched3Date: r3Dt,
+                    resched3Locked: r3Chk && r3Dt ? true : false,
+                    remarks: rem
                 };
             });
         }
@@ -941,10 +950,10 @@
                 document.getElementById('bookingModalSubtitle').textContent = 'Daftar transaksi berdasarkan Tanggal BOC & Rentang Filter';
                 const thead = document.getElementById('bookingModalTableHeader');
                 const tbody = document.getElementById('bookingModalTableBody');
-                thead.innerHTML = `<tr><th class="py-3 px-2 text-left">Nomor Polisi</th><th class="py-3 px-2 text-left">Nama MRA</th><th class="py-3 px-2 text-left">Tgl BOC</th><th class="py-3 px-2 text-left">Tgl Service</th><th class="py-3 px-2 text-left">Status</th><th class="py-3 px-2 text-center">Resched 1</th><th class="py-3 px-2 text-center">Resched 2</th><th class="py-3 px-2 text-center">Resched 3</th><th class="py-3 px-2 text-left">Remarks</th></tr>`;
+                thead.innerHTML = `<tr><th class="py-3 px-2 text-left">Nomor Polisi</th><th class="py-3 px-2 text-left">Nama MRA</th><th class="py-3 px-2 text-left">Sumber Data</th><th class="py-3 px-2 text-left">Tgl BOC</th><th class="py-3 px-2 text-left">Tgl Service</th><th class="py-3 px-2 text-left">Status</th><th class="py-3 px-2 text-center">Resched 1</th><th class="py-3 px-2 text-center">Resched 2</th><th class="py-3 px-2 text-center">Resched 3</th><th class="py-3 px-2 text-left">Remarks</th></tr>`;
                 tbody.innerHTML = '';
                 if (listBoc.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="9" class="py-6 text-center text-slate-400">Tidak ada data unit ditemukan.</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="10" class="py-6 text-center text-slate-400">Tidak ada data unit ditemukan.</td></tr>`;
                 } else {
                     listBoc.forEach(item => {
                         tbody.appendChild(createBookingRow(item, true));
@@ -968,10 +977,10 @@
             document.getElementById('bookingModalSubtitle').textContent = subtitle;
             const thead = document.getElementById('bookingModalTableHeader');
             const tbody = document.getElementById('bookingModalTableBody');
-            thead.innerHTML = `<tr><th class="py-3 px-2 text-left">Nomor Polisi</th><th class="py-3 px-2 text-left">Nama MRA</th><th class="py-3 px-2 text-left">Tgl Service</th><th class="py-3 px-2 text-left">Status</th><th class="py-3 px-2 text-center">Resched 1</th><th class="py-3 px-2 text-center">Resched 2</th><th class="py-3 px-2 text-center">Resched 3</th><th class="py-3 px-2 text-left">Remarks</th></tr>`;
+            thead.innerHTML = `<tr><th class="py-3 px-2 text-left">Nomor Polisi</th><th class="py-3 px-2 text-left">Nama MRA</th><th class="py-3 px-2 text-left">Sumber Data</th><th class="py-3 px-2 text-left">Tgl Service</th><th class="py-3 px-2 text-left">Status</th><th class="py-3 px-2 text-center">Resched 1</th><th class="py-3 px-2 text-center">Resched 2</th><th class="py-3 px-2 text-center">Resched 3</th><th class="py-3 px-2 text-left">Remarks</th></tr>`;
             tbody.innerHTML = '';
             if (!list || list.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="8" class="py-6 text-center text-slate-400">Tidak ada data unit ditemukan.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="9" class="py-6 text-center text-slate-400">Tidak ada data unit ditemukan.</td></tr>`;
             } else {
                 list.forEach(item => {
                     tbody.appendChild(createBookingRow(item, false));
@@ -1030,7 +1039,7 @@
             }
 
             let remarksHtml = `<span class="text-slate-300 text-[10px] italic">-</span>`;
-            if (r1Done) {
+            if (r1Done || item.remarks) {
                 remarksHtml = `<input type="text" value="${item.remarks || ''}" oninput="handleRemarksInput(${item.id}, this.value)" placeholder="Ketik remarks..." class="bg-slate-50 border border-slate-200 rounded px-2 py-1 text-[11px] w-full focus:outline-none focus:ring-1 focus:ring-red-500 font-medium">`;
             }
 
@@ -1038,6 +1047,7 @@
                 tr.innerHTML = `
                     <td class="py-2.5 px-2 font-bold text-slate-900">${item.nopol}</td>
                     <td class="py-2.5 px-2 font-bold text-slate-700">${item.mra}</td>
+                    <td class="py-2.5 px-2 text-slate-600">${item.sumber}</td>
                     <td class="py-2.5 px-2 font-semibold text-purple-600">${item.tglBoc}</td>
                     <td class="py-2.5 px-2 text-slate-600 font-medium">${item.tglService}</td>
                     <td class="py-2.5 px-2"><span class="px-2 py-0.5 rounded text-[10px] font-bold border ${badgeColor}">${item.status}</span></td>
@@ -1050,6 +1060,7 @@
                 tr.innerHTML = `
                     <td class="py-2.5 px-2 font-bold text-slate-900">${item.nopol}</td>
                     <td class="py-2.5 px-2 font-bold text-slate-700">${item.mra}</td>
+                    <td class="py-2.5 px-2 text-slate-600">${item.sumber}</td>
                     <td class="py-2.5 px-2 text-slate-600 font-medium">${item.tglService}</td>
                     <td class="py-2.5 px-2"><span class="px-2 py-0.5 rounded text-[10px] font-bold border ${badgeColor}">${item.status}</span></td>
                     <td class="py-2.5 px-2 text-center">${r1Html}</td>
@@ -1097,7 +1108,6 @@
             if (item) item.remarks = val;
         }
 
-        // Fungsi Simpan Perubahan ke Google Sheets (Menggunakan URL Web App terbaru Anda)
         function saveChangesToSheet() {
             const btn = document.getElementById('saveChangesBtn');
             const indicator = document.getElementById('saveStatusIndicator');
@@ -1130,7 +1140,7 @@
                 console.error('Gagal menyimpan:', error);
                 btn.disabled = false;
                 btn.innerHTML = `<i data-lucide="save" class="w-4 h-4"></i> Simpan Perubahan`;
-                alert('Terjadi kesalahan saat menyimpan ke Google Sheet.');
+                alert('Terjadi kesalahan saat mengirim data ke Google Sheet.');
             });
         }
 
