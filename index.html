@@ -342,7 +342,7 @@
                 </div>
 
                 <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 lg:col-span-3 flex flex-col">
-                    <div class="flex flex-col lg:grid-cols-3 justify-between items-start lg:items-center gap-4 mb-4">
+                    <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-4">
                         <div>
                             <h3 class="text-sm font-bold flex items-center gap-2 text-slate-800 uppercase">
                                 <i data-lucide="timer" class="w-4 h-4 text-indigo-600"></i> Lead Time Suplai (> 3 Hari)
@@ -604,14 +604,13 @@
                     status = 'BELUM DIKONFIRMASI';
                 }
 
-                // Ambil data dari kolom L s/d R jika sudah ada di sheet (jika terbaca oleh csv)
-                const r1Chk = getVal(row, ['Resched 1', 'Resched1']) === 'TRUE' || getVal(row, ['Resched 1', 'Resched1']) === 'true';
-                const r1Dt = getVal(row, ['Tanggal Resched 1', 'Tgl Resched 1', 'Resched1Date']) || '';
-                const r2Chk = getVal(row, ['Resched 2', 'Resched2']) === 'TRUE' || getVal(row, ['Resched 2', 'Resched2']) === 'true';
-                const r2Dt = getVal(row, ['Tanggal Resched 2', 'Tgl Resched 2', 'Resched2Date']) || '';
-                const r3Chk = getVal(row, ['Resched 3', 'Resched3']) === 'TRUE' || getVal(row, ['Resched 3', 'Resched3']) === 'true';
-                const r3Dt = getVal(row, ['Tanggal Resched 3', 'Tgl Resched 3', 'Resched3Date']) || '';
-                const rem = getVal(row, ['Remarks', 'Keterangan']) || '';
+                const r1Chk = getVal(row, ['Resched 1', 'Resched1', Object.keys(row)[11] || '']) === 'TRUE' || getVal(row, ['Resched 1', 'Resched1']) === 'true';
+                const r1Dt = getVal(row, ['Tanggal Resched 1', 'Tgl Resched 1', 'Resched1Date', Object.keys(row)[12] || '']) || '';
+                const r2Chk = getVal(row, ['Resched 2', 'Resched2', Object.keys(row)[13] || '']) === 'TRUE' || getVal(row, ['Resched 2', 'Resched2']) === 'true';
+                const r2Dt = getVal(row, ['Tanggal Resched 2', 'Tgl Resched 2', 'Resched2Date', Object.keys(row)[14] || '']) || '';
+                const r3Chk = getVal(row, ['Resched 3', 'Resched3', Object.keys(row)[15] || '']) === 'TRUE' || getVal(row, ['Resched 3', 'Resched3']) === 'true';
+                const r3Dt = getVal(row, ['Tanggal Resched 3', 'Tgl Resched 3', 'Resched3Date', Object.keys(row)[16] || '']) || '';
+                const rem = getVal(row, ['Remarks', 'Keterangan', Object.keys(row)[17] || '']) || '';
 
                 return { 
                     id: index, 
@@ -1004,62 +1003,49 @@
             // --- RESCHEDULE 1 ---
             let r1Html = `<span class="text-slate-300 text-[10px] italic">-</span>`;
             if (isTidakDatang || isBelumDatang || item.resched1Checked || item.resched1Date) {
-                // Jika Belum Datang, tampilkan statis (disable) tapi nilainya tetap muncul jika ada
-                if (isBelumDatang && !item.resched1Checked && !item.resched1Date) {
-                    r1Html = `<span class="text-slate-300 text-[10px] italic">-</span>`;
-                } else {
-                    const isDisabled = isBelumDatang || item.resched1Locked ? 'disabled' : '';
-                    const opacityClass = isBelumDatang ? 'opacity-70 bg-slate-100' : '';
-                    r1Html = `
-                        <div class="flex items-center justify-center gap-1.5">
-                            <input type="checkbox" ${item.resched1Checked ? 'checked' : ''} ${isDisabled} onchange="handleReschedCheck(${item.id}, 1, this.checked)" class="w-3.5 h-3.5 accent-red-600 cursor-pointer">
-                            <input type="date" value="${item.resched1Date}" ${isDisabled} onchange="handleReschedDate(${item.id}, 1, this.value)" class="bg-slate-50 border border-slate-200 rounded px-1.5 py-0.5 text-[11px] ${opacityClass}">
-                        </div>
-                    `;
-                }
+                const isDisabled = isBelumDatang || item.resched1Locked ? 'disabled' : '';
+                const opacityClass = isBelumDatang ? 'opacity-80 bg-slate-100 cursor-not-allowed' : '';
+                r1Html = `
+                    <div class="flex items-center justify-center gap-1.5">
+                        <input type="checkbox" ${item.resched1Checked ? 'checked' : ''} ${isDisabled} onchange="handleReschedCheck(${item.id}, 1, this.checked)" class="w-3.5 h-3.5 accent-red-600 ${isBelumDatang ? 'cursor-not-allowed' : 'cursor-pointer'}">
+                        <input type="date" value="${item.resched1Date}" ${isDisabled} onchange="handleReschedDate(${item.id}, 1, this.value)" class="bg-slate-50 border border-slate-200 rounded px-1.5 py-0.5 text-[11px] ${opacityClass}">
+                    </div>
+                `;
             }
 
             // --- RESCHEDULE 2 ---
             let r2Html = `<span class="text-slate-300 text-[10px] italic">-</span>`;
             const r1Done = item.resched1Checked && item.resched1Date;
             if (r1Done || item.resched2Checked || item.resched2Date) {
-                if (isBelumDatang && !item.resched2Checked && !item.resched2Date) {
-                    r2Html = `<span class="text-slate-300 text-[10px] italic">-</span>`;
-                } else {
-                    const isDisabled = isBelumDatang || item.resched2Locked ? 'disabled' : '';
-                    const opacityClass = isBelumDatang ? 'opacity-70 bg-slate-100' : '';
-                    r2Html = `
-                        <div class="flex items-center justify-center gap-1.5">
-                            <input type="checkbox" ${item.resched2Checked ? 'checked' : ''} ${isDisabled} onchange="handleReschedCheck(${item.id}, 2, this.checked)" class="w-3.5 h-3.5 accent-red-600 cursor-pointer">
-                            <input type="date" value="${item.resched2Date}" ${isDisabled} onchange="handleReschedDate(${item.id}, 2, this.value)" class="bg-slate-50 border border-slate-200 rounded px-1.5 py-0.5 text-[11px] ${opacityClass}">
-                        </div>
-                    `;
-                }
+                const isDisabled = isBelumDatang || item.resched2Locked ? 'disabled' : '';
+                const opacityClass = isBelumDatang ? 'opacity-80 bg-slate-100 cursor-not-allowed' : '';
+                r2Html = `
+                    <div class="flex items-center justify-center gap-1.5">
+                        <input type="checkbox" ${item.resched2Checked ? 'checked' : ''} ${isDisabled} onchange="handleReschedCheck(${item.id}, 2, this.checked)" class="w-3.5 h-3.5 accent-red-600 ${isBelumDatang ? 'cursor-not-allowed' : 'cursor-pointer'}">
+                        <input type="date" value="${item.resched2Date}" ${isDisabled} onchange="handleReschedDate(${item.id}, 2, this.value)" class="bg-slate-50 border border-slate-200 rounded px-1.5 py-0.5 text-[11px] ${opacityClass}">
+                    </div>
+                `;
             }
 
             // --- RESCHEDULE 3 ---
             let r3Html = `<span class="text-slate-300 text-[10px] italic">-</span>`;
             const r2Done = item.resched2Checked && item.resched2Date;
             if (r2Done || item.resched3Checked || item.resched3Date) {
-                if (isBelumDatang && !item.resched3Checked && !item.resched3Date) {
-                    r3Html = `<span class="text-slate-300 text-[10px] italic">-</span>`;
-                } else {
-                    const isDisabled = isBelumDatang || item.resched3Locked ? 'disabled' : '';
-                    const opacityClass = isBelumDatang ? 'opacity-70 bg-slate-100' : '';
-                    r3Html = `
-                        <div class="flex items-center justify-center gap-1.5">
-                            <input type="checkbox" ${item.resched3Checked ? 'checked' : ''} ${isDisabled} onchange="handleReschedCheck(${item.id}, 3, this.checked)" class="w-3.5 h-3.5 accent-red-600 cursor-pointer">
-                            <input type="date" value="${item.resched3Date}" ${isDisabled} onchange="handleReschedDate(${item.id}, 3, this.value)" class="bg-slate-50 border border-slate-200 rounded px-1.5 py-0.5 text-[11px] ${opacityClass}">
-                        </div>
-                    `;
-                }
+                const isDisabled = isBelumDatang || item.resched3Locked ? 'disabled' : '';
+                const opacityClass = isBelumDatang ? 'opacity-80 bg-slate-100 cursor-not-allowed' : '';
+                r3Html = `
+                    <div class="flex items-center justify-center gap-1.5">
+                        <input type="checkbox" ${item.resched3Checked ? 'checked' : ''} ${isDisabled} onchange="handleReschedCheck(${item.id}, 3, this.checked)" class="w-3.5 h-3.5 accent-red-600 ${isBelumDatang ? 'cursor-not-allowed' : 'cursor-pointer'}">
+                        <input type="date" value="${item.resched3Date}" ${isDisabled} onchange="handleReschedDate(${item.id}, 3, this.value)" class="bg-slate-50 border border-slate-200 rounded px-1.5 py-0.5 text-[11px] ${opacityClass}">
+                    </div>
+                `;
             }
 
             // --- REMARKS ---
             let remarksHtml = `<span class="text-slate-300 text-[10px] italic">-</span>`;
             if (r1Done || item.remarks) {
                 if (isBelumDatang) {
-                    remarksHtml = `<input type="text" value="${item.remarks || ''}" disabled class="bg-slate-100 border border-slate-200 rounded px-2 py-1 text-[11px] w-full opacity-70 font-medium">`;
+                    remarksHtml = `<input type="text" value="${item.remarks || ''}" disabled class="bg-slate-100 border border-slate-200 rounded px-2 py-1 text-[11px] w-full opacity-80 cursor-not-allowed font-medium">`;
                 } else {
                     remarksHtml = `<input type="text" value="${item.remarks || ''}" oninput="handleRemarksInput(${item.id}, this.value)" placeholder="Ketik remarks..." class="bg-slate-50 border border-slate-200 rounded px-2 py-1 text-[11px] w-full focus:outline-none focus:ring-1 focus:ring-red-500 font-medium">`;
                 }
