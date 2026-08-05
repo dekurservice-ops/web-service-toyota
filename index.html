@@ -997,12 +997,15 @@
             const isTidakDatang = (item.status === 'TIDAK DATANG');
             const isBelumDatang = (item.status === 'BELUM DATANG');
 
+            // Unit punya histori resched jika sudah ada data resched tersimpan sebelumnya
+            const hasReschedHistory = item.resched1Checked || item.resched1Date || item.resched2Checked || item.resched2Date || item.resched3Checked || item.resched3Date || item.remarks;
+
             const tr = document.createElement('tr');
             tr.className = "hover:bg-slate-50 transition-colors";
             
             // --- RESCHEDULE 1 ---
             let r1Html = `<span class="text-slate-300 text-[10px] italic">-</span>`;
-            if (isTidakDatang || isBelumDatang || item.resched1Checked || item.resched1Date) {
+            if (isTidakDatang || (isBelumDatang && hasReschedHistory) || item.resched1Checked || item.resched1Date) {
                 const isDisabled = isBelumDatang || item.resched1Locked ? 'disabled' : '';
                 const opacityClass = isBelumDatang ? 'opacity-80 bg-slate-100 cursor-not-allowed' : '';
                 r1Html = `
@@ -1016,7 +1019,7 @@
             // --- RESCHEDULE 2 ---
             let r2Html = `<span class="text-slate-300 text-[10px] italic">-</span>`;
             const r1Done = item.resched1Checked && item.resched1Date;
-            if (r1Done || item.resched2Checked || item.resched2Date) {
+            if (r1Done || (isBelumDatang && hasReschedHistory && (item.resched2Checked || item.resched2Date)) || item.resched2Checked || item.resched2Date) {
                 const isDisabled = isBelumDatang || item.resched2Locked ? 'disabled' : '';
                 const opacityClass = isBelumDatang ? 'opacity-80 bg-slate-100 cursor-not-allowed' : '';
                 r2Html = `
@@ -1030,7 +1033,7 @@
             // --- RESCHEDULE 3 ---
             let r3Html = `<span class="text-slate-300 text-[10px] italic">-</span>`;
             const r2Done = item.resched2Checked && item.resched2Date;
-            if (r2Done || item.resched3Checked || item.resched3Date) {
+            if (r2Done || (isBelumDatang && hasReschedHistory && (item.resched3Checked || item.resched3Date)) || item.resched3Checked || item.resched3Date) {
                 const isDisabled = isBelumDatang || item.resched3Locked ? 'disabled' : '';
                 const opacityClass = isBelumDatang ? 'opacity-80 bg-slate-100 cursor-not-allowed' : '';
                 r3Html = `
@@ -1043,7 +1046,7 @@
 
             // --- REMARKS ---
             let remarksHtml = `<span class="text-slate-300 text-[10px] italic">-</span>`;
-            if (r1Done || item.remarks) {
+            if (r1Done || (isBelumDatang && hasReschedHistory && item.remarks) || item.remarks) {
                 if (isBelumDatang) {
                     remarksHtml = `<input type="text" value="${item.remarks || ''}" disabled class="bg-slate-100 border border-slate-200 rounded px-2 py-1 text-[11px] w-full opacity-80 cursor-not-allowed font-medium">`;
                 } else {
