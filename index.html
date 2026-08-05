@@ -995,23 +995,18 @@
             else if (item.status === 'TIDAK DATANG') badgeColor = 'bg-rose-50 text-rose-600 border-rose-200';
 
             const isTidakDatang = (item.status === 'TIDAK DATANG');
-            const isBelumDatang = (item.status === 'BELUM DATANG');
-
-            // Unit punya histori resched jika sudah ada data resched tersimpan sebelumnya
-            const hasReschedHistory = item.resched1Checked || item.resched1Date || item.resched2Checked || item.resched2Date || item.resched3Checked || item.resched3Date || item.remarks;
-
             const tr = document.createElement('tr');
             tr.className = "hover:bg-slate-50 transition-colors";
             
             // --- RESCHEDULE 1 ---
             let r1Html = `<span class="text-slate-300 text-[10px] italic">-</span>`;
-            if (isTidakDatang || (isBelumDatang && hasReschedHistory) || item.resched1Checked || item.resched1Date) {
-                const isDisabled = isBelumDatang || item.resched1Locked ? 'disabled' : '';
-                const opacityClass = isBelumDatang ? 'opacity-80 bg-slate-100 cursor-not-allowed' : '';
+            if (isTidakDatang || item.resched1Checked || item.resched1Date) {
+                const isDisabled = !isTidakDatang ? 'disabled' : '';
+                const opacityClass = !isTidakDatang ? 'opacity-80 bg-slate-100 cursor-not-allowed' : 'cursor-pointer';
                 r1Html = `
                     <div class="flex items-center justify-center gap-1.5">
-                        <input type="checkbox" ${item.resched1Checked ? 'checked' : ''} ${isDisabled} onchange="handleReschedCheck(${item.id}, 1, this.checked)" class="w-3.5 h-3.5 accent-red-600 ${isBelumDatang ? 'cursor-not-allowed' : 'cursor-pointer'}">
-                        <input type="date" value="${item.resched1Date}" ${isDisabled} onchange="handleReschedDate(${item.id}, 1, this.value)" class="bg-slate-50 border border-slate-200 rounded px-1.5 py-0.5 text-[11px] ${opacityClass}">
+                        <input type="checkbox" ${item.resched1Checked ? 'checked' : ''} ${isDisabled} onchange="handleReschedCheck(${item.id}, 1, this.checked)" class="w-3.5 h-3.5 accent-red-600 ${opacityClass}">
+                        <input type="date" value="${item.resched1Date}" ${isDisabled} onchange="handleReschedDate(${item.id}, 1, this.value)" class="bg-slate-50 border border-slate-200 rounded px-1.5 py-0.5 text-[11px] ${!isTidakDatang ? 'opacity-80 bg-slate-100 cursor-not-allowed' : ''}">
                     </div>
                 `;
             }
@@ -1019,13 +1014,13 @@
             // --- RESCHEDULE 2 ---
             let r2Html = `<span class="text-slate-300 text-[10px] italic">-</span>`;
             const r1Done = item.resched1Checked && item.resched1Date;
-            if (r1Done || (isBelumDatang && hasReschedHistory && (item.resched2Checked || item.resched2Date)) || item.resched2Checked || item.resched2Date) {
-                const isDisabled = isBelumDatang || item.resched2Locked ? 'disabled' : '';
-                const opacityClass = isBelumDatang ? 'opacity-80 bg-slate-100 cursor-not-allowed' : '';
+            if (r1Done || item.resched2Checked || item.resched2Date) {
+                const isDisabled = !isTidakDatang ? 'disabled' : '';
+                const opacityClass = !isTidakDatang ? 'opacity-80 bg-slate-100 cursor-not-allowed' : 'cursor-pointer';
                 r2Html = `
                     <div class="flex items-center justify-center gap-1.5">
-                        <input type="checkbox" ${item.resched2Checked ? 'checked' : ''} ${isDisabled} onchange="handleReschedCheck(${item.id}, 2, this.checked)" class="w-3.5 h-3.5 accent-red-600 ${isBelumDatang ? 'cursor-not-allowed' : 'cursor-pointer'}">
-                        <input type="date" value="${item.resched2Date}" ${isDisabled} onchange="handleReschedDate(${item.id}, 2, this.value)" class="bg-slate-50 border border-slate-200 rounded px-1.5 py-0.5 text-[11px] ${opacityClass}">
+                        <input type="checkbox" ${item.resched2Checked ? 'checked' : ''} ${isDisabled} onchange="handleReschedCheck(${item.id}, 2, this.checked)" class="w-3.5 h-3.5 accent-red-600 ${opacityClass}">
+                        <input type="date" value="${item.resched2Date}" ${isDisabled} onchange="handleReschedDate(${item.id}, 2, this.value)" class="bg-slate-50 border border-slate-200 rounded px-1.5 py-0.5 text-[11px] ${!isTidakDatang ? 'opacity-80 bg-slate-100 cursor-not-allowed' : ''}">
                     </div>
                 `;
             }
@@ -1033,21 +1028,21 @@
             // --- RESCHEDULE 3 ---
             let r3Html = `<span class="text-slate-300 text-[10px] italic">-</span>`;
             const r2Done = item.resched2Checked && item.resched2Date;
-            if (r2Done || (isBelumDatang && hasReschedHistory && (item.resched3Checked || item.resched3Date)) || item.resched3Checked || item.resched3Date) {
-                const isDisabled = isBelumDatang || item.resched3Locked ? 'disabled' : '';
-                const opacityClass = isBelumDatang ? 'opacity-80 bg-slate-100 cursor-not-allowed' : '';
+            if (r2Done || item.resched3Checked || item.resched3Date) {
+                const isDisabled = !isTidakDatang ? 'disabled' : '';
+                const opacityClass = !isTidakDatang ? 'opacity-80 bg-slate-100 cursor-not-allowed' : 'cursor-pointer';
                 r3Html = `
                     <div class="flex items-center justify-center gap-1.5">
-                        <input type="checkbox" ${item.resched3Checked ? 'checked' : ''} ${isDisabled} onchange="handleReschedCheck(${item.id}, 3, this.checked)" class="w-3.5 h-3.5 accent-red-600 ${isBelumDatang ? 'cursor-not-allowed' : 'cursor-pointer'}">
-                        <input type="date" value="${item.resched3Date}" ${isDisabled} onchange="handleReschedDate(${item.id}, 3, this.value)" class="bg-slate-50 border border-slate-200 rounded px-1.5 py-0.5 text-[11px] ${opacityClass}">
+                        <input type="checkbox" ${item.resched3Checked ? 'checked' : ''} ${isDisabled} onchange="handleReschedCheck(${item.id}, 3, this.checked)" class="w-3.5 h-3.5 accent-red-600 ${opacityClass}">
+                        <input type="date" value="${item.resched3Date}" ${isDisabled} onchange="handleReschedDate(${item.id}, 3, this.value)" class="bg-slate-50 border border-slate-200 rounded px-1.5 py-0.5 text-[11px] ${!isTidakDatang ? 'opacity-80 bg-slate-100 cursor-not-allowed' : ''}">
                     </div>
                 `;
             }
 
             // --- REMARKS ---
             let remarksHtml = `<span class="text-slate-300 text-[10px] italic">-</span>`;
-            if (r1Done || (isBelumDatang && hasReschedHistory && item.remarks) || item.remarks) {
-                if (isBelumDatang) {
+            if (r1Done || item.remarks) {
+                if (!isTidakDatang) {
                     remarksHtml = `<input type="text" value="${item.remarks || ''}" disabled class="bg-slate-100 border border-slate-200 rounded px-2 py-1 text-[11px] w-full opacity-80 cursor-not-allowed font-medium">`;
                 } else {
                     remarksHtml = `<input type="text" value="${item.remarks || ''}" oninput="handleRemarksInput(${item.id}, this.value)" placeholder="Ketik remarks..." class="bg-slate-50 border border-slate-200 rounded px-2 py-1 text-[11px] w-full focus:outline-none focus:ring-1 focus:ring-red-500 font-medium">`;
@@ -1083,7 +1078,7 @@
 
         function handleReschedCheck(id, level, isChecked) {
             const item = rawBookingData.find(d => d.id === id);
-            if (!item || item.status === 'BELUM DATANG') return;
+            if (!item || item.status !== 'TIDAK DATANG') return;
 
             if (level === 1) item.resched1Checked = isChecked;
             if (level === 2) item.resched2Checked = isChecked;
@@ -1094,7 +1089,7 @@
 
         function handleReschedDate(id, level, dateVal) {
             const item = rawBookingData.find(d => d.id === id);
-            if (!item || item.status === 'BELUM DATANG') return;
+            if (!item || item.status !== 'TIDAK DATANG') return;
 
             if (level === 1) {
                 item.resched1Date = dateVal;
@@ -1114,7 +1109,7 @@
 
         function handleRemarksInput(id, val) {
             const item = rawBookingData.find(d => d.id === id);
-            if (item && item.status !== 'BELUM DATANG') item.remarks = val;
+            if (item && item.status === 'TIDAK DATANG') item.remarks = val;
         }
 
         // Fungsi Simpan Perubahan ke Google Sheets
