@@ -1097,7 +1097,7 @@
             if (item) item.remarks = val;
         }
 
-        // Fungsi Simpan Perubahan ke Google Sheets (Menggunakan URLSearchParams agar tembus Web App doPost)
+        // Fungsi Simpan Perubahan ke Google Sheets (Menggunakan URLSearchParams)
         function saveChangesToSheet() {
             const btn = document.getElementById('saveChangesBtn');
             const indicator = document.getElementById('saveStatusIndicator');
@@ -1108,13 +1108,13 @@
             const modifiedData = rawBookingData.filter(d => d.resched1Checked || d.resched2Checked || d.resched3Checked || d.remarks);
             const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwq8MjRiGxjuq3s14OlcN89n0zn1ZefhhD3tTK2z8fS7TO4kjYo6yhKBzLSo3UPkqy72w/exec'; 
 
-            const bodyData = new URLSearchParams();
-            bodyData.append('data', JSON.stringify(modifiedData));
+            const payload = new URLSearchParams();
+            payload.append('data', JSON.stringify(modifiedData));
 
             fetch(WEB_APP_URL, {
                 method: 'POST',
                 mode: 'no-cors',
-                body: bodyData
+                body: payload
             })
             .then(() => {
                 btn.disabled = false;
