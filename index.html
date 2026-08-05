@@ -983,7 +983,7 @@
                 });
             }
             document.getElementById('bookingModalRecordCount').textContent = `Total: ${list.length} Record`;
-            document.getElementById('bookingModal').classList.add('hidden');
+            document.getElementById('bookingModal').classList.remove('hidden');
         }
 
         function createBookingRow(item, isBocModal) {
@@ -995,53 +995,75 @@
             const tr = document.createElement('tr');
             tr.className = "hover:bg-slate-50 transition-colors";
 
-            // Kondisi Kunci Permanen jika checkbox DAN tanggal sudah terisi sebelumnya
-            const r1Locked = item.resched1Checked && item.resched1Date;
-            const r2Locked = item.resched2Checked && item.resched2Date;
-            const r3Locked = item.resched3Checked && item.resched3Date;
+            // Status kunci (sudah tercentang DAN terisi tanggal sebelumnya)
+            const r1Done = item.resched1Checked && item.resched1Date;
+            const r2Done = item.resched2Checked && item.resched2Date;
+            const r3Done = item.resched3Checked && item.resched3Date;
 
             // --- RESCHEDULE 1 ---
             let r1Html = `<span class="text-slate-300 text-[10px] italic">-</span>`;
-            if (isTidakDatang || item.resched1Checked || item.resched1Date) {
-                const disabledAttr = (!isTidakDatang || r1Locked) ? 'disabled' : '';
-                const styleClass = (!isTidakDatang || r1Locked) ? 'opacity-80 bg-slate-100 cursor-not-allowed' : 'cursor-pointer';
+            if (isTidakDatang) {
+                const isLocked = r1Done;
                 r1Html = `
                     <div class="flex items-center justify-center gap-1.5">
-                        <input type="checkbox" ${item.resched1Checked ? 'checked' : ''} ${disabledAttr} onchange="handleReschedCheck(${item.id}, 1, this.checked)" class="w-3.5 h-3.5 accent-red-600 ${styleClass}">
-                        <input type="date" value="${item.resched1Date}" ${disabledAttr} onchange="handleReschedDate(${item.id}, 1, this.value)" class="bg-slate-50 border border-slate-200 rounded px-1.5 py-0.5 text-[11px] ${styleClass}">
+                        <input type="checkbox" ${item.resched1Checked ? 'checked' : ''} ${isLocked ? 'disabled' : ''} onchange="handleReschedCheck(${item.id}, 1, this.checked)" class="w-3.5 h-3.5 accent-red-600 ${isLocked ? 'opacity-80 bg-slate-100 cursor-not-allowed' : 'cursor-pointer'}">
+                        <input type="date" value="${item.resched1Date}" ${isLocked ? 'disabled' : ''} onchange="handleReschedDate(${item.id}, 1, this.value)" class="bg-slate-50 border border-slate-200 rounded px-1.5 py-0.5 text-[11px] ${isLocked ? 'opacity-80 bg-slate-100 cursor-not-allowed' : 'cursor-pointer'}">
+                    </div>
+                `;
+            } else if (item.resched1Checked || item.resched1Date) {
+                r1Html = `
+                    <div class="flex items-center justify-center gap-1.5">
+                        <input type="checkbox" ${item.resched1Checked ? 'checked' : ''} disabled class="w-3.5 h-3.5 accent-red-600 opacity-80 bg-slate-100 cursor-not-allowed">
+                        <input type="date" value="${item.resched1Date}" disabled class="bg-slate-100 border border-slate-200 rounded px-1.5 py-0.5 text-[11px] opacity-80 cursor-not-allowed">
                     </div>
                 `;
             }
 
             // --- RESCHEDULE 2 ---
             let r2Html = `<span class="text-slate-300 text-[10px] italic">-</span>`;
-            if (r1Locked && (isTidakDatang || item.resched2Checked || item.resched2Date)) {
-                const disabledAttr = (!isTidakDatang || r2Locked) ? 'disabled' : '';
-                const styleClass = (!isTidakDatang || r2Locked) ? 'opacity-80 bg-slate-100 cursor-not-allowed' : 'cursor-pointer';
-                r2Html = `
-                    <div class="flex items-center justify-center gap-1.5">
-                        <input type="checkbox" ${item.resched2Checked ? 'checked' : ''} ${disabledAttr} onchange="handleReschedCheck(${item.id}, 2, this.checked)" class="w-3.5 h-3.5 accent-red-600 ${styleClass}">
-                        <input type="date" value="${item.resched2Date}" ${disabledAttr} onchange="handleReschedDate(${item.id}, 2, this.value)" class="bg-slate-50 border border-slate-200 rounded px-1.5 py-0.5 text-[11px] ${styleClass}">
-                    </div>
-                `;
+            if (r1Done) {
+                if (isTidakDatang) {
+                    const isLocked = r2Done;
+                    r2Html = `
+                        <div class="flex items-center justify-center gap-1.5">
+                            <input type="checkbox" ${item.resched2Checked ? 'checked' : ''} ${isLocked ? 'disabled' : ''} onchange="handleReschedCheck(${item.id}, 2, this.checked)" class="w-3.5 h-3.5 accent-red-600 ${isLocked ? 'opacity-80 bg-slate-100 cursor-not-allowed' : 'cursor-pointer'}">
+                            <input type="date" value="${item.resched2Date}" ${isLocked ? 'disabled' : ''} onchange="handleReschedDate(${item.id}, 2, this.value)" class="bg-slate-50 border border-slate-200 rounded px-1.5 py-0.5 text-[11px] ${isLocked ? 'opacity-80 bg-slate-100 cursor-not-allowed' : 'cursor-pointer'}">
+                        </div>
+                    `;
+                } else if (item.resched2Checked || item.resched2Date) {
+                    r2Html = `
+                        <div class="flex items-center justify-center gap-1.5">
+                            <input type="checkbox" ${item.resched2Checked ? 'checked' : ''} disabled class="w-3.5 h-3.5 accent-red-600 opacity-80 bg-slate-100 cursor-not-allowed">
+                            <input type="date" value="${item.resched2Date}" disabled class="bg-slate-100 border border-slate-200 rounded px-1.5 py-0.5 text-[11px] opacity-80 cursor-not-allowed">
+                        </div>
+                    `;
+                }
             }
 
             // --- RESCHEDULE 3 ---
             let r3Html = `<span class="text-slate-300 text-[10px] italic">-</span>`;
-            if (r2Locked && (isTidakDatang || item.resched3Checked || item.resched3Date)) {
-                const disabledAttr = (!isTidakDatang || r3Locked) ? 'disabled' : '';
-                const styleClass = (!isTidakDatang || r3Locked) ? 'opacity-80 bg-slate-100 cursor-not-allowed' : 'cursor-pointer';
-                r3Html = `
-                    <div class="flex items-center justify-center gap-1.5">
-                        <input type="checkbox" ${item.resched3Checked ? 'checked' : ''} ${disabledAttr} onchange="handleReschedCheck(${item.id}, 3, this.checked)" class="w-3.5 h-3.5 accent-red-600 ${styleClass}">
-                        <input type="date" value="${item.resched3Date}" ${disabledAttr} onchange="handleReschedDate(${item.id}, 3, this.value)" class="bg-slate-50 border border-slate-200 rounded px-1.5 py-0.5 text-[11px] ${styleClass}">
-                    </div>
-                `;
+            if (r2Done) {
+                if (isTidakDatang) {
+                    const isLocked = r3Done;
+                    r3Html = `
+                        <div class="flex items-center justify-center gap-1.5">
+                            <input type="checkbox" ${item.resched3Checked ? 'checked' : ''} ${isLocked ? 'disabled' : ''} onchange="handleReschedCheck(${item.id}, 3, this.checked)" class="w-3.5 h-3.5 accent-red-600 ${isLocked ? 'opacity-80 bg-slate-100 cursor-not-allowed' : 'cursor-pointer'}">
+                            <input type="date" value="${item.resched3Date}" ${isLocked ? 'disabled' : ''} onchange="handleReschedDate(${item.id}, 3, this.value)" class="bg-slate-50 border border-slate-200 rounded px-1.5 py-0.5 text-[11px] ${isLocked ? 'opacity-80 bg-slate-100 cursor-not-allowed' : 'cursor-pointer'}">
+                        </div>
+                    `;
+                } else if (item.resched3Checked || item.resched3Date) {
+                    r3Html = `
+                        <div class="flex items-center justify-center gap-1.5">
+                            <input type="checkbox" ${item.resched3Checked ? 'checked' : ''} disabled class="w-3.5 h-3.5 accent-red-600 opacity-80 bg-slate-100 cursor-not-allowed">
+                            <input type="date" value="${item.resched3Date}" disabled class="bg-slate-100 border border-slate-200 rounded px-1.5 py-0.5 text-[11px] opacity-80 cursor-not-allowed">
+                        </div>
+                    `;
+                }
             }
 
             // --- REMARKS ---
             let remarksHtml = `<span class="text-slate-300 text-[10px] italic">-</span>`;
-            const anyReschedActive = (r1Locked || r2Locked || r3Locked);
+            const anyReschedActive = (r1Done || r2Done || r3Done || item.resched1Checked || item.resched2Checked || item.resched3Checked || item.resched1Date || item.resched2Date || item.resched3Date);
             if (anyReschedActive || item.remarks) {
                 if (!isTidakDatang) {
                     remarksHtml = `<input type="text" value="${item.remarks || ''}" disabled class="bg-slate-100 border border-slate-200 rounded px-2 py-1 text-[11px] w-full opacity-80 cursor-not-allowed font-medium">`;
