@@ -588,11 +588,9 @@
                 const mraVal = getVal(row, ['Nama MRA', 'MRA', 'Nama Mra', 'Nama Sales MRA', 'Sales MRA']);
                 const mra = (mraVal !== '' && mraVal !== '-') ? mraVal : 'Unassigned';
                 
-                // Pembacaan Status secara presisi mengikuti nilai aktual Google Sheet
                 const rawStatus = getVal(row, ['CAI', 'Status Kedatangan', 'Status', Object.keys(row)[9] || '']);
                 const status = (rawStatus !== '' && rawStatus !== '-' && rawStatus !== 'KOSONG') ? rawStatus : 'BELUM DIKONFIRMASI';
 
-                // Parsing Resched 1, 2, 3
                 const r1ChkVal = getVal(row, ['Resched 1', 'Resched1']);
                 const r1Chk = r1ChkVal === 'TRUE' || r1ChkVal === 'true' || r1ChkVal === '1';
                 const r1Dt = getVal(row, ['Resched 1 Tgl', 'Tgl 1', 'Resched1Tgl']) || '';
@@ -606,6 +604,9 @@
                 const r3Dt = getVal(row, ['Resched 3 Tgl', 'Tgl 3', 'Resched3Tgl']) || '';
                 
                 const rem = getVal(row, ['Remarks', 'Keterangan', 'Note']) || '';
+
+                // Tandai locked jika sudah tersimpan sebelumnya atau sudah lengkap
+                const isLocked = (r1Chk && r1Dt !== '') || r1ChkVal === 'LOCKED';
 
                 return { 
                     id: index, 
@@ -621,7 +622,8 @@
                     resched2Date: r2Dt,
                     resched3Checked: r3Chk,
                     resched3Date: r3Dt,
-                    remarks: rem
+                    remarks: rem,
+                    isLocked: isLocked
                 };
             });
         }
@@ -671,7 +673,6 @@
 
             const totalBooking = filteredGeneral.filter(d => d.status !== 'BELUM DIKONFIRMASI').length;
             
-            // Perhitungan akurat sesuai label Google Sheets
             const totalDatang = filteredGeneral.filter(d => {
                 const st = d.status.toUpperCase();
                 return st === 'DATANG' || st === 'SBE' || st === 'GRP' || (st.includes('DATANG') && !st.includes('TIDAK') && !st.includes('BELUM'));
@@ -1049,54 +1050,75 @@
         function createBookingRow(item, isBocModal) {
             const stUpper = item.status.toUpperCase();
             let badgeColor = 'bg-amber-50 text-amber-600 border-amber-200';
+            const isTidakDatang = stUpper.includes('TIDAK') || stUpper.includes('CANCEL') || stUpper.includes('BATAL');
+
             if (stUpper === 'DATANG' || stUpper === 'SBE' || stUpper === 'GRP' || (stUpper.includes('DATANG') && !stUpper.includes('TIDAK') && !stUpper.includes('BELUM'))) {
                 badgeColor = 'bg-emerald-50 text-emerald-600 border-emerald-200';
-            } else if (stUpper.includes('TIDAK') || stUpper.includes('CANCEL')) {
+            } else if (isTidakDatang) {
                 badgeColor = 'bg-rose-50 text-rose-600 border-rose-200';
             }
 
             const tr = document.createElement('tr');
             tr.className = "hover:bg-slate-50 transition-colors";
             
-            // HANYA MUNCULKAN KONTROL RESCHED JIKA ADA DATANYA (Tercentang ATAU Ada Tanggal)
+            // ATURAN TAMPILAN BERJENJANG (Resched 1 -> 2 -> 3) BERDASARKAN STATUS TIDAK DATANG & KELENGKAPAN SEBELUMNYA
+            const showResched1 = isTidakDatang;
+            const showResched2 = showResched1 && item.resched1Checked && item.resched1Date !== '';
+            const showResched3 = showResched2 && item.resched2Checked && item.resched2Date !== '';
+
+            // GENERATE RESCHEDULING 1 HTML
             let r1Html = `<span class="text-slate-300 text-[10px] italic">-</span>`;
-            if (item.resched1Checked || (item.resched1Date && item.resched1Date !== '')) {
+            if (showResched1) {
+                const disabledAttr = item.isLocked ? 'disabled' : '';
                 r1Html = `
                     <div class="flex items-center justify-center gap-1.5">
-                        <input type="checkbox" ${item.resched1Checked ? 'checked' : ''} onchange="handleReschedCheck(${item.id}, 1, this.checked)" class="w-3.5 h-3.5 accent-red-600 cursor-pointer">
-                        <input type="date" value="${item.resched1Date}" onchange="handleReschedDate(${item.id}, 1, this.value)" class="bg-slate-50 border border-slate-200 rounded px-1.5 py-0.5 text-[11px]">
+                        <input type="checkbox" ${item.resched1Checked ? 'checked' : ''} ${disabledAttr} onchange="handleReschedCheck(${item.id}, 1, this.checked)" class="w-3.5 h-3.5 accent-red-600 cursor-pointer">
+                        ${item.resched1Checked ? `<input type="date" value="${item.resched1Date}" ${disabledAttr} onchange="handleReschedDate(${item.id}, 1, this.value)" class="bg-slate-50 border border-slate-200 rounded px-1.5 py-0.5 text-[11px]">` : ''}
                     </div>
                 `;
             }
 
+            // GENERATE RESCHEDULING 2 HTML
             let r2Html = `<span class="text-slate-300 text-[10px] italic">-</span>`;
-            if (item.resched2Checked || (item.resched2Date && item.resched2Date !== '')) {
+            if (showResched2) {
                 r2Html = `
                     <div class="flex items-center justify-center gap-1.5">
                         <input type="checkbox" ${item.resched2Checked ? 'checked' : ''} onchange="handleReschedCheck(${item.id}, 2, this.checked)" class="w-3.5 h-3.5 accent-red-600 cursor-pointer">
-                        <input type="date" value="${item.resched2Date}" onchange="handleReschedDate(${item.id}, 2, this.value)" class="bg-slate-50 border border-slate-200 rounded px-1.5 py-0.5 text-[11px]">
+                        ${item.resched2Checked ? `<input type="date" value="${item.resched2Date}" onchange="handleReschedDate(${item.id}, 2, this.value)" class="bg-slate-50 border border-slate-200 rounded px-1.5 py-0.5 text-[11px]">` : ''}
                     </div>
                 `;
             }
 
+            // GENERATE RESCHEDULING 3 HTML
             let r3Html = `<span class="text-slate-300 text-[10px] italic">-</span>`;
-            if (item.resched3Checked || (item.resched3Date && item.resched3Date !== '')) {
+            if (showResched3) {
                 r3Html = `
                     <div class="flex items-center justify-center gap-1.5">
                         <input type="checkbox" ${item.resched3Checked ? 'checked' : ''} onchange="handleReschedCheck(${item.id}, 3, this.checked)" class="w-3.5 h-3.5 accent-red-600 cursor-pointer">
-                        <input type="date" value="${item.resched3Date}" onchange="handleReschedDate(${item.id}, 3, this.value)" class="bg-slate-50 border border-slate-200 rounded px-1.5 py-0.5 text-[11px]">
+                        ${item.resched3Checked ? `<input type="date" value="${item.resched3Date}" onchange="handleReschedDate(${item.id}, 3, this.value)" class="bg-slate-50 border border-slate-200 rounded px-1.5 py-0.5 text-[11px]">` : ''}
                     </div>
                 `;
             }
 
-            // Remarks & Tombol Simpan Per Baris
-            let remarksHtml = `<input type="text" value="${item.remarks || ''}" oninput="handleRemarksInput(${item.id}, this.value)" placeholder="Ketik remarks..." class="bg-slate-50 border border-slate-200 rounded px-2 py-1 text-[11px] w-full focus:outline-none focus:ring-1 focus:ring-red-500 font-medium">`;
-            
-            let saveButtonHtml = `
-                <button onclick="saveSingleRowChanges(${item.id}, this)" class="px-2.5 py-1 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-colors inline-flex items-center gap-1 text-[10px] shadow-sm">
-                    <i data-lucide="save" class="w-3 h-3"></i> Simpan
-                </button>
-            `;
+            // TOMBOL SAVE & REMARKS HANYA MUNCUL JIKA RESCHEDULING AKTIF DAN TANGGALNYA TERISI
+            const hasActiveDate = (item.resched1Checked && item.resched1Date !== '') || 
+                                  (item.resched2Checked && item.resched2Date !== '') || 
+                                  (item.resched3Checked && item.resched3Date !== '');
+
+            let remarksHtml = `<span class="text-slate-300 text-[10px] italic">-</span>`;
+            let saveButtonHtml = `<span class="text-slate-300 text-[10px] italic">-</span>`;
+
+            if (hasActiveDate && !item.isLocked) {
+                remarksHtml = `<input type="text" value="${item.remarks || ''}" oninput="handleRemarksInput(${item.id}, this.value)" placeholder="Ketik remarks..." class="bg-slate-50 border border-slate-200 rounded px-2 py-1 text-[11px] w-full focus:outline-none focus:ring-1 focus:ring-red-500 font-medium">`;
+                saveButtonHtml = `
+                    <button onclick="saveSingleRowChanges(${item.id}, this)" class="px-2.5 py-1 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-colors inline-flex items-center gap-1 text-[10px] shadow-sm">
+                        <i data-lucide="save" class="w-3 h-3"></i> Simpan
+                    </button>
+                `;
+            } else if (item.isLocked) {
+                remarksHtml = `<span class="text-slate-700 text-[11px] font-medium">${item.remarks || '-'}</span>`;
+                saveButtonHtml = `<span class="text-emerald-600 font-bold text-[10px] inline-flex items-center gap-1"><i data-lucide="lock" class="w-3 h-3"></i> Terkunci</span>`;
+            }
 
             if (isBocModal) {
                 tr.innerHTML = `
@@ -1131,18 +1153,27 @@
 
         function handleReschedCheck(id, level, isChecked) {
             const item = rawBookingData.find(d => d.id === id);
-            if (!item) return;
+            if (!item || item.isLocked) return;
 
-            if (level === 1) item.resched1Checked = isChecked;
-            if (level === 2) item.resched2Checked = isChecked;
-            if (level === 3) item.resched3Checked = isChecked;
+            if (level === 1) {
+                item.resched1Checked = isChecked;
+                if (!isChecked) item.resched1Date = '';
+            }
+            if (level === 2) {
+                item.resched2Checked = isChecked;
+                if (!isChecked) item.resched2Date = '';
+            }
+            if (level === 3) {
+                item.resched3Checked = isChecked;
+                if (!isChecked) item.resched3Date = '';
+            }
 
             refreshModalTableContent();
         }
 
         function handleReschedDate(id, level, dateVal) {
             const item = rawBookingData.find(d => d.id === id);
-            if (!item) return;
+            if (!item || item.isLocked) return;
 
             if (level === 1) item.resched1Date = dateVal;
             if (level === 2) item.resched2Date = dateVal;
@@ -1153,7 +1184,7 @@
 
         function handleRemarksInput(id, val) {
             const item = rawBookingData.find(d => d.id === id);
-            if (item) item.remarks = val;
+            if (item && !item.isLocked) item.remarks = val;
         }
 
         function saveSingleRowChanges(id, btnElement) {
@@ -1176,6 +1207,9 @@
                 body: payload
             })
             .then(() => {
+                // Kunci data setelah berhasil disimpan
+                item.isLocked = true;
+
                 btnElement.disabled = false;
                 btnElement.innerHTML = `<i data-lucide="check" class="w-3 h-3"></i> Tersimpan`;
                 btnElement.classList.remove('bg-red-600', 'hover:bg-red-700');
@@ -1183,11 +1217,8 @@
                 lucide.createIcons();
                 
                 setTimeout(() => {
-                    btnElement.innerHTML = originalText;
-                    btnElement.classList.remove('bg-emerald-600');
-                    btnElement.classList.add('bg-red-600', 'hover:bg-red-700');
-                    lucide.createIcons();
-                }, 2500);
+                    refreshModalTableContent();
+                }, 1000);
             })
             .catch(error => {
                 console.error('Gagal menyimpan:', error);
