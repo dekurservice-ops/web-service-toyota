@@ -1097,7 +1097,7 @@
             if (item) item.remarks = val;
         }
 
-        // Fungsi Simpan Perubahan ke Google Sheets (Menggunakan URLSearchParams)
+        // Fungsi Simpan Perubahan ke Google Sheets (Menggunakan URL Web App terbaru Anda)
         function saveChangesToSheet() {
             const btn = document.getElementById('saveChangesBtn');
             const indicator = document.getElementById('saveStatusIndicator');
@@ -1106,7 +1106,7 @@
             btn.innerHTML = `<i data-lucide="loader" class="w-4 h-4 animate-spin"></i> Menyimpan...`;
             
             const modifiedData = rawBookingData.filter(d => d.resched1Checked || d.resched2Checked || d.resched3Checked || d.remarks);
-            const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwq8MjRiGxjuq3s14OlcN89n0zn1ZefhhD3tTK2z8fS7TO4kjYo6yhKBzLSo3UPkqy72w/exec'; 
+            const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxYLlud1e5N_tLR3EtsEEjrEuoIywYNnND90Pcyz81sWso1mKrZUX_E5OAIW_UaOlzKUQ/exec'; 
 
             const payload = new URLSearchParams();
             payload.append('data', JSON.stringify(modifiedData));
