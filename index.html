@@ -941,7 +941,6 @@
                 document.getElementById('bookingModalSubtitle').textContent = 'Daftar transaksi berdasarkan Tanggal BOC & Rentang Filter';
                 const thead = document.getElementById('bookingModalTableHeader');
                 const tbody = document.getElementById('bookingModalTableBody');
-                // Kolom MRA dimunculkan kembali
                 thead.innerHTML = `<tr><th class="py-3 px-2 text-left">Nomor Polisi</th><th class="py-3 px-2 text-left">Nama MRA</th><th class="py-3 px-2 text-left">Tgl BOC</th><th class="py-3 px-2 text-left">Tgl Service</th><th class="py-3 px-2 text-left">Status</th><th class="py-3 px-2 text-center">Resched 1</th><th class="py-3 px-2 text-center">Resched 2</th><th class="py-3 px-2 text-center">Resched 3</th><th class="py-3 px-2 text-left">Remarks</th></tr>`;
                 tbody.innerHTML = '';
                 if (listBoc.length === 0) {
@@ -969,7 +968,6 @@
             document.getElementById('bookingModalSubtitle').textContent = subtitle;
             const thead = document.getElementById('bookingModalTableHeader');
             const tbody = document.getElementById('bookingModalTableBody');
-            // Kolom MRA dimunculkan kembali
             thead.innerHTML = `<tr><th class="py-3 px-2 text-left">Nomor Polisi</th><th class="py-3 px-2 text-left">Nama MRA</th><th class="py-3 px-2 text-left">Tgl Service</th><th class="py-3 px-2 text-left">Status</th><th class="py-3 px-2 text-center">Resched 1</th><th class="py-3 px-2 text-center">Resched 2</th><th class="py-3 px-2 text-center">Resched 3</th><th class="py-3 px-2 text-left">Remarks</th></tr>`;
             tbody.innerHTML = '';
             if (!list || list.length === 0) {
@@ -1099,7 +1097,7 @@
             if (item) item.remarks = val;
         }
 
-        // Fungsi Simpan Perubahan ke Google Sheets (Menggunakan text/plain agar tembus CORS)
+        // Fungsi Simpan Perubahan ke Google Sheets
         function saveChangesToSheet() {
             const btn = document.getElementById('saveChangesBtn');
             const indicator = document.getElementById('saveStatusIndicator');
