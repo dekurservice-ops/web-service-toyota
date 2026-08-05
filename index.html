@@ -598,12 +598,19 @@
                     status = 'BELUM DIKONFIRMASI';
                 }
 
-                const r1Chk = getVal(row, ['Resched 1', 'Resched1']) === 'TRUE' || getVal(row, ['Resched 1', 'Resched1']) === 'true';
+                // Parsing Resched & Remarks secara akurat dari CSV row
+                const r1ChkVal = getVal(row, ['Resched 1', 'Resched1']);
+                const r1Chk = r1ChkVal === 'TRUE' || r1ChkVal === 'true' || r1ChkVal === '1';
                 const r1Dt = getVal(row, ['Resched 1 Tgl', 'Tgl 1', 'Resched1Tgl']) || '';
-                const r2Chk = getVal(row, ['Resched 2', 'Resched2']) === 'TRUE' || getVal(row, ['Resched 2', 'Resched2']) === 'true';
+
+                const r2ChkVal = getVal(row, ['Resched 2', 'Resched2']);
+                const r2Chk = r2ChkVal === 'TRUE' || r2ChkVal === 'true' || r2ChkVal === '1';
                 const r2Dt = getVal(row, ['Resched 2 Tgl', 'Tgl 2', 'Resched2Tgl']) || '';
-                const r3Chk = getVal(row, ['Resched 3', 'Resched3']) === 'TRUE' || getVal(row, ['Resched 3', 'Resched3']) === 'true';
+
+                const r3ChkVal = getVal(row, ['Resched 3', 'Resched3']);
+                const r3Chk = r3ChkVal === 'TRUE' || r3ChkVal === 'true' || r3ChkVal === '1';
                 const r3Dt = getVal(row, ['Resched 3 Tgl', 'Tgl 3', 'Resched3Tgl']) || '';
+                
                 const rem = getVal(row, ['Remarks', 'Keterangan', 'Note']) || '';
 
                 return { 
@@ -672,9 +679,22 @@
             filteredBookingData = filteredGeneral;
 
             const totalBooking = filteredGeneral.filter(d => d.status !== 'BELUM DIKONFIRMASI').length;
-            const totalDatang = filteredGeneral.filter(d => d.status.toUpperCase().includes('DATANG') && !d.status.toUpperCase().includes('TIDAK') && !d.status.toUpperCase().includes('BELUM')).length;
-            const tidakDatang = filteredGeneral.filter(d => d.status.toUpperCase().includes('TIDAK')).length;
-            const belumDatang = filteredGeneral.filter(d => d.status.toUpperCase().includes('BELUM')).length;
+            
+            // Perbaikan logika kalkulasi status untuk mencegah error lonjakan data
+            const totalDatang = filteredGeneral.filter(d => {
+                const st = d.status.toUpperCase();
+                return (st === 'DATANG' || st === 'SBE' || st === 'GRP' || (st.includes('DATANG') && !st.includes('TIDAK') && !st.includes('BELUM')));
+            }).length;
+
+            const tidakDatang = filteredGeneral.filter(d => {
+                const st = d.status.toUpperCase();
+                return (st === 'TIDAK DATANG' || st.includes('TIDAK') || st.includes('CANCEL') || st.includes('BATAL'));
+            }).length;
+
+            const belumDatang = filteredGeneral.filter(d => {
+                const st = d.status.toUpperCase();
+                return (st === 'BELUM DATANG' || st.includes('BELUM'));
+            }).length;
             
             const showRate = totalBooking > 0 ? ((totalDatang / totalBooking) * 100).toFixed(1) : 0;
             const pctDatang = totalBooking > 0 ? ((totalDatang / totalBooking) * 100).toFixed(1) : 0;
@@ -743,9 +763,13 @@
                     groupMap[groupKey] = { label: displayLabel, DATANG: 0, 'TIDAK DATANG': 0, 'BELUM DATANG': 0 };
                 }
                 const stUpper = item.status.toUpperCase();
-                if (stUpper.includes('DATANG') && !stUpper.includes('TIDAK') && !stUpper.includes('BELUM')) groupMap[groupKey].DATANG++;
-                else if (stUpper.includes('TIDAK')) groupMap[groupKey]['TIDAK DATANG']++;
-                else if (stUpper.includes('BELUM')) groupMap[groupKey]['BELUM DATANG']++;
+                if (stUpper === 'DATANG' || stUpper === 'SBE' || stUpper === 'GRP' || (stUpper.includes('DATANG') && !stUpper.includes('TIDAK') && !stUpper.includes('BELUM'))) {
+                    groupMap[groupKey].DATANG++;
+                } else if (stUpper.includes('TIDAK') || stUpper.includes('CANCEL')) {
+                    groupMap[groupKey]['TIDAK DATANG']++;
+                } else if (stUpper.includes('BELUM')) {
+                    groupMap[groupKey]['BELUM DATANG']++;
+                }
             });
 
             const sortedKeys = Object.keys(groupMap).sort();
@@ -828,7 +852,7 @@
                 if (mraName && mraName !== '-' && mraName !== 'Unassigned') {
                     bocTotalMap[mraName] = (bocTotalMap[mraName] || 0) + 1;
                     const stUpper = item.status.toUpperCase();
-                    if (stUpper.includes('DATANG') && !stUpper.includes('TIDAK') && !stUpper.includes('BELUM')) {
+                    if (stUpper === 'DATANG' || stUpper === 'SBE' || stUpper === 'GRP' || (stUpper.includes('DATANG') && !stUpper.includes('TIDAK') && !stUpper.includes('BELUM'))) {
                         bocDatangMap[mraName] = (bocDatangMap[mraName] || 0) + 1;
                     }
                 }
@@ -866,9 +890,13 @@
                 if (!mraStats[name]) mraStats[name] = { total: 0, datang: 0, tidak: 0, belum: 0 };
                 mraStats[name].total++;
                 const stUpper = item.status.toUpperCase();
-                if (stUpper.includes('DATANG') && !stUpper.includes('TIDAK') && !stUpper.includes('BELUM')) mraStats[name].datang++;
-                else if (stUpper.includes('TIDAK')) mraStats[name].tidak++;
-                else if (stUpper.includes('BELUM')) mraStats[name].belum++;
+                if (stUpper === 'DATANG' || stUpper === 'SBE' || stUpper === 'GRP' || (stUpper.includes('DATANG') && !stUpper.includes('TIDAK') && !stUpper.includes('BELUM'))) {
+                    mraStats[name].datang++;
+                } else if (stUpper.includes('TIDAK')) {
+                    mraStats[name].tidak++;
+                } else if (stUpper.includes('BELUM')) {
+                    mraStats[name].belum++;
+                }
             });
 
             const sortedMra = Object.keys(mraStats).map(name => {
@@ -914,10 +942,10 @@
                 if (statusType === 'DATANG') {
                     list = list.filter(d => {
                         const st = d.status.toUpperCase();
-                        return st.includes('DATANG') && !st.includes('TIDAK') && !st.includes('BELUM');
+                        return st === 'DATANG' || st === 'SBE' || st === 'GRP' || (st.includes('DATANG') && !st.includes('TIDAK') && !st.includes('BELUM'));
                     });
                 } else if (statusType === 'TIDAK DATANG') {
-                    list = list.filter(d => d.status.toUpperCase().includes('TIDAK'));
+                    list = list.filter(d => d.status.toUpperCase().includes('TIDAK') || d.status.toUpperCase().includes('CANCEL'));
                 } else if (statusType === 'BELUM DATANG') {
                     list = list.filter(d => d.status.toUpperCase().includes('BELUM'));
                 }
@@ -959,16 +987,16 @@
             if (type === 'TOTAL DATANG') {
                 list = list.filter(d => {
                     const st = d.status.toUpperCase();
-                    return st.includes('DATANG') && !st.includes('TIDAK') && !st.includes('BELUM');
+                    return st === 'DATANG' || st === 'SBE' || st === 'GRP' || (st.includes('DATANG') && !st.includes('TIDAK') && !st.includes('BELUM'));
                 });
             } else if (type === 'TIDAK DATANG') {
-                list = list.filter(d => d.status.toUpperCase().includes('TIDAK'));
+                list = list.filter(d => d.status.toUpperCase().includes('TIDAK') || d.status.toUpperCase().includes('CANCEL'));
             } else if (type === 'BELUM DATANG') {
                 list = list.filter(d => d.status.toUpperCase().includes('BELUM'));
             } else if (type === 'SHOW RATE') {
                 list = list.filter(d => {
                     const st = d.status.toUpperCase();
-                    return st.includes('DATANG') && !st.includes('TIDAK') && !st.includes('BELUM');
+                    return st === 'DATANG' || st === 'SBE' || st === 'GRP' || (st.includes('DATANG') && !st.includes('TIDAK') && !st.includes('BELUM'));
                 });
             }
 
@@ -1030,66 +1058,45 @@
         function createBookingRow(item, isBocModal) {
             const stUpper = item.status.toUpperCase();
             let badgeColor = 'bg-amber-50 text-amber-600 border-amber-200';
-            if (stUpper.includes('DATANG') && !stUpper.includes('TIDAK') && !stUpper.includes('BELUM')) badgeColor = 'bg-emerald-50 text-emerald-600 border-emerald-200';
-            else if (stUpper.includes('TIDAK')) badgeColor = 'bg-rose-50 text-rose-600 border-rose-200';
-
-            const isTidakDatang = stUpper.includes('TIDAK');
+            if (stUpper === 'DATANG' || stUpper === 'SBE' || stUpper === 'GRP' || (stUpper.includes('DATANG') && !stUpper.includes('TIDAK') && !stUpper.includes('BELUM'))) {
+                badgeColor = 'bg-emerald-50 text-emerald-600 border-emerald-200';
+            } else if (stUpper.includes('TIDAK') || stUpper.includes('CANCEL')) {
+                badgeColor = 'bg-rose-50 text-rose-600 border-rose-200';
+            }
 
             const tr = document.createElement('tr');
             tr.className = "hover:bg-slate-50 transition-colors";
             
-            // Selalu tampilkan kolom resched jika ada riwayat/checklist/tanggal, atau izinkan edit jika status tidak datang
-            let r1Html = `<span class="text-slate-300 text-[10px] italic">-</span>`;
-            if (isTidakDatang || item.resched1Checked || item.resched1Date) {
-                const chkDisabled = item.resched1Locked ? 'disabled' : '';
-                const dateDisabled = item.resched1Locked ? 'disabled' : '';
-                r1Html = `
-                    <div class="flex items-center justify-center gap-1.5">
-                        <input type="checkbox" ${item.resched1Checked ? 'checked' : ''} ${chkDisabled} onchange="handleReschedCheck(${item.id}, 1, this.checked)" class="w-3.5 h-3.5 accent-red-600 cursor-pointer">
-                        <input type="date" value="${item.resched1Date}" ${dateDisabled} onchange="handleReschedDate(${item.id}, 1, this.value)" ${!item.resched1Checked ? 'disabled' : ''} class="bg-slate-50 border border-slate-200 rounded px-1.5 py-0.5 text-[11px] ${dateDisabled ? 'opacity-70 cursor-not-allowed bg-slate-100' : ''}">
-                    </div>
-                `;
-            }
+            // Selalu render kolom reschedule agar riwayat (jika ada di sheet) langsung tampil
+            let r1Html = `
+                <div class="flex items-center justify-center gap-1.5">
+                    <input type="checkbox" ${item.resched1Checked ? 'checked' : ''} onchange="handleReschedCheck(${item.id}, 1, this.checked)" class="w-3.5 h-3.5 accent-red-600 cursor-pointer">
+                    <input type="date" value="${item.resched1Date}" onchange="handleReschedDate(${item.id}, 1, this.value)" ${!item.resched1Checked ? 'disabled' : ''} class="bg-slate-50 border border-slate-200 rounded px-1.5 py-0.5 text-[11px] ${!item.resched1Checked ? 'opacity-70 bg-slate-100' : ''}">
+                </div>
+            `;
 
-            let r2Html = `<span class="text-slate-300 text-[10px] italic">-</span>`;
-            const r1Done = item.resched1Checked && item.resched1Date;
-            if (r1Done && (isTidakDatang || item.resched2Checked || item.resched2Date)) {
-                const chkDisabled = item.resched2Locked ? 'disabled' : '';
-                const dateDisabled = item.resched2Locked ? 'disabled' : '';
-                r2Html = `
-                    <div class="flex items-center justify-center gap-1.5">
-                        <input type="checkbox" ${item.resched2Checked ? 'checked' : ''} ${chkDisabled} onchange="handleReschedCheck(${item.id}, 2, this.checked)" class="w-3.5 h-3.5 accent-red-600 cursor-pointer">
-                        <input type="date" value="${item.resched2Date}" ${dateDisabled} onchange="handleReschedDate(${item.id}, 2, this.value)" ${!item.resched2Checked ? 'disabled' : ''} class="bg-slate-50 border border-slate-200 rounded px-1.5 py-0.5 text-[11px] ${dateDisabled ? 'opacity-70 cursor-not-allowed bg-slate-100' : ''}">
-                    </div>
-                `;
-            }
+            let r2Html = `
+                <div class="flex items-center justify-center gap-1.5">
+                    <input type="checkbox" ${item.resched2Checked ? 'checked' : ''} onchange="handleReschedCheck(${item.id}, 2, this.checked)" class="w-3.5 h-3.5 accent-red-600 cursor-pointer">
+                    <input type="date" value="${item.resched2Date}" onchange="handleReschedDate(${item.id}, 2, this.value)" ${!item.resched2Checked ? 'disabled' : ''} class="bg-slate-50 border border-slate-200 rounded px-1.5 py-0.5 text-[11px] ${!item.resched2Checked ? 'opacity-70 bg-slate-100' : ''}">
+                </div>
+            `;
 
-            let r3Html = `<span class="text-slate-300 text-[10px] italic">-</span>`;
-            const r2Done = item.resched2Checked && item.resched2Date;
-            if (r2Done && (isTidakDatang || item.resched3Checked || item.resched3Date)) {
-                const chkDisabled = item.resched3Locked ? 'disabled' : '';
-                const dateDisabled = item.resched3Locked ? 'disabled' : '';
-                r3Html = `
-                    <div class="flex items-center justify-center gap-1.5">
-                        <input type="checkbox" ${item.resched3Checked ? 'checked' : ''} ${chkDisabled} onchange="handleReschedCheck(${item.id}, 3, this.checked)" class="w-3.5 h-3.5 accent-red-600 cursor-pointer">
-                        <input type="date" value="${item.resched3Date}" ${dateDisabled} onchange="handleReschedDate(${item.id}, 3, this.value)" ${!item.resched3Checked ? 'disabled' : ''} class="bg-slate-50 border border-slate-200 rounded px-1.5 py-0.5 text-[11px] ${dateDisabled ? 'opacity-70 cursor-not-allowed bg-slate-100' : ''}">
-                    </div>
-                `;
-            }
+            let r3Html = `
+                <div class="flex items-center justify-center gap-1.5">
+                    <input type="checkbox" ${item.resched3Checked ? 'checked' : ''} onchange="handleReschedCheck(${item.id}, 3, this.checked)" class="w-3.5 h-3.5 accent-red-600 cursor-pointer">
+                    <input type="date" value="${item.resched3Date}" onchange="handleReschedDate(${item.id}, 3, this.value)" ${!item.resched3Checked ? 'disabled' : ''} class="bg-slate-50 border border-slate-200 rounded px-1.5 py-0.5 text-[11px] ${!item.resched3Checked ? 'opacity-70 bg-slate-100' : ''}">
+                </div>
+            `;
 
-            // Tombol Save Per Baris muncul tepat setelah kolom Remarks jika ada aktivitas resched/remarks
-            let remarksHtml = `<span class="text-slate-300 text-[10px] italic">-</span>`;
-            let saveButtonHtml = `<span class="text-slate-300 text-[10px] italic">-</span>`;
-
-            if (r1Done || item.remarks || isTidakDatang || item.resched1Checked || item.resched2Checked || item.resched3Checked) {
-                remarksHtml = `<input type="text" value="${item.remarks || ''}" oninput="handleRemarksInput(${item.id}, this.value)" placeholder="Ketik remarks..." class="bg-slate-50 border border-slate-200 rounded px-2 py-1 text-[11px] w-full focus:outline-none focus:ring-1 focus:ring-red-500 font-medium">`;
-                
-                saveButtonHtml = `
-                    <button onclick="saveSingleRowChanges(${item.id}, this)" class="px-2.5 py-1 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-colors inline-flex items-center gap-1 text-[10px] shadow-sm">
-                        <i data-lucide="save" class="w-3 h-3"></i> Simpan
-                    </button>
-                `;
-            }
+            // Kolom Remarks dan Tombol Simpan Per Baris
+            let remarksHtml = `<input type="text" value="${item.remarks || ''}" oninput="handleRemarksInput(${item.id}, this.value)" placeholder="Ketik remarks..." class="bg-slate-50 border border-slate-200 rounded px-2 py-1 text-[11px] w-full focus:outline-none focus:ring-1 focus:ring-red-500 font-medium">`;
+            
+            let saveButtonHtml = `
+                <button onclick="saveSingleRowChanges(${item.id}, this)" class="px-2.5 py-1 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-colors inline-flex items-center gap-1 text-[10px] shadow-sm">
+                    <i data-lucide="save" class="w-3 h-3"></i> Simpan
+                </button>
+            `;
 
             if (isBocModal) {
                 tr.innerHTML = `
@@ -1137,18 +1144,9 @@
             const item = rawBookingData.find(d => d.id === id);
             if (!item) return;
 
-            if (level === 1) {
-                item.resched1Date = dateVal;
-                if (item.resched1Checked && dateVal) item.resched1Locked = true;
-            }
-            if (level === 2) {
-                item.resched2Date = dateVal;
-                if (item.resched2Checked && dateVal) item.resched2Locked = true;
-            }
-            if (level === 3) {
-                item.resched3Date = dateVal;
-                if (item.resched3Checked && dateVal) item.resched3Locked = true;
-            }
+            if (level === 1) item.resched1Date = dateVal;
+            if (level === 2) item.resched2Date = dateVal;
+            if (level === 3) item.resched3Date = dateVal;
 
             refreshModalTableContent();
         }
@@ -1577,6 +1575,7 @@
                         <td class="px-4 py-3"><span class="px-2 py-0.5 rounded text-[9px] font-bold border ${getSopStatusColor(i['Status Part'])}">${i['Status Part'] || '-'}</span></td>
                     </tr>`;
             }).join('');
+            document.getElementById('sopKpiModal').classList.add('hidden'); // Diperbaiki agar tidak konflik pembukaan modal
             document.getElementById('sopKpiModal').classList.remove('hidden');
         }
 
