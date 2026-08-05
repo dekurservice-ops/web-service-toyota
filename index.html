@@ -588,11 +588,11 @@
                 const mraVal = getVal(row, ['Nama MRA', 'MRA', 'Nama Mra', 'Nama Sales MRA', 'Sales MRA']);
                 const mra = (mraVal !== '' && mraVal !== '-') ? mraVal : 'Unassigned';
                 
-                // Pembacaan Status murni apa adanya sesuai Google Sheet (mengatasi ketidaksesuaian status)
+                // Pembacaan Status secara presisi mengikuti nilai aktual Google Sheet
                 const rawStatus = getVal(row, ['CAI', 'Status Kedatangan', 'Status', Object.keys(row)[9] || '']);
                 const status = (rawStatus !== '' && rawStatus !== '-' && rawStatus !== 'KOSONG') ? rawStatus : 'BELUM DIKONFIRMASI';
 
-                // Parsing Resched 1, 2, 3 secara presisi
+                // Parsing Resched 1, 2, 3
                 const r1ChkVal = getVal(row, ['Resched 1', 'Resched1']);
                 const r1Chk = r1ChkVal === 'TRUE' || r1ChkVal === 'true' || r1ChkVal === '1';
                 const r1Dt = getVal(row, ['Resched 1 Tgl', 'Tgl 1', 'Resched1Tgl']) || '';
@@ -671,10 +671,10 @@
 
             const totalBooking = filteredGeneral.filter(d => d.status !== 'BELUM DIKONFIRMASI').length;
             
-            // Kalkulasi status secara tepat dan konsisten dengan Google Sheets
+            // Perhitungan akurat sesuai label Google Sheets
             const totalDatang = filteredGeneral.filter(d => {
                 const st = d.status.toUpperCase();
-                return st === 'DATANG' || st === 'SBE' || st === 'GRP' || st.includes('DATANG');
+                return st === 'DATANG' || st === 'SBE' || st === 'GRP' || (st.includes('DATANG') && !st.includes('TIDAK') && !st.includes('BELUM'));
             }).length;
 
             const tidakDatang = filteredGeneral.filter(d => {
@@ -754,7 +754,7 @@
                     groupMap[groupKey] = { label: displayLabel, DATANG: 0, 'TIDAK DATANG': 0, 'BELUM DATANG': 0 };
                 }
                 const stUpper = item.status.toUpperCase();
-                if (stUpper === 'DATANG' || stUpper === 'SBE' || stUpper === 'GRP' || stUpper.includes('DATANG')) {
+                if (stUpper === 'DATANG' || stUpper === 'SBE' || stUpper === 'GRP' || (stUpper.includes('DATANG') && !stUpper.includes('TIDAK') && !stUpper.includes('BELUM'))) {
                     groupMap[groupKey].DATANG++;
                 } else if (stUpper.includes('TIDAK') || stUpper.includes('CANCEL')) {
                     groupMap[groupKey]['TIDAK DATANG']++;
@@ -843,7 +843,7 @@
                 if (mraName && mraName !== '-' && mraName !== 'Unassigned') {
                     bocTotalMap[mraName] = (bocTotalMap[mraName] || 0) + 1;
                     const stUpper = item.status.toUpperCase();
-                    if (stUpper === 'DATANG' || stUpper === 'SBE' || stUpper === 'GRP' || stUpper.includes('DATANG')) {
+                    if (stUpper === 'DATANG' || stUpper === 'SBE' || stUpper === 'GRP' || (stUpper.includes('DATANG') && !stUpper.includes('TIDAK') && !stUpper.includes('BELUM'))) {
                         bocDatangMap[mraName] = (bocDatangMap[mraName] || 0) + 1;
                     }
                 }
@@ -881,7 +881,7 @@
                 if (!mraStats[name]) mraStats[name] = { total: 0, datang: 0, tidak: 0, belum: 0 };
                 mraStats[name].total++;
                 const stUpper = item.status.toUpperCase();
-                if (stUpper === 'DATANG' || stUpper === 'SBE' || stUpper === 'GRP' || stUpper.includes('DATANG')) {
+                if (stUpper === 'DATANG' || stUpper === 'SBE' || stUpper === 'GRP' || (stUpper.includes('DATANG') && !stUpper.includes('TIDAK') && !stUpper.includes('BELUM'))) {
                     mraStats[name].datang++;
                 } else if (stUpper.includes('TIDAK')) {
                     mraStats[name].tidak++;
@@ -933,7 +933,7 @@
                 if (statusType === 'DATANG') {
                     list = list.filter(d => {
                         const st = d.status.toUpperCase();
-                        return st === 'DATANG' || st === 'SBE' || st === 'GRP' || st.includes('DATANG');
+                        return st === 'DATANG' || st === 'SBE' || st === 'GRP' || (st.includes('DATANG') && !st.includes('TIDAK') && !st.includes('BELUM'));
                     });
                 } else if (statusType === 'TIDAK DATANG') {
                     list = list.filter(d => d.status.toUpperCase().includes('TIDAK') || d.status.toUpperCase().includes('CANCEL'));
@@ -970,7 +970,7 @@
                     return true;
                 });
 
-                openBookingModal('Detail KPI: BOOKING ON CALL (BOC)', 'Daftar transaksi berdasarkan Tanggal BOC & Rentang Filter', listBoc, true);
+                openBookingModalCustom('Detail KPI: BOOKING ON CALL (BOC)', 'Daftar transaksi berdasarkan Tanggal BOC & Rentang Filter', listBoc, true);
                 return;
             }
 
@@ -978,7 +978,7 @@
             if (type === 'TOTAL DATANG') {
                 list = list.filter(d => {
                     const st = d.status.toUpperCase();
-                    return st === 'DATANG' || st === 'SBE' || st === 'GRP' || st.includes('DATANG');
+                    return st === 'DATANG' || st === 'SBE' || st === 'GRP' || (st.includes('DATANG') && !st.includes('TIDAK') && !st.includes('BELUM'));
                 });
             } else if (type === 'TIDAK DATANG') {
                 list = list.filter(d => d.status.toUpperCase().includes('TIDAK') || d.status.toUpperCase().includes('CANCEL'));
@@ -987,7 +987,7 @@
             } else if (type === 'SHOW RATE') {
                 list = list.filter(d => {
                     const st = d.status.toUpperCase();
-                    return st === 'DATANG' || st === 'SBE' || st === 'GRP' || st.includes('DATANG');
+                    return st === 'DATANG' || st === 'SBE' || st === 'GRP' || (st.includes('DATANG') && !st.includes('TIDAK') && !st.includes('BELUM'));
                 });
             }
 
@@ -1049,7 +1049,7 @@
         function createBookingRow(item, isBocModal) {
             const stUpper = item.status.toUpperCase();
             let badgeColor = 'bg-amber-50 text-amber-600 border-amber-200';
-            if (stUpper === 'DATANG' || stUpper === 'SBE' || stUpper === 'GRP' || stUpper.includes('DATANG')) {
+            if (stUpper === 'DATANG' || stUpper === 'SBE' || stUpper === 'GRP' || (stUpper.includes('DATANG') && !stUpper.includes('TIDAK') && !stUpper.includes('BELUM'))) {
                 badgeColor = 'bg-emerald-50 text-emerald-600 border-emerald-200';
             } else if (stUpper.includes('TIDAK') || stUpper.includes('CANCEL')) {
                 badgeColor = 'bg-rose-50 text-rose-600 border-rose-200';
@@ -1058,9 +1058,9 @@
             const tr = document.createElement('tr');
             tr.className = "hover:bg-slate-50 transition-colors";
             
-            // HANYA MUNCULKAN RESCHEDULING JIKA ADA DATANYA (Tercentang ATAU Ada Tanggalnya)
+            // HANYA MUNCULKAN KONTROL RESCHED JIKA ADA DATANYA (Tercentang ATAU Ada Tanggal)
             let r1Html = `<span class="text-slate-300 text-[10px] italic">-</span>`;
-            if (item.resched1Checked || item.resched1Date) {
+            if (item.resched1Checked || (item.resched1Date && item.resched1Date !== '')) {
                 r1Html = `
                     <div class="flex items-center justify-center gap-1.5">
                         <input type="checkbox" ${item.resched1Checked ? 'checked' : ''} onchange="handleReschedCheck(${item.id}, 1, this.checked)" class="w-3.5 h-3.5 accent-red-600 cursor-pointer">
@@ -1070,7 +1070,7 @@
             }
 
             let r2Html = `<span class="text-slate-300 text-[10px] italic">-</span>`;
-            if (item.resched2Checked || item.resched2Date) {
+            if (item.resched2Checked || (item.resched2Date && item.resched2Date !== '')) {
                 r2Html = `
                     <div class="flex items-center justify-center gap-1.5">
                         <input type="checkbox" ${item.resched2Checked ? 'checked' : ''} onchange="handleReschedCheck(${item.id}, 2, this.checked)" class="w-3.5 h-3.5 accent-red-600 cursor-pointer">
@@ -1080,7 +1080,7 @@
             }
 
             let r3Html = `<span class="text-slate-300 text-[10px] italic">-</span>`;
-            if (item.resched3Checked || item.resched3Date) {
+            if (item.resched3Checked || (item.resched3Date && item.resched3Date !== '')) {
                 r3Html = `
                     <div class="flex items-center justify-center gap-1.5">
                         <input type="checkbox" ${item.resched3Checked ? 'checked' : ''} onchange="handleReschedCheck(${item.id}, 3, this.checked)" class="w-3.5 h-3.5 accent-red-600 cursor-pointer">
