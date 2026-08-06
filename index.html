@@ -1016,7 +1016,7 @@
                     return true;
                 });
 
-                openBookingModalCustom('Detail KPI: BOOKING ON CALL (BOC)', 'Daftar transaksi berdasarkan Tanggal BOC & Rentang Filter', listBoc, true);
+                openBookingModalCustom('Detail KPI: BOOKING ON CALL (BOC)', 'Daftar transaksi berdasarkan Tanggal BOC & Rentang Filter', listBoc);
                 return;
             }
 
@@ -1037,54 +1037,37 @@
                 });
             }
 
-            openBookingModalCustom(`Detail KPI: ${type}`, `Menampilkan daftar rincian kendaraan (${type})`, list, false);
+            openBookingModalCustom(`Detail KPI: ${type}`, `Menampilkan daftar rincian kendaraan (${type})`, list);
         }
 
-        function openBookingModalCustom(title, subtitle, list, isBocModal = false) {
+        function openBookingModalCustom(title, subtitle, list) {
             document.getElementById('bookingModalTitle').textContent = title;
             document.getElementById('bookingModalSubtitle').textContent = subtitle;
             const thead = document.getElementById('bookingModalTableHeader');
             const tbody = document.getElementById('bookingModalTableBody');
             
-            if (isBocModal) {
-                thead.innerHTML = `
-                    <tr>
-                        <th class="py-3 px-2 text-left">Nomor Polisi</th>
-                        <th class="py-3 px-2 text-left">Nama MRA</th>
-                        <th class="py-3 px-2 text-left">Sumber Data</th>
-                        <th class="py-3 px-2 text-left">Tgl BOC</th>
-                        <th class="py-3 px-2 text-left">Tgl Service</th>
-                        <th class="py-3 px-2 text-left">Status</th>
-                        <th class="py-3 px-2 text-center">Resched 1</th>
-                        <th class="py-3 px-2 text-center">Resched 2</th>
-                        <th class="py-3 px-2 text-center">Resched 3</th>
-                        <th class="py-3 px-2 text-left">Remarks</th>
-                        <th class="py-3 px-2 text-center">Aksi Simpan</th>
-                    </tr>
-                `;
-            } else {
-                thead.innerHTML = `
-                    <tr>
-                        <th class="py-3 px-2 text-left">Nomor Polisi</th>
-                        <th class="py-3 px-2 text-left">Nama MRA</th>
-                        <th class="py-3 px-2 text-left">Sumber Data</th>
-                        <th class="py-3 px-2 text-left">Tgl Service</th>
-                        <th class="py-3 px-2 text-left">Status</th>
-                        <th class="py-3 px-2 text-center">Resched 1</th>
-                        <th class="py-3 px-2 text-center">Resched 2</th>
-                        <th class="py-3 px-2 text-center">Resched 3</th>
-                        <th class="py-3 px-2 text-left">Remarks</th>
-                        <th class="py-3 px-2 text-center">Aksi Simpan</th>
-                    </tr>
-                `;
-            }
+            thead.innerHTML = `
+                <tr>
+                    <th class="py-3 px-2 text-left">Nomor Polisi</th>
+                    <th class="py-3 px-2 text-left">Nama MRA</th>
+                    <th class="py-3 px-2 text-left">Sumber Data</th>
+                    <th class="py-3 px-2 text-left">Tgl BOC</th>
+                    <th class="py-3 px-2 text-left">Tgl Service</th>
+                    <th class="py-3 px-2 text-left">Status</th>
+                    <th class="py-3 px-2 text-center">Resched 1</th>
+                    <th class="py-3 px-2 text-center">Resched 2</th>
+                    <th class="py-3 px-2 text-center">Resched 3</th>
+                    <th class="py-3 px-2 text-left">Remarks</th>
+                    <th class="py-3 px-2 text-center">Aksi Simpan</th>
+                </tr>
+            `;
 
             tbody.innerHTML = '';
             if (!list || list.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="11" class="py-6 text-center text-slate-400">Tidak ada data unit ditemukan.</td></tr>`;
             } else {
                 list.forEach(item => {
-                    tbody.appendChild(createBookingRow(item, isBocModal));
+                    tbody.appendChild(createBookingRow(item));
                 });
             }
             document.getElementById('bookingModalRecordCount').textContent = `Total: ${list.length} Record`;
@@ -1092,7 +1075,7 @@
             lucide.createIcons();
         }
 
-        function createBookingRow(item, isBocModal) {
+        function createBookingRow(item) {
             const stUpper = item.status.toUpperCase();
             let badgeColor = 'bg-amber-50 text-amber-600 border-amber-200';
             const isTidakDatang = stUpper.includes('TIDAK') || stUpper.includes('CANCEL') || stUpper.includes('BATAL');
@@ -1149,34 +1132,19 @@
                 </button>
             `;
 
-            if (isBocModal) {
-                tr.innerHTML = `
-                    <td class="py-2.5 px-2 font-bold text-slate-900">${item.nopol}</td>
-                    <td class="py-2.5 px-2 font-bold text-slate-700">${item.mra}</td>
-                    <td class="py-2.5 px-2 text-slate-600">${item.sumber}</td>
-                    <td class="py-2.5 px-2 font-semibold text-purple-600">${item.tglBoc}</td>
-                    <td class="py-2.5 px-2 text-slate-600 font-medium">${item.tglService}</td>
-                    <td class="py-2.5 px-2"><span class="px-2 py-0.5 rounded text-[10px] font-bold border ${badgeColor}">${item.status}</span></td>
-                    <td class="py-2.5 px-2 text-center">${r1Html}</td>
-                    <td class="py-2.5 px-2 text-center">${r2Html}</td>
-                    <td class="py-2.5 px-2 text-center">${r3Html}</td>
-                    <td class="py-2.5 px-2">${remarksHtml}</td>
-                    <td class="py-2.5 px-2 text-center">${saveButtonHtml}</td>
-                `;
-            } else {
-                tr.innerHTML = `
-                    <td class="py-2.5 px-2 font-bold text-slate-900">${item.nopol}</td>
-                    <td class="py-2.5 px-2 font-bold text-slate-700">${item.mra}</td>
-                    <td class="py-2.5 px-2 text-slate-600">${item.sumber}</td>
-                    <td class="py-2.5 px-2 text-slate-600 font-medium">${item.tglService}</td>
-                    <td class="py-2.5 px-2"><span class="px-2 py-0.5 rounded text-[10px] font-bold border ${badgeColor}">${item.status}</span></td>
-                    <td class="py-2.5 px-2 text-center">${r1Html}</td>
-                    <td class="py-2.5 px-2 text-center">${r2Html}</td>
-                    <td class="py-2.5 px-2 text-center">${r3Html}</td>
-                    <td class="py-2.5 px-2">${remarksHtml}</td>
-                    <td class="py-2.5 px-2 text-center">${saveButtonHtml}</td>
-                `;
-            }
+            tr.innerHTML = `
+                <td class="py-2.5 px-2 font-bold text-slate-900">${item.nopol}</td>
+                <td class="py-2.5 px-2 font-bold text-slate-700">${item.mra}</td>
+                <td class="py-2.5 px-2 text-slate-600">${item.sumber}</td>
+                <td class="py-2.5 px-2 font-semibold text-purple-600">${item.tglBoc || '-'}</td>
+                <td class="py-2.5 px-2 text-slate-600 font-medium">${item.tglService}</td>
+                <td class="py-2.5 px-2"><span class="px-2 py-0.5 rounded text-[10px] font-bold border ${badgeColor}">${item.status}</span></td>
+                <td class="py-2.5 px-2 text-center">${r1Html}</td>
+                <td class="py-2.5 px-2 text-center">${r2Html}</td>
+                <td class="py-2.5 px-2 text-center">${r3Html}</td>
+                <td class="py-2.5 px-2">${remarksHtml}</td>
+                <td class="py-2.5 px-2 text-center">${saveButtonHtml}</td>
+            `;
             return tr;
         }
 
