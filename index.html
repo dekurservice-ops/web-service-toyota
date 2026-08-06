@@ -1048,7 +1048,7 @@
                     <th class="py-3 px-2 text-center">Resched 2 Tgl</th>
                     <th class="py-3 px-2 text-center">Resched 3 Tgl</th>
                     <th class="py-3 px-2 text-left">Remarks</th>
-                    <th class="py-3 px-2 text-center">Aksi Simpan</th>
+                    <th class="py-3 px-2 text-center">Aksi Update</th>
                 </tr>
             `;
 
@@ -1079,16 +1079,16 @@
             const tr = document.createElement('tr');
             tr.className = "hover:bg-slate-50 transition-colors";
             
-            // Kolom Resched selalu tampil terbuka dan aktif di semua jenis modal (BOC, Belum Datang, Total Datang, dll)
-            let r1Html = `<input type="date" value="${item.resched1Date}" onchange="handleReschedDate(${item.id}, 1, this.value)" class="bg-slate-50 border border-slate-200 rounded px-1.5 py-0.5 text-[11px] w-32">`;
-            let r2Html = `<input type="date" value="${item.resched2Date}" onchange="handleReschedDate(${item.id}, 2, this.value)" class="bg-slate-50 border border-slate-200 rounded px-1.5 py-0.5 text-[11px] w-32">`;
-            let r3Html = `<input type="date" value="${item.resched3Date}" onchange="handleReschedDate(${item.id}, 3, this.value)" class="bg-slate-50 border border-slate-200 rounded px-1.5 py-0.5 text-[11px] w-32">`;
+            // HANYA TAMPILKAN JIKA TERISI DAN DALAM POSISI TERKUNCI (DISABLED)
+            const r1Html = item.resched1Date ? `<span class="px-2 py-1 bg-slate-100 border border-slate-200 rounded text-[11px] font-semibold text-slate-700 block text-center">${item.resched1Date}</span>` : `<span class="text-slate-300 text-[10px] italic">-</span>`;
+            const r2Html = item.resched2Date ? `<span class="px-2 py-1 bg-slate-100 border border-slate-200 rounded text-[11px] font-semibold text-slate-700 block text-center">${item.resched2Date}</span>` : `<span class="text-slate-300 text-[10px] italic">-</span>`;
+            const r3Html = item.resched3Date ? `<span class="px-2 py-1 bg-slate-100 border border-slate-200 rounded text-[11px] font-semibold text-slate-700 block text-center">${item.resched3Date}</span>` : `<span class="text-slate-300 text-[10px] italic">-</span>`;
 
-            const remarksHtml = `<input type="text" value="${item.remarks || ''}" oninput="handleRemarksInput(${item.id}, this.value)" placeholder="Ketik remarks..." class="bg-slate-50 border border-slate-200 rounded px-2 py-1 text-[11px] w-full focus:outline-none focus:ring-1 focus:ring-red-500 font-medium">`;
+            const remarksHtml = item.remarks ? `<span class="text-slate-700 text-[11px] font-semibold block">${item.remarks}</span>` : `<span class="text-slate-300 text-[10px] italic">-</span>`;
             
             const saveButtonHtml = `
-                <button onclick="saveSingleRowChanges(${item.id}, this)" class="px-2.5 py-1 ${item.isLocked ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-red-600 hover:bg-red-700'} text-white font-semibold rounded-lg transition-colors inline-flex items-center gap-1 text-[10px] shadow-sm">
-                    <i data-lucide="save" class="w-3 h-3"></i> ${item.isLocked ? 'Update' : 'Simpan'}
+                <button onclick="saveSingleRowChanges(${item.id}, this)" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg transition-colors inline-flex items-center gap-1 text-[10px] shadow-sm">
+                    <i data-lucide="check" class="w-3 h-3"></i> Tersimpan
                 </button>
             `;
 
@@ -1107,59 +1107,10 @@
             return tr;
         }
 
-        function handleReschedDate(id, level, dateVal) {
-            const item = rawBookingData.find(d => d.id === id);
-            if (!item) return;
-
-            if (level === 1) item.resched1Date = dateVal;
-            if (level === 2) item.resched2Date = dateVal;
-            if (level === 3) item.resched3Date = dateVal;
-
-            refreshModalTableContent();
-        }
-
-        function handleRemarksInput(id, val) {
-            const item = rawBookingData.find(d => d.id === id);
-            if (item) item.remarks = val;
-        }
-
         function saveSingleRowChanges(id, btnElement) {
             const item = rawBookingData.find(d => d.id === id);
             if (!item) return;
-
-            const originalText = btnElement.innerHTML;
-            btnElement.disabled = true;
-            btnElement.innerHTML = `<i data-lucide="loader" class="w-3 h-3 animate-spin"></i> Proses`;
-            lucide.createIcons();
-
-            const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxYLlud1e5N_tLR3EtsEEjrEuoIywYNnND90Pcyz81sWso1mKrZUX_E5OAIW_UaOlzKUQ/exec'; 
-
-            const payload = new URLSearchParams();
-            payload.append('data', JSON.stringify([item]));
-
-            fetch(WEB_APP_URL, {
-                method: 'POST',
-                mode: 'no-cors',
-                body: payload
-            })
-            .then(() => {
-                item.isLocked = true;
-
-                btnElement.disabled = false;
-                btnElement.innerHTML = `<i data-lucide="check" class="w-3 h-3"></i> Tersimpan`;
-                btnElement.className = "px-2.5 py-1 bg-emerald-600 text-white font-semibold rounded-lg transition-colors inline-flex items-center gap-1 text-[10px] shadow-sm";
-                lucide.createIcons();
-                
-                setTimeout(() => {
-                    refreshModalTableContent();
-                }, 1000);
-            })
-            .catch(error => {
-                console.error('Gagal menyimpan:', error);
-                btnElement.disabled = false;
-                btnElement.innerHTML = originalText;
-                alert('Terjadi kesalahan saat mengirim data ke Google Sheet.');
-            });
+            alert(`Data nopol ${item.nopol} sudah tersimpan dan terkunci.`);
         }
 
         function refreshModalTableContent() {
