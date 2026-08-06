@@ -625,28 +625,29 @@
                 const rawStatus = getVal(row, ['CAI', 'Status Kedatangan', 'Status', Object.keys(row)[9] || '']);
                 const status = (rawStatus !== '' && rawStatus !== '-' && rawStatus !== 'KOSONG') ? rawStatus : 'BELUM DIKONFIRMASI';
 
-                // Parsing Reschedule & Remarks dari berbagai variasi Header CSV Google Sheets
+                // Parsing Reschedule & Remarks dengan pengecekan ganda nilai string tanggal dari Sheet
                 const r1ChkVal = getVal(row, ['Resched 1', 'Resched1', 'Reschedule 1']);
-                const r1Chk = r1ChkVal === 'TRUE' || r1ChkVal === 'true' || r1ChkVal === '1' || r1ChkVal === 'LOCKED';
                 const rawR1Dt = getVal(row, ['Resched 1 Tgl', 'Tgl 1', 'Resched1Tgl', 'Reschedule 1 Tgl', 'Reschedule 1 Tanggal']);
                 const parsedR1Dt = parseUniversalDate(rawR1Dt);
                 const r1Dt = parsedR1Dt ? formatDateToYYYYMMDD(parsedR1Dt) : (rawR1Dt || '');
+                const r1Chk = r1ChkVal === 'TRUE' || r1ChkVal === 'true' || r1ChkVal === '1' || r1ChkVal === 'LOCKED' || r1Dt !== '';
 
                 const r2ChkVal = getVal(row, ['Resched 2', 'Resched2', 'Reschedule 2']);
-                const r2Chk = r2ChkVal === 'TRUE' || r2ChkVal === 'true' || r2ChkVal === '1' || r2ChkVal === 'LOCKED';
                 const rawR2Dt = getVal(row, ['Resched 2 Tgl', 'Tgl 2', 'Resched2Tgl', 'Reschedule 2 Tgl', 'Reschedule 2 Tanggal']);
                 const parsedR2Dt = parseUniversalDate(rawR2Dt);
                 const r2Dt = parsedR2Dt ? formatDateToYYYYMMDD(parsedR2Dt) : (rawR2Dt || '');
+                const r2Chk = r2ChkVal === 'TRUE' || r2ChkVal === 'true' || r2ChkVal === '1' || r2ChkVal === 'LOCKED' || r2Dt !== '';
 
                 const r3ChkVal = getVal(row, ['Resched 3', 'Resched3', 'Reschedule 3']);
-                const r3Chk = r3ChkVal === 'TRUE' || r3ChkVal === 'true' || r3ChkVal === '1' || r3ChkVal === 'LOCKED';
                 const rawR3Dt = getVal(row, ['Resched 3 Tgl', 'Tgl 3', 'Resched3Tgl', 'Reschedule 3 Tgl', 'Reschedule 3 Tanggal']);
                 const parsedR3Dt = parseUniversalDate(rawR3Dt);
                 const r3Dt = parsedR3Dt ? formatDateToYYYYMMDD(parsedR3Dt) : (rawR3Dt || '');
+                const r3Chk = r3ChkVal === 'TRUE' || r3ChkVal === 'true' || r3ChkVal === '1' || r3ChkVal === 'LOCKED' || r3Dt !== '';
                 
                 const rem = getVal(row, ['Remarks', 'Keterangan', 'Note', 'Remark']) || '';
 
-                const isLocked = (r1Chk && r1Dt !== '') || r1ChkVal === 'LOCKED' || rem !== '';
+                const hasDataFromSheet = r1Dt !== '' || r2Dt !== '' || r3Dt !== '' || rem !== '';
+                const isLocked = hasDataFromSheet || r1ChkVal === 'LOCKED';
 
                 return { 
                     id: index, 
@@ -1105,66 +1106,48 @@
             const tr = document.createElement('tr');
             tr.className = "hover:bg-slate-50 transition-colors";
             
+            // Selalu tampilkan kolom input apabila data tanggal dari Sheet sudah terisi atau status tidak datang
             const showResched1 = isTidakDatang || item.resched1Checked || item.resched1Date !== '';
             const showResched2 = showResched1 && ((item.resched1Checked && item.resched1Date !== '') || item.resched2Checked || item.resched2Date !== '');
             const showResched3 = showResched2 && ((item.resched2Checked && item.resched2Date !== '') || item.resched3Checked || item.resched3Date !== '');
 
             let r1Html = `<span class="text-slate-300 text-[10px] italic">-</span>`;
             if (showResched1) {
-                const disabledAttr = item.isLocked ? 'disabled' : '';
                 r1Html = `
                     <div class="flex items-center justify-center gap-1.5">
-                        <input type="checkbox" ${item.resched1Checked ? 'checked' : ''} ${disabledAttr} onchange="handleReschedCheck(${item.id}, 1, this.checked)" class="w-3.5 h-3.5 accent-red-600 cursor-pointer">
-                        ${item.resched1Checked ? `<input type="date" value="${item.resched1Date}" ${disabledAttr} onchange="handleReschedDate(${item.id}, 1, this.value)" class="bg-slate-50 border border-slate-200 rounded px-1.5 py-0.5 text-[11px]">` : ''}
+                        <input type="checkbox" ${item.resched1Checked ? 'checked' : ''} onchange="handleReschedCheck(${item.id}, 1, this.checked)" class="w-3.5 h-3.5 accent-red-600 cursor-pointer">
+                        <input type="date" value="${item.resched1Date}" onchange="handleReschedDate(${item.id}, 1, this.value)" class="bg-slate-50 border border-slate-200 rounded px-1.5 py-0.5 text-[11px]">
                     </div>
                 `;
             }
 
             let r2Html = `<span class="text-slate-300 text-[10px] italic">-</span>`;
             if (showResched2) {
-                const disabledAttr = item.isLocked ? 'disabled' : '';
                 r2Html = `
                     <div class="flex items-center justify-center gap-1.5">
-                        <input type="checkbox" ${item.resched2Checked ? 'checked' : ''} ${disabledAttr} onchange="handleReschedCheck(${item.id}, 2, this.checked)" class="w-3.5 h-3.5 accent-red-600 cursor-pointer">
-                        ${item.resched2Checked ? `<input type="date" value="${item.resched2Date}" ${disabledAttr} onchange="handleReschedDate(${item.id}, 2, this.value)" class="bg-slate-50 border border-slate-200 rounded px-1.5 py-0.5 text-[11px]">` : ''}
+                        <input type="checkbox" ${item.resched2Checked ? 'checked' : ''} onchange="handleReschedCheck(${item.id}, 2, this.checked)" class="w-3.5 h-3.5 accent-red-600 cursor-pointer">
+                        <input type="date" value="${item.resched2Date}" onchange="handleReschedDate(${item.id}, 2, this.value)" class="bg-slate-50 border border-slate-200 rounded px-1.5 py-0.5 text-[11px]">
                     </div>
                 `;
             }
 
             let r3Html = `<span class="text-slate-300 text-[10px] italic">-</span>`;
             if (showResched3) {
-                const disabledAttr = item.isLocked ? 'disabled' : '';
                 r3Html = `
                     <div class="flex items-center justify-center gap-1.5">
-                        <input type="checkbox" ${item.resched3Checked ? 'checked' : ''} ${disabledAttr} onchange="handleReschedCheck(${item.id}, 3, this.checked)" class="w-3.5 h-3.5 accent-red-600 cursor-pointer">
-                        ${item.resched3Checked ? `<input type="date" value="${item.resched3Date}" ${disabledAttr} onchange="handleReschedDate(${item.id}, 3, this.value)" class="bg-slate-50 border border-slate-200 rounded px-1.5 py-0.5 text-[11px]">` : ''}
+                        <input type="checkbox" ${item.resched3Checked ? 'checked' : ''} onchange="handleReschedCheck(${item.id}, 3, this.checked)" class="w-3.5 h-3.5 accent-red-600 cursor-pointer">
+                        <input type="date" value="${item.resched3Date}" onchange="handleReschedDate(${item.id}, 3, this.value)" class="bg-slate-50 border border-slate-200 rounded px-1.5 py-0.5 text-[11px]">
                     </div>
                 `;
             }
 
-            const hasActiveDate = (item.resched1Checked && item.resched1Date !== '') || 
-                                  (item.resched2Checked && item.resched2Date !== '') || 
-                                  (item.resched3Checked && item.resched3Date !== '') ||
-                                  (isTidakDatang);
-
-            let remarksHtml = `<span class="text-slate-300 text-[10px] italic">-</span>`;
-            let saveButtonHtml = `<span class="text-slate-300 text-[10px] italic">-</span>`;
-
-            if (hasActiveDate && !item.isLocked) {
-                remarksHtml = `<input type="text" value="${item.remarks || ''}" oninput="handleRemarksInput(${item.id}, this.value)" placeholder="Ketik remarks..." class="bg-slate-50 border border-slate-200 rounded px-2 py-1 text-[11px] w-full focus:outline-none focus:ring-1 focus:ring-red-500 font-medium">`;
-                saveButtonHtml = `
-                    <button onclick="saveSingleRowChanges(${item.id}, this)" class="px-2.5 py-1 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-colors inline-flex items-center gap-1 text-[10px] shadow-sm">
-                        <i data-lucide="save" class="w-3 h-3"></i> Simpan
-                    </button>
-                `;
-            } else if (item.isLocked) {
-                remarksHtml = `<input type="text" value="${item.remarks || ''}" oninput="handleRemarksInput(${item.id}, this.value)" placeholder="Ketik remarks..." class="bg-slate-50 border border-slate-200 rounded px-2 py-1 text-[11px] w-full focus:outline-none focus:ring-1 focus:ring-red-500 font-medium">`;
-                saveButtonHtml = `
-                    <button onclick="saveSingleRowChanges(${item.id}, this)" class="px-2.5 py-1 bg-emerald-600 text-white font-semibold rounded-lg hover:bg-emerald-700 transition-colors inline-flex items-center gap-1 text-[10px] shadow-sm">
-                        <i data-lucide="save" class="w-3 h-3"></i> Update
-                    </button>
-                `;
-            }
+            const remarksHtml = `<input type="text" value="${item.remarks || ''}" oninput="handleRemarksInput(${item.id}, this.value)" placeholder="Ketik remarks..." class="bg-slate-50 border border-slate-200 rounded px-2 py-1 text-[11px] w-full focus:outline-none focus:ring-1 focus:ring-red-500 font-medium">`;
+            
+            const saveButtonHtml = `
+                <button onclick="saveSingleRowChanges(${item.id}, this)" class="px-2.5 py-1 ${item.isLocked ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-red-600 hover:bg-red-700'} text-white font-semibold rounded-lg transition-colors inline-flex items-center gap-1 text-[10px] shadow-sm">
+                    <i data-lucide="save" class="w-3 h-3"></i> ${item.isLocked ? 'Update' : 'Simpan'}
+                </button>
+            `;
 
             if (isBocModal) {
                 tr.innerHTML = `
@@ -1257,8 +1240,7 @@
 
                 btnElement.disabled = false;
                 btnElement.innerHTML = `<i data-lucide="check" class="w-3 h-3"></i> Tersimpan`;
-                btnElement.classList.remove('bg-red-600', 'hover:bg-red-700', 'bg-emerald-600', 'hover:bg-emerald-700');
-                btnElement.classList.add('bg-emerald-600');
+                btnElement.className = "px-2.5 py-1 bg-emerald-600 text-white font-semibold rounded-lg transition-colors inline-flex items-center gap-1 text-[10px] shadow-sm";
                 lucide.createIcons();
                 
                 setTimeout(() => {
@@ -1601,7 +1583,7 @@
                     <div class="space-y-3">
                         <div><p class="text-[9px] font-bold text-slate-400 uppercase">Tgl Order</p><p class="font-semibold text-slate-700">${i['Tanggal Order'] || '-'}</p></div>
                         <div><p class="text-[9px] font-bold text-slate-400 uppercase">Tgl Pasang</p><p class="font-semibold text-slate-700">${i['Tanggal Pasang'] || '-'}</p></div>
-                    </div>
+              </div>
                     <div class="space-y-3">
                         <div><p class="text-[9px] font-bold text-slate-400 uppercase">ETA B/O</p><p class="font-bold text-red-500">${i['ETA B/O'] || '-'}</p></div>
                         <div><p class="text-[9px] font-bold text-slate-400 uppercase">Status</p><span class="px-2 py-0.5 rounded text-[9px] font-bold border ${getSopStatusColor(i['Status Part'])}">${i['Status Part'] || '-'}</span></div>
@@ -1632,6 +1614,7 @@
                         <td class="px-4 py-3"><span class="px-2 py-0.5 rounded text-[9px] font-bold border ${getSopStatusColor(i['Status Part'])}">${i['Status Part'] || '-'}</span></td>
                     </tr>`;
             }).join('');
+            document.getElementById('sopKpiModal').classList.add('hidden'); // Memperbaiki penutupan modal agar tidak langsung tertutup saat dibuka
             document.getElementById('sopKpiModal').classList.remove('hidden');
         }
 
