@@ -86,11 +86,11 @@
             <section class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row gap-4 items-stretch md:items-center justify-between">
                 <div class="flex items-center gap-2 text-slate-700 font-semibold text-sm">
                     <i data-lucide="filter" class="w-4 h-4 text-red-600"></i>
-                    <span>Filter Analytics:</span>
+                    <span>Filter Analytics (Berdasarkan Tgl BOC):</span>
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 md:flex gap-3 items-center flex-1 md:justify-end">
                     <div class="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5">
-                        <label class="text-xs text-slate-500 whitespace-nowrap">Rentang Service:</label>
+                        <label class="text-xs text-slate-500 whitespace-nowrap">Rentang Tgl BOC:</label>
                         <input type="date" id="startDate" onchange="applyBookingFilters()" class="bg-transparent text-xs text-slate-800 font-medium focus:outline-none">
                         <span class="text-xs text-slate-400">-</span>
                         <input type="date" id="endDate" onchange="applyBookingFilters()" class="bg-transparent text-xs text-slate-800 font-medium focus:outline-none">
@@ -560,22 +560,54 @@
             return '';
         }
 
-        function parseDate(dateStr) {
-            if (!dateStr || dateStr === '-' || dateStr === 'N/A') return null;
-            let cleaned = String(dateStr).trim().replace(/\s+/g, ' ');
+        function parseUniversalDate(dateStr) {
+            if (!dateStr || dateStr === '-' || dateStr === 'N/A' || dateStr.toLowerCase() === 'undefined' || dateStr.toLowerCase() === 'null') return null;
+            let cleaned = String(dateStr).trim();
+            
+            // Format Excel Serial Number (e.g., 45000)
+            if (/^\d{5}$/.test(cleaned)) {
+                const excelEpoch = new Date(1899, 11, 30);
+                return new Date(excelEpoch.getTime() + parseInt(cleaned, 10) * 86400000);
+            }
+
+            // ISO Format YYYY-MM-DD
+            if (/^\d{4}[-/]\d{1,2}[-/]\d{1,2}/.test(cleaned)) {
+                const d = new Date(cleaned);
+                return isNaN(d.getTime()) ? null : d;
+            }
+
+            // Format DD/MM/YYYY or DD-MM-YYYY or Text Month (01-Jan-2026, 01 Jan 2026, etc.)
             const parts = cleaned.split(/[-/\s]+/);
             if (parts.length >= 3) {
                 const day = parseInt(parts[0], 10);
                 const monthStr = parts[1].toLowerCase();
                 let year = parseInt(parts[2], 10);
                 if (year < 100) year += 2000;
-                const months = { jan: 0, feb: 1, mar: 2, apr: 3, mei: 4, may: 4, jun: 5, jul: 6, agu: 7, aug: 7, sep: 8, okt: 9, oct: 9, nov: 10, des: 11, dec: 11 };
+                
+                const months = { 
+                    jan: 0, feb: 1, mar: 2, apr: 3, mei: 4, may: 4, jun: 5, jul: 6, agu: 7, aug: 7, sep: 8, okt: 9, oct: 9, nov: 10, des: 11, dec: 11 
+                };
+
                 if (months[monthStr] !== undefined && !isNaN(day) && !isNaN(year)) {
                     return new Date(year, months[monthStr], day);
+                } else {
+                    const mNum = parseInt(parts[1], 10);
+                    if (!isNaN(day) && !isNaN(mNum) && !isNaN(year)) {
+                        return new Date(year, mNum - 1, day);
+                    }
                 }
             }
-            const d = new Date(cleaned);
-            return isNaN(d.getTime()) ? null : d;
+
+            const fallbackDate = new Date(cleaned);
+            return isNaN(fallbackDate.getTime()) ? null : fallbackDate;
+        }
+
+        function formatDateToYYYYMMDD(dateObj) {
+            if (!dateObj || isNaN(dateObj.getTime())) return '';
+            const y = dateObj.getFullYear();
+            const m = String(dateObj.getMonth() + 1).padStart(2, '0');
+            const d = String(dateObj.getDate()).padStart(2, '0');
+            return `${y}-${m}-${d}`;
         }
 
         function processBookingData(data) {
@@ -583,7 +615,9 @@
                 const nopol = getVal(row, ['Nomor Polisi', 'No Polisi', 'No Pol', 'Nopol']) || '-';
                 const sumber = getVal(row, ['Sumber Data', 'Sumber', 'Media']) || 'Lainnya';
                 const tglService = getVal(row, ['Service Tanggal', 'Tgl Service', 'Tanggal Service', 'Tanggal']) || '-';
-                const tglBoc = getVal(row, ['Tanggal BOC', 'Tgl BOC', 'BOC']) || '';
+                const rawTglBoc = getVal(row, ['Tanggal BOC', 'Tgl BOC', 'BOC']);
+                const parsedBoc = parseUniversalDate(rawTglBoc);
+                const tglBoc = parsedBoc ? formatDateToYYYYMMDD(parsedBoc) : (rawTglBoc || '');
                 
                 const mraVal = getVal(row, ['Nama MRA', 'MRA', 'Nama Mra', 'Nama Sales MRA', 'Sales MRA']);
                 const mra = (mraVal !== '' && mraVal !== '-') ? mraVal : 'Unassigned';
@@ -591,22 +625,28 @@
                 const rawStatus = getVal(row, ['CAI', 'Status Kedatangan', 'Status', Object.keys(row)[9] || '']);
                 const status = (rawStatus !== '' && rawStatus !== '-' && rawStatus !== 'KOSONG') ? rawStatus : 'BELUM DIKONFIRMASI';
 
-                const r1ChkVal = getVal(row, ['Resched 1', 'Resched1']);
-                const r1Chk = r1ChkVal === 'TRUE' || r1ChkVal === 'true' || r1ChkVal === '1';
-                const r1Dt = getVal(row, ['Resched 1 Tgl', 'Tgl 1', 'Resched1Tgl']) || '';
+                // Parsing Reschedule & Remarks dari berbagai variasi Header CSV Google Sheets
+                const r1ChkVal = getVal(row, ['Resched 1', 'Resched1', 'Reschedule 1']);
+                const r1Chk = r1ChkVal === 'TRUE' || r1ChkVal === 'true' || r1ChkVal === '1' || r1ChkVal === 'LOCKED';
+                const rawR1Dt = getVal(row, ['Resched 1 Tgl', 'Tgl 1', 'Resched1Tgl', 'Reschedule 1 Tgl', 'Reschedule 1 Tanggal']);
+                const parsedR1Dt = parseUniversalDate(rawR1Dt);
+                const r1Dt = parsedR1Dt ? formatDateToYYYYMMDD(parsedR1Dt) : (rawR1Dt || '');
 
-                const r2ChkVal = getVal(row, ['Resched 2', 'Resched2']);
-                const r2Chk = r2ChkVal === 'TRUE' || r2ChkVal === 'true' || r2ChkVal === '1';
-                const r2Dt = getVal(row, ['Resched 2 Tgl', 'Tgl 2', 'Resched2Tgl']) || '';
+                const r2ChkVal = getVal(row, ['Resched 2', 'Resched2', 'Reschedule 2']);
+                const r2Chk = r2ChkVal === 'TRUE' || r2ChkVal === 'true' || r2ChkVal === '1' || r2ChkVal === 'LOCKED';
+                const rawR2Dt = getVal(row, ['Resched 2 Tgl', 'Tgl 2', 'Resched2Tgl', 'Reschedule 2 Tgl', 'Reschedule 2 Tanggal']);
+                const parsedR2Dt = parseUniversalDate(rawR2Dt);
+                const r2Dt = parsedR2Dt ? formatDateToYYYYMMDD(parsedR2Dt) : (rawR2Dt || '');
 
-                const r3ChkVal = getVal(row, ['Resched 3', 'Resched3']);
-                const r3Chk = r3ChkVal === 'TRUE' || r3ChkVal === 'true' || r3ChkVal === '1';
-                const r3Dt = getVal(row, ['Resched 3 Tgl', 'Tgl 3', 'Resched3Tgl']) || '';
+                const r3ChkVal = getVal(row, ['Resched 3', 'Resched3', 'Reschedule 3']);
+                const r3Chk = r3ChkVal === 'TRUE' || r3ChkVal === 'true' || r3ChkVal === '1' || r3ChkVal === 'LOCKED';
+                const rawR3Dt = getVal(row, ['Resched 3 Tgl', 'Tgl 3', 'Resched3Tgl', 'Reschedule 3 Tgl', 'Reschedule 3 Tanggal']);
+                const parsedR3Dt = parseUniversalDate(rawR3Dt);
+                const r3Dt = parsedR3Dt ? formatDateToYYYYMMDD(parsedR3Dt) : (rawR3Dt || '');
                 
-                const rem = getVal(row, ['Remarks', 'Keterangan', 'Note']) || '';
+                const rem = getVal(row, ['Remarks', 'Keterangan', 'Note', 'Remark']) || '';
 
-                // Tandai locked jika sudah tersimpan sebelumnya atau sudah lengkap
-                const isLocked = (r1Chk && r1Dt !== '') || r1ChkVal === 'LOCKED';
+                const isLocked = (r1Chk && r1Dt !== '') || r1ChkVal === 'LOCKED' || rem !== '';
 
                 return { 
                     id: index, 
@@ -659,11 +699,15 @@
 
             const filteredGeneral = rawBookingData.filter(item => {
                 if (selectedMra !== 'ALL' && item.mra !== selectedMra) return false;
+                
+                // FILTER UTAMA MENGGUNAKAN TGL BOC
                 if (startLimit || endLimit) {
-                    const itemDate = parseDate(item.tglService);
-                    if (itemDate) {
-                        if (startLimit && itemDate < startLimit) return false;
-                        if (endLimit && itemDate > endLimit) return false;
+                    const bocDate = parseUniversalDate(item.tglBoc);
+                    if (bocDate) {
+                        if (startLimit && bocDate < startLimit) return false;
+                        if (endLimit && bocDate > endLimit) return false;
+                    } else {
+                        return false;
                     }
                 }
                 return true;
@@ -700,7 +744,7 @@
                 if (!isValidBoc) return false;
 
                 if (startLimit || endLimit) {
-                    const bocDate = parseDate(item.tglBoc);
+                    const bocDate = parseUniversalDate(item.tglBoc);
                     if (bocDate) {
                         if (startLimit && bocDate < startLimit) return false;
                         if (endLimit && bocDate > endLimit) return false;
@@ -732,7 +776,7 @@
 
             filteredBookingData.forEach(item => {
                 if (item.status === 'BELUM DIKONFIRMASI') return;
-                const pDate = parseDate(item.tglService);
+                const pDate = parseUniversalDate(item.tglService);
                 if (!pDate) return;
 
                 let groupKey = '', displayLabel = '';
@@ -831,7 +875,7 @@
                 if (!isValidBoc) return;
 
                 if (startLimit || endLimit) {
-                    const bocDate = parseDate(item.tglBoc);
+                    const bocDate = parseUniversalDate(item.tglBoc);
                     if (bocDate) {
                         if (startLimit && bocDate < startLimit) return;
                         if (endLimit && bocDate > endLimit) return;
@@ -960,7 +1004,7 @@
                     if (!isValidBoc) return false;
 
                     if (startLimit || endLimit) {
-                        const bocDate = parseDate(item.tglBoc);
+                        const bocDate = parseUniversalDate(item.tglBoc);
                         if (bocDate) {
                             if (startLimit && bocDate < startLimit) return false;
                             if (endLimit && bocDate > endLimit) return false;
@@ -1061,12 +1105,10 @@
             const tr = document.createElement('tr');
             tr.className = "hover:bg-slate-50 transition-colors";
             
-            // ATURAN TAMPILAN BERJENJANG (Resched 1 -> 2 -> 3) BERDASARKAN STATUS TIDAK DATANG & KELENGKAPAN SEBELUMNYA
-            const showResched1 = isTidakDatang;
-            const showResched2 = showResched1 && item.resched1Checked && item.resched1Date !== '';
-            const showResched3 = showResched2 && item.resched2Checked && item.resched2Date !== '';
+            const showResched1 = isTidakDatang || item.resched1Checked || item.resched1Date !== '';
+            const showResched2 = showResched1 && ((item.resched1Checked && item.resched1Date !== '') || item.resched2Checked || item.resched2Date !== '');
+            const showResched3 = showResched2 && ((item.resched2Checked && item.resched2Date !== '') || item.resched3Checked || item.resched3Date !== '');
 
-            // GENERATE RESCHEDULING 1 HTML
             let r1Html = `<span class="text-slate-300 text-[10px] italic">-</span>`;
             if (showResched1) {
                 const disabledAttr = item.isLocked ? 'disabled' : '';
@@ -1078,32 +1120,32 @@
                 `;
             }
 
-            // GENERATE RESCHEDULING 2 HTML
             let r2Html = `<span class="text-slate-300 text-[10px] italic">-</span>`;
             if (showResched2) {
+                const disabledAttr = item.isLocked ? 'disabled' : '';
                 r2Html = `
                     <div class="flex items-center justify-center gap-1.5">
-                        <input type="checkbox" ${item.resched2Checked ? 'checked' : ''} onchange="handleReschedCheck(${item.id}, 2, this.checked)" class="w-3.5 h-3.5 accent-red-600 cursor-pointer">
-                        ${item.resched2Checked ? `<input type="date" value="${item.resched2Date}" onchange="handleReschedDate(${item.id}, 2, this.value)" class="bg-slate-50 border border-slate-200 rounded px-1.5 py-0.5 text-[11px]">` : ''}
+                        <input type="checkbox" ${item.resched2Checked ? 'checked' : ''} ${disabledAttr} onchange="handleReschedCheck(${item.id}, 2, this.checked)" class="w-3.5 h-3.5 accent-red-600 cursor-pointer">
+                        ${item.resched2Checked ? `<input type="date" value="${item.resched2Date}" ${disabledAttr} onchange="handleReschedDate(${item.id}, 2, this.value)" class="bg-slate-50 border border-slate-200 rounded px-1.5 py-0.5 text-[11px]">` : ''}
                     </div>
                 `;
             }
 
-            // GENERATE RESCHEDULING 3 HTML
             let r3Html = `<span class="text-slate-300 text-[10px] italic">-</span>`;
             if (showResched3) {
+                const disabledAttr = item.isLocked ? 'disabled' : '';
                 r3Html = `
                     <div class="flex items-center justify-center gap-1.5">
-                        <input type="checkbox" ${item.resched3Checked ? 'checked' : ''} onchange="handleReschedCheck(${item.id}, 3, this.checked)" class="w-3.5 h-3.5 accent-red-600 cursor-pointer">
-                        ${item.resched3Checked ? `<input type="date" value="${item.resched3Date}" onchange="handleReschedDate(${item.id}, 3, this.value)" class="bg-slate-50 border border-slate-200 rounded px-1.5 py-0.5 text-[11px]">` : ''}
+                        <input type="checkbox" ${item.resched3Checked ? 'checked' : ''} ${disabledAttr} onchange="handleReschedCheck(${item.id}, 3, this.checked)" class="w-3.5 h-3.5 accent-red-600 cursor-pointer">
+                        ${item.resched3Checked ? `<input type="date" value="${item.resched3Date}" ${disabledAttr} onchange="handleReschedDate(${item.id}, 3, this.value)" class="bg-slate-50 border border-slate-200 rounded px-1.5 py-0.5 text-[11px]">` : ''}
                     </div>
                 `;
             }
 
-            // TOMBOL SAVE & REMARKS HANYA MUNCUL JIKA RESCHEDULING AKTIF DAN TANGGALNYA TERISI
             const hasActiveDate = (item.resched1Checked && item.resched1Date !== '') || 
                                   (item.resched2Checked && item.resched2Date !== '') || 
-                                  (item.resched3Checked && item.resched3Date !== '');
+                                  (item.resched3Checked && item.resched3Date !== '') ||
+                                  (isTidakDatang);
 
             let remarksHtml = `<span class="text-slate-300 text-[10px] italic">-</span>`;
             let saveButtonHtml = `<span class="text-slate-300 text-[10px] italic">-</span>`;
@@ -1116,8 +1158,12 @@
                     </button>
                 `;
             } else if (item.isLocked) {
-                remarksHtml = `<span class="text-slate-700 text-[11px] font-medium">${item.remarks || '-'}</span>`;
-                saveButtonHtml = `<span class="text-emerald-600 font-bold text-[10px] inline-flex items-center gap-1"><i data-lucide="lock" class="w-3 h-3"></i> Terkunci</span>`;
+                remarksHtml = `<input type="text" value="${item.remarks || ''}" oninput="handleRemarksInput(${item.id}, this.value)" placeholder="Ketik remarks..." class="bg-slate-50 border border-slate-200 rounded px-2 py-1 text-[11px] w-full focus:outline-none focus:ring-1 focus:ring-red-500 font-medium">`;
+                saveButtonHtml = `
+                    <button onclick="saveSingleRowChanges(${item.id}, this)" class="px-2.5 py-1 bg-emerald-600 text-white font-semibold rounded-lg hover:bg-emerald-700 transition-colors inline-flex items-center gap-1 text-[10px] shadow-sm">
+                        <i data-lucide="save" class="w-3 h-3"></i> Update
+                    </button>
+                `;
             }
 
             if (isBocModal) {
@@ -1153,7 +1199,7 @@
 
         function handleReschedCheck(id, level, isChecked) {
             const item = rawBookingData.find(d => d.id === id);
-            if (!item || item.isLocked) return;
+            if (!item) return;
 
             if (level === 1) {
                 item.resched1Checked = isChecked;
@@ -1173,7 +1219,7 @@
 
         function handleReschedDate(id, level, dateVal) {
             const item = rawBookingData.find(d => d.id === id);
-            if (!item || item.isLocked) return;
+            if (!item) return;
 
             if (level === 1) item.resched1Date = dateVal;
             if (level === 2) item.resched2Date = dateVal;
@@ -1184,7 +1230,7 @@
 
         function handleRemarksInput(id, val) {
             const item = rawBookingData.find(d => d.id === id);
-            if (item && !item.isLocked) item.remarks = val;
+            if (item) item.remarks = val;
         }
 
         function saveSingleRowChanges(id, btnElement) {
@@ -1207,12 +1253,11 @@
                 body: payload
             })
             .then(() => {
-                // Kunci data setelah berhasil disimpan
                 item.isLocked = true;
 
                 btnElement.disabled = false;
                 btnElement.innerHTML = `<i data-lucide="check" class="w-3 h-3"></i> Tersimpan`;
-                btnElement.classList.remove('bg-red-600', 'hover:bg-red-700');
+                btnElement.classList.remove('bg-red-600', 'hover:bg-red-700', 'bg-emerald-600', 'hover:bg-emerald-700');
                 btnElement.classList.add('bg-emerald-600');
                 lucide.createIcons();
                 
@@ -1253,7 +1298,6 @@
         }
 
         function closeBookingModal() { document.getElementById('bookingModal').classList.add('hidden'); }
-
 
         // ================= SPECIAL ORDER PART (SOP) LOGIC =================
         function groupSopByCodeMatrix(masterRows, detailRows) {
@@ -1328,24 +1372,6 @@
             });
         }
 
-        function parseSopDateString(str) {
-            if (!str) return null;
-            let cleaned = String(str).trim().replace(/\s+/g, ' ');
-            const parts = cleaned.split(/[-/\s]+/);
-            if (parts.length >= 3) {
-                const day = parseInt(parts[0], 10);
-                const monthStr = parts[1].toLowerCase();
-                let year = parseInt(parts[2], 10);
-                if (year < 100) year += 2000;
-                const months = { jan: 0, feb: 1, mar: 2, apr: 3, mei: 4, may: 4, jun: 5, jul: 6, agu: 7, aug: 7, sep: 8, okt: 9, oct: 9, nov: 10, des: 11, dec: 11 };
-                if (months[monthStr] !== undefined && !isNaN(day) && !isNaN(year)) {
-                    return new Date(year, months[monthStr], day);
-                }
-            }
-            const d = new Date(cleaned);
-            return isNaN(d.getTime()) ? null : d;
-        }
-
         function applySopFilters() {
             const search = document.getElementById('sop-search')?.value.toLowerCase() || '';
             const sa = document.getElementById('sop-filter-sa')?.value || '';
@@ -1377,7 +1403,7 @@
                 
                 let matchesDate = true;
                 if (start || end) {
-                    const d = parseSopDateString(i['Tanggal Order']);
+                    const d = parseUniversalDate(i['Tanggal Order']);
                     if (d) {
                         if (start && d < new Date(start)) matchesDate = false;
                         if (end) { 
@@ -1392,7 +1418,7 @@
                 return matchesSearch && matchesSA && matchesStatus && matchesDate;
             });
 
-            filteredSopData.sort((a,b) => (parseSopDateString(b['Tanggal Order']) || 0) - (parseSopDateString(a['Tanggal Order']) || 0));
+            filteredSopData.sort((a,b) => (parseUniversalDate(b['Tanggal Order']) || 0) - (parseUniversalDate(a['Tanggal Order']) || 0));
             updateSopUI();
         }
 
@@ -1520,7 +1546,7 @@
 
             let ltTot=0, ltCnt=0, ltMax=0; const ltD=[], ltL=[];
             filteredSopData.forEach(i => {
-                const o = parseSopDateString(i['Tanggal Order']), a = parseSopDateString(i['Aktual Kedatangan']);
+                const o = parseUniversalDate(i['Tanggal Order']), a = parseUniversalDate(i['Aktual Kedatangan']);
                 if(o && a) {
                     const diffTime = a - o;
                     if (diffTime >= 0) {
