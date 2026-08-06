@@ -625,29 +625,23 @@
                 const rawStatus = getVal(row, ['CAI', 'Status Kedatangan', 'Status', Object.keys(row)[9] || '']);
                 const status = (rawStatus !== '' && rawStatus !== '-' && rawStatus !== 'KOSONG') ? rawStatus : 'BELUM DIKONFIRMASI';
 
-                // Parsing Reschedule & Remarks dengan pengecekan ganda nilai string tanggal dari Sheet
-                const r1ChkVal = getVal(row, ['Resched 1', 'Resched1', 'Reschedule 1']);
+                // Parsing Reschedule & Remarks string tanggal langsung dari Sheet
                 const rawR1Dt = getVal(row, ['Resched 1 Tgl', 'Tgl 1', 'Resched1Tgl', 'Reschedule 1 Tgl', 'Reschedule 1 Tanggal']);
                 const parsedR1Dt = parseUniversalDate(rawR1Dt);
                 const r1Dt = parsedR1Dt ? formatDateToYYYYMMDD(parsedR1Dt) : (rawR1Dt || '');
-                const r1Chk = r1ChkVal === 'TRUE' || r1ChkVal === 'true' || r1ChkVal === '1' || r1ChkVal === 'LOCKED' || r1Dt !== '';
 
-                const r2ChkVal = getVal(row, ['Resched 2', 'Resched2', 'Reschedule 2']);
                 const rawR2Dt = getVal(row, ['Resched 2 Tgl', 'Tgl 2', 'Resched2Tgl', 'Reschedule 2 Tgl', 'Reschedule 2 Tanggal']);
                 const parsedR2Dt = parseUniversalDate(rawR2Dt);
                 const r2Dt = parsedR2Dt ? formatDateToYYYYMMDD(parsedR2Dt) : (rawR2Dt || '');
-                const r2Chk = r2ChkVal === 'TRUE' || r2ChkVal === 'true' || r2ChkVal === '1' || r2ChkVal === 'LOCKED' || r2Dt !== '';
 
-                const r3ChkVal = getVal(row, ['Resched 3', 'Resched3', 'Reschedule 3']);
                 const rawR3Dt = getVal(row, ['Resched 3 Tgl', 'Tgl 3', 'Resched3Tgl', 'Reschedule 3 Tgl', 'Reschedule 3 Tanggal']);
                 const parsedR3Dt = parseUniversalDate(rawR3Dt);
                 const r3Dt = parsedR3Dt ? formatDateToYYYYMMDD(parsedR3Dt) : (rawR3Dt || '');
-                const r3Chk = r3ChkVal === 'TRUE' || r3ChkVal === 'true' || r3ChkVal === '1' || r3ChkVal === 'LOCKED' || r3Dt !== '';
                 
                 const rem = getVal(row, ['Remarks', 'Keterangan', 'Note', 'Remark']) || '';
 
                 const hasDataFromSheet = r1Dt !== '' || r2Dt !== '' || r3Dt !== '' || rem !== '';
-                const isLocked = hasDataFromSheet || r1ChkVal === 'LOCKED';
+                const isLocked = hasDataFromSheet;
 
                 return { 
                     id: index, 
@@ -657,11 +651,8 @@
                     tglBoc, 
                     mra, 
                     status,
-                    resched1Checked: r1Chk,
                     resched1Date: r1Dt,
-                    resched2Checked: r2Chk,
                     resched2Date: r2Dt,
-                    resched3Checked: r3Chk,
                     resched3Date: r3Dt,
                     remarks: rem,
                     isLocked: isLocked
@@ -1050,13 +1041,12 @@
                 <tr>
                     <th class="py-3 px-2 text-left">Nomor Polisi</th>
                     <th class="py-3 px-2 text-left">Nama MRA</th>
-                    <th class="py-3 px-2 text-left">Sumber Data</th>
                     <th class="py-3 px-2 text-left">Tgl BOC</th>
                     <th class="py-3 px-2 text-left">Tgl Service</th>
                     <th class="py-3 px-2 text-left">Status</th>
-                    <th class="py-3 px-2 text-center">Resched 1</th>
-                    <th class="py-3 px-2 text-center">Resched 2</th>
-                    <th class="py-3 px-2 text-center">Resched 3</th>
+                    <th class="py-3 px-2 text-center">Resched 1 Tgl</th>
+                    <th class="py-3 px-2 text-center">Resched 2 Tgl</th>
+                    <th class="py-3 px-2 text-center">Resched 3 Tgl</th>
                     <th class="py-3 px-2 text-left">Remarks</th>
                     <th class="py-3 px-2 text-center">Aksi Simpan</th>
                 </tr>
@@ -1064,7 +1054,7 @@
 
             tbody.innerHTML = '';
             if (!list || list.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="11" class="py-6 text-center text-slate-400">Tidak ada data unit ditemukan.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="10" class="py-6 text-center text-slate-400">Tidak ada data unit ditemukan.</td></tr>`;
             } else {
                 list.forEach(item => {
                     tbody.appendChild(createBookingRow(item));
@@ -1089,39 +1079,24 @@
             const tr = document.createElement('tr');
             tr.className = "hover:bg-slate-50 transition-colors";
             
-            // Logika menampilkan modul reschedule & remarks secara dinamis jika terisi atau memenuhi syarat
-            const showResched1 = isTidakDatang || item.resched1Checked || item.resched1Date !== '';
-            const showResched2 = showResched1 && ((item.resched1Checked && item.resched1Date !== '') || item.resched2Checked || item.resched2Date !== '');
-            const showResched3 = showResched2 && ((item.resched2Checked && item.resched2Date !== '') || item.resched3Checked || item.resched3Date !== '');
+            // Kolom Resched menampilkan input tanggal jika terisi atau status tidak datang
+            const showResched1 = isTidakDatang || item.resched1Date !== '';
+            const showResched2 = showResched1 && (item.resched1Date !== '' || item.resched2Date !== '');
+            const showResched3 = showResched2 && (item.resched2Date !== '' || item.resched3Date !== '');
 
             let r1Html = `<span class="text-slate-300 text-[10px] italic">-</span>`;
             if (showResched1) {
-                r1Html = `
-                    <div class="flex items-center justify-center gap-1.5">
-                        <input type="checkbox" ${item.resched1Checked ? 'checked' : ''} onchange="handleReschedCheck(${item.id}, 1, this.checked)" class="w-3.5 h-3.5 accent-red-600 cursor-pointer">
-                        <input type="date" value="${item.resched1Date}" onchange="handleReschedDate(${item.id}, 1, this.value)" class="bg-slate-50 border border-slate-200 rounded px-1.5 py-0.5 text-[11px]">
-                    </div>
-                `;
+                r1Html = `<input type="date" value="${item.resched1Date}" onchange="handleReschedDate(${item.id}, 1, this.value)" class="bg-slate-50 border border-slate-200 rounded px-1.5 py-0.5 text-[11px] w-32">`;
             }
 
             let r2Html = `<span class="text-slate-300 text-[10px] italic">-</span>`;
             if (showResched2) {
-                r2Html = `
-                    <div class="flex items-center justify-center gap-1.5">
-                        <input type="checkbox" ${item.resched2Checked ? 'checked' : ''} onchange="handleReschedCheck(${item.id}, 2, this.checked)" class="w-3.5 h-3.5 accent-red-600 cursor-pointer">
-                        <input type="date" value="${item.resched2Date}" onchange="handleReschedDate(${item.id}, 2, this.value)" class="bg-slate-50 border border-slate-200 rounded px-1.5 py-0.5 text-[11px]">
-                    </div>
-                `;
+                r2Html = `<input type="date" value="${item.resched2Date}" onchange="handleReschedDate(${item.id}, 2, this.value)" class="bg-slate-50 border border-slate-200 rounded px-1.5 py-0.5 text-[11px] w-32">`;
             }
 
             let r3Html = `<span class="text-slate-300 text-[10px] italic">-</span>`;
             if (showResched3) {
-                r3Html = `
-                    <div class="flex items-center justify-center gap-1.5">
-                        <input type="checkbox" ${item.resched3Checked ? 'checked' : ''} onchange="handleReschedCheck(${item.id}, 3, this.checked)" class="w-3.5 h-3.5 accent-red-600 cursor-pointer">
-                        <input type="date" value="${item.resched3Date}" onchange="handleReschedDate(${item.id}, 3, this.value)" class="bg-slate-50 border border-slate-200 rounded px-1.5 py-0.5 text-[11px]">
-                    </div>
-                `;
+                r3Html = `<input type="date" value="${item.resched3Date}" onchange="handleReschedDate(${item.id}, 3, this.value)" class="bg-slate-50 border border-slate-200 rounded px-1.5 py-0.5 text-[11px] w-32">`;
             }
 
             const remarksHtml = `<input type="text" value="${item.remarks || ''}" oninput="handleRemarksInput(${item.id}, this.value)" placeholder="Ketik remarks..." class="bg-slate-50 border border-slate-200 rounded px-2 py-1 text-[11px] w-full focus:outline-none focus:ring-1 focus:ring-red-500 font-medium">`;
@@ -1135,7 +1110,6 @@
             tr.innerHTML = `
                 <td class="py-2.5 px-2 font-bold text-slate-900">${item.nopol}</td>
                 <td class="py-2.5 px-2 font-bold text-slate-700">${item.mra}</td>
-                <td class="py-2.5 px-2 text-slate-600">${item.sumber}</td>
                 <td class="py-2.5 px-2 font-semibold text-purple-600">${item.tglBoc || '-'}</td>
                 <td class="py-2.5 px-2 text-slate-600 font-medium">${item.tglService}</td>
                 <td class="py-2.5 px-2"><span class="px-2 py-0.5 rounded text-[10px] font-bold border ${badgeColor}">${item.status}</span></td>
@@ -1146,26 +1120,6 @@
                 <td class="py-2.5 px-2 text-center">${saveButtonHtml}</td>
             `;
             return tr;
-        }
-
-        function handleReschedCheck(id, level, isChecked) {
-            const item = rawBookingData.find(d => d.id === id);
-            if (!item) return;
-
-            if (level === 1) {
-                item.resched1Checked = isChecked;
-                if (!isChecked) item.resched1Date = '';
-            }
-            if (level === 2) {
-                item.resched2Checked = isChecked;
-                if (!isChecked) item.resched2Date = '';
-            }
-            if (level === 3) {
-                item.resched3Checked = isChecked;
-                if (!isChecked) item.resched3Date = '';
-            }
-
-            refreshModalTableContent();
         }
 
         function handleReschedDate(id, level, dateVal) {
