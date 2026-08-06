@@ -1106,7 +1106,7 @@
             const tr = document.createElement('tr');
             tr.className = "hover:bg-slate-50 transition-colors";
             
-            // Selalu tampilkan kolom input apabila data tanggal dari Sheet sudah terisi atau status tidak datang
+            // Logika menampilkan modul reschedule & remarks secara dinamis jika terisi atau memenuhi syarat
             const showResched1 = isTidakDatang || item.resched1Checked || item.resched1Date !== '';
             const showResched2 = showResched1 && ((item.resched1Checked && item.resched1Date !== '') || item.resched2Checked || item.resched2Date !== '');
             const showResched3 = showResched2 && ((item.resched2Checked && item.resched2Date !== '') || item.resched3Checked || item.resched3Date !== '');
@@ -1583,7 +1583,7 @@
                     <div class="space-y-3">
                         <div><p class="text-[9px] font-bold text-slate-400 uppercase">Tgl Order</p><p class="font-semibold text-slate-700">${i['Tanggal Order'] || '-'}</p></div>
                         <div><p class="text-[9px] font-bold text-slate-400 uppercase">Tgl Pasang</p><p class="font-semibold text-slate-700">${i['Tanggal Pasang'] || '-'}</p></div>
-              </div>
+                    </div>
                     <div class="space-y-3">
                         <div><p class="text-[9px] font-bold text-slate-400 uppercase">ETA B/O</p><p class="font-bold text-red-500">${i['ETA B/O'] || '-'}</p></div>
                         <div><p class="text-[9px] font-bold text-slate-400 uppercase">Status</p><span class="px-2 py-0.5 rounded text-[9px] font-bold border ${getSopStatusColor(i['Status Part'])}">${i['Status Part'] || '-'}</span></div>
@@ -1614,7 +1614,6 @@
                         <td class="px-4 py-3"><span class="px-2 py-0.5 rounded text-[9px] font-bold border ${getSopStatusColor(i['Status Part'])}">${i['Status Part'] || '-'}</span></td>
                     </tr>`;
             }).join('');
-            document.getElementById('sopKpiModal').classList.add('hidden'); // Memperbaiki penutupan modal agar tidak langsung tertutup saat dibuka
             document.getElementById('sopKpiModal').classList.remove('hidden');
         }
 
