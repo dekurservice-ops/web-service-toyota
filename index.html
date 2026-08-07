@@ -229,6 +229,7 @@
                                 <th class="py-3.5 px-4 text-center">Datang</th>
                                 <th class="py-3.5 px-4 text-center">Tidak Datang</th>
                                 <th class="py-3.5 px-4 text-center">Belum Datang</th>
+                                <th class="py-3.5 px-4 text-center">Batal</th>
                                 <th class="py-3.5 px-4 text-center">Show Rate (%)</th>
                             </tr>
                         </thead>
@@ -724,8 +725,8 @@
             }).length;
 
             const batalCount = filteredGeneral.filter(d => {
-                const bVal = String(d.batal || '').toLowerCase();
-                return bVal === 'ya' || bVal === 'true' || bVal === '✓' || bVal === '1';
+                const bVal = String(d.batal || '').toLowerCase().trim();
+                return bVal === 'ya' || bVal === 'true' || bVal === '✓' || bVal === '1' || bVal === 'batal';
             }).length;
             
             const showRate = bookingOnCallCount > 0 ? ((totalDatang / bookingOnCallCount) * 100).toFixed(1) : 0;
@@ -903,7 +904,7 @@
                 if (!isValidBoc) return;
 
                 const name = item.mra;
-                if (!mraStats[name]) mraStats[name] = { total: 0, datang: 0, tidak: 0, belum: 0 };
+                if (!mraStats[name]) mraStats[name] = { total: 0, datang: 0, tidak: 0, belum: 0, batal: 0 };
                 mraStats[name].total++;
                 const stUpper = item.status.toUpperCase();
                 if (stUpper === 'DATANG' || stUpper === 'SBE' || stUpper === 'GRP' || (stUpper.includes('DATANG') && !stUpper.includes('TIDAK') && !stUpper.includes('BELUM'))) {
@@ -912,6 +913,11 @@
                     mraStats[name].tidak++;
                 } else if (stUpper.includes('BELUM')) {
                     mraStats[name].belum++;
+                }
+
+                const bVal = String(item.batal || '').toLowerCase().trim();
+                if (bVal === 'ya' || bVal === 'true' || bVal === '✓' || bVal === '1' || bVal === 'batal') {
+                    mraStats[name].batal++;
                 }
             });
 
@@ -926,7 +932,7 @@
             tbody.innerHTML = '';
 
             if (sortedMra.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="7" class="py-6 text-center text-slate-400">Tidak ada data ditemukan</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="8" class="py-6 text-center text-slate-400">Tidak ada data ditemukan</td></tr>`;
                 return;
             }
 
@@ -946,6 +952,7 @@
                     <td class="py-3 px-4 text-center text-emerald-600 font-bold hover:underline cursor-pointer" onclick="openMraModal('${mra.name}', 'TOTAL DATANG')">${mra.datang}</td>
                     <td class="py-3 px-4 text-center text-rose-600 font-bold hover:underline cursor-pointer" onclick="openMraModal('${mra.name}', 'TIDAK DATANG')">${mra.tidak}</td>
                     <td class="py-3 px-4 text-center text-amber-600 font-bold hover:underline cursor-pointer" onclick="openMraModal('${mra.name}', 'BELUM DATANG')">${mra.belum}</td>
+                    <td class="py-3 px-4 text-center text-slate-600 font-bold hover:underline cursor-pointer" onclick="openMraModal('${mra.name}', 'BATAL')">${mra.batal}</td>
                     <td class="py-3 px-4 text-center"><span class="px-2.5 py-1 rounded-full text-xs font-bold border ${badgeClass}">${mra.showRate}%</span></td>
                 `;
                 tbody.appendChild(tr);
@@ -969,6 +976,11 @@
                 list = list.filter(d => d.status.toUpperCase().includes('TIDAK') || d.status.toUpperCase().includes('CANCEL'));
             } else if (statusType === 'BELUM DATANG') {
                 list = list.filter(d => d.status.toUpperCase().includes('BELUM'));
+            } else if (statusType === 'BATAL') {
+                list = list.filter(d => {
+                    const bVal = String(d.batal || '').toLowerCase().trim();
+                    return bVal === 'ya' || bVal === 'true' || bVal === '✓' || bVal === '1' || bVal === 'batal';
+                });
             }
             openBookingModalCustom(`Detail MRA: ${mraName} (${statusType})`, `Menampilkan rincian nopol unit untuk MRA ${mraName}`, list, statusType);
         }
@@ -1009,8 +1021,8 @@
                 list = list.filter(d => d.status.toUpperCase().includes('BELUM'));
             } else if (type === 'BATAL') {
                 list = list.filter(d => {
-                    const bVal = String(d.batal || '').toLowerCase();
-                    return bVal === 'ya' || bVal === 'true' || bVal === '✓' || bVal === '1';
+                    const bVal = String(d.batal || '').toLowerCase().trim();
+                    return bVal === 'ya' || bVal === 'true' || bVal === '✓' || bVal === '1' || bVal === 'batal';
                 });
             } else if (type === 'SHOW RATE') {
                 list = list.filter(d => {
@@ -1082,7 +1094,7 @@
 
             let r1Html, r2Html, r3Html, batalHtml, remarksHtml, actionHtml = '';
 
-            const isBatalChecked = String(item.batal || '').toLowerCase() === 'ya' || String(item.batal || '').toLowerCase() === 'true' || item.batal === '✓' || item.batal === '1';
+            const isBatalChecked = String(item.batal || '').toLowerCase().trim() === 'ya' || String(item.batal || '').toLowerCase().trim() === 'true' || item.batal === '✓' || item.batal === '1' || String(item.batal || '').toLowerCase().trim() === 'batal';
 
             if (isModulTidakDatang) {
                 r1Html = `<input type="date" id="rd1_${item.id}" value="${item.resched1Date ? parseUniversalDate(item.resched1Date)?.toISOString().split('T')[0] || '' : ''}" onchange="handleReschedDate(${item.id}, 1, this.value)" class="bg-slate-50 border border-slate-200 rounded px-1.5 py-1 text-[11px] w-32 font-medium focus:outline-none focus:ring-1 focus:ring-red-500">`;
@@ -1522,7 +1534,6 @@
 
         function openSopKPIModal(st, title) {
             const upperSt = st.toUpperCase();
-            const list = st ? filteredSopData.getLen = (st) => ... : filteredSopData; // safe check fallback
             const targetList = st ? filteredSopData.filter(i => {
                 const itemStatus = i['Status Part'].toUpperCase();
                 if (upperSt.includes('TUNGGU PASANG')) {
