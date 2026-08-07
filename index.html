@@ -211,7 +211,7 @@
                 </div>
             </section>
 
-            <!-- LEADERBOARD MRA (Tanpa Kolom Reschedule & Remarks) -->
+            <!-- LEADERBOARD MRA -->
             <section class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
                 <div class="p-5 border-b border-slate-100 flex items-center justify-between">
                     <div>
@@ -617,34 +617,33 @@
         function processBookingData(data) {
             return data.map((row, index) => {
                 const rowArr = Object.values(row);
-                const nopol = getVal(row, ['Nomor Polisi', 'No Polisi', 'No Pol', 'Nopol']) || '-';
-                const sumber = getVal(row, ['Sumber Data', 'Sumber', 'Media']) || 'Lainnya';
-                const tglService = getVal(row, ['Service Tanggal', 'Tgl Service', 'Tanggal Service', 'Tanggal']) || '-';
-                const parsedService = parseUniversalDate(tglService);
-                const formattedService = parsedService ? formatDisplayDate(tglService) : (tglService || '-');
 
-                const rawTglBoc = getVal(row, ['Tanggal BOC', 'Tgl BOC', 'BOC']);
-                const parsedBoc = parseUniversalDate(rawTglBoc);
-                const tglBoc = parsedBoc ? formatDisplayDate(rawTglBoc) : (rawTglBoc || '');
+                const nopol = rowArr[1] || getVal(row, ['Nomor Polisi', 'No Polisi']) || '-';
+                const mra = rowArr[6] || getVal(row, ['Nama MRA', 'MRA']) || 'Unassigned';
                 
-                const mraVal = getVal(row, ['Nama MRA', 'MRA', 'Nama Mra', 'Nama Sales MRA', 'Sales MRA']);
-                const mra = (mraVal !== '' && mraVal !== '-') ? mraVal : 'Unassigned';
-                
-                const rawStatus = getVal(row, ['CAI', 'Status Kedatangan', 'Status', Object.keys(row)[9] || '']);
-                const status = (rawStatus !== '' && rawStatus !== '-' && rawStatus !== 'KOSONG') ? rawStatus : 'BELUM DIKONFIRMASI';
+                // Kolom J (index 9) adalah CAI / Status Kedatangan
+                const rawStatus = rowArr[9] || getVal(row, ['CAI', 'Status']) || 'BELUM DIKONFIRMASI';
+                const status = (rawStatus !== '' && rawStatus !== '-') ? rawStatus : 'BELUM DIKONFIRMASI';
 
-                const r1Dt = formatDisplayDate(rowArr[11] || getVal(row, ['Reschedule 1']));
-                const r2Dt = formatDisplayDate(rowArr[12] || getVal(row, ['Reschedule 2']));
-                const r3Dt = formatDisplayDate(rowArr[13] || getVal(row, ['Reschedule 3']));
-                const batalVal = rowArr[14] || getVal(row, ['Batal']) || '';
-                const rem = rowArr[15] || getVal(row, ['Remarks']) || '';
+                const tglBoc = rowArr[4] || getVal(row, ['Tanggal BOC', 'BOC']) || '';
+                const tglService = rowArr[5] || getVal(row, ['Service Tanggal', 'Tgl Service']) || '-';
+                const sumber = rowArr[3] || getVal(row, ['Sumber Data']) || 'Lainnya';
+
+                // Kolom L, M, N (index 11, 12, 13) untuk Reschedule 1, 2, 3
+                const r1Dt = formatDisplayDate(rowArr[11] || '');
+                const r2Dt = formatDisplayDate(rowArr[12] || '');
+                const r3Dt = formatDisplayDate(rowArr[13] || '');
+
+                // Kolom O (index 14) untuk Batal & Kolom P (index 15) untuk Remarks
+                const batalVal = rowArr[14] || '';
+                const rem = rowArr[15] || '';
 
                 return { 
                     id: index, 
                     nopol, 
                     sumber, 
-                    tglService: formattedService, 
-                    tglBoc, 
+                    tglService: formatDisplayDate(tglService), 
+                    tglBoc: formatDisplayDate(tglBoc), 
                     mra, 
                     status,
                     resched1Date: r1Dt,
@@ -714,7 +713,7 @@
 
             const tidakDatang = filteredGeneral.filter(d => {
                 const st = d.status.toUpperCase();
-                return st === 'TIDAK DATANG' || st.includes('TIDAK') || st.includes('CANCEL');
+                return (st.includes('TIDAK') || st.includes('CANCEL')) && !st.includes('BATAL');
             }).length;
 
             const belumDatang = filteredGeneral.filter(d => {
@@ -723,8 +722,11 @@
             }).length;
 
             const batalCount = filteredGeneral.filter(d => {
+                const st = d.status.toUpperCase();
                 const bVal = String(d.batal || '').trim();
-                return bVal !== '' && bVal !== '-' && bVal.toLowerCase() !== 'undefined' && bVal.toLowerCase() !== 'null';
+                const isBatalColumnFilled = bVal !== '' && bVal !== '-' && bVal.toLowerCase() !== 'undefined';
+                const isStatusBatal = st.includes('BATAL') || st.includes('CANCEL');
+                return isBatalColumnFilled || isStatusBatal;
             }).length;
             
             const showRate = bookingOnCallCount > 0 ? ((totalDatang / bookingOnCallCount) * 100).toFixed(1) : 0;
@@ -915,7 +917,9 @@
                 }
 
                 const bVal = String(item.batal || '').trim();
-                if (bVal !== '' && bVal !== '-' && bVal.toLowerCase() !== 'undefined' && bVal.toLowerCase() !== 'null') {
+                const isBatalColumnFilled = bVal !== '' && bVal !== '-' && bVal.toLowerCase() !== 'undefined';
+                const isStatusBatal = stUpper.includes('BATAL') || stUpper.includes('CANCEL');
+                if (isBatalColumnFilled || isStatusBatal) {
                     mraStats[name].batal++;
                 }
             });
@@ -976,8 +980,11 @@
                 list = list.filter(d => d.status.toUpperCase().includes('BELUM'));
             } else if (statusType === 'BATAL') {
                 list = list.filter(d => {
+                    const st = d.status.toUpperCase();
                     const bVal = String(d.batal || '').trim();
-                    return bVal !== '' && bVal !== '-' && bVal.toLowerCase() !== 'undefined' && bVal.toLowerCase() !== 'null';
+                    const isBatalColumnFilled = bVal !== '' && bVal !== '-' && bVal.toLowerCase() !== 'undefined';
+                    const isStatusBatal = st.includes('BATAL') || st.includes('CANCEL');
+                    return isBatalColumnFilled || isStatusBatal;
                 });
             }
             openBookingModalCustom(`Detail MRA: ${mraName} (${statusType})`, `Menampilkan rincian nopol unit untuk MRA ${mraName}`, list, statusType);
@@ -1019,8 +1026,11 @@
                 list = list.filter(d => d.status.toUpperCase().includes('BELUM'));
             } else if (type === 'BATAL') {
                 list = list.filter(d => {
+                    const st = d.status.toUpperCase();
                     const bVal = String(d.batal || '').trim();
-                    return bVal !== '' && bVal !== '-' && bVal.toLowerCase() !== 'undefined' && bVal.toLowerCase() !== 'null';
+                    const isBatalColumnFilled = bVal !== '' && bVal !== '-' && bVal.toLowerCase() !== 'undefined';
+                    const isStatusBatal = st.includes('BATAL') || st.includes('CANCEL');
+                    return isBatalColumnFilled || isStatusBatal;
                 });
             } else if (type === 'SHOW RATE') {
                 list = list.filter(d => {
