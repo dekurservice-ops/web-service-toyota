@@ -211,6 +211,7 @@
                 </div>
             </section>
 
+            <!-- LEADERBOARD MRA (Tanpa Kolom Reschedule & Remarks) -->
             <section class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
                 <div class="p-5 border-b border-slate-100 flex items-center justify-between">
                     <div>
@@ -615,6 +616,7 @@
 
         function processBookingData(data) {
             return data.map((row, index) => {
+                const rowArr = Object.values(row);
                 const nopol = getVal(row, ['Nomor Polisi', 'No Polisi', 'No Pol', 'Nopol']) || '-';
                 const sumber = getVal(row, ['Sumber Data', 'Sumber', 'Media']) || 'Lainnya';
                 const tglService = getVal(row, ['Service Tanggal', 'Tgl Service', 'Tanggal Service', 'Tanggal']) || '-';
@@ -631,14 +633,11 @@
                 const rawStatus = getVal(row, ['CAI', 'Status Kedatangan', 'Status', Object.keys(row)[9] || '']);
                 const status = (rawStatus !== '' && rawStatus !== '-' && rawStatus !== 'KOSONG') ? rawStatus : 'BELUM DIKONFIRMASI';
 
-                // Pemetaan Kolom L, M, N (Reschedule 1, 2, 3)
-                const r1Dt = formatDisplayDate(getVal(row, ['Reschedule 1', 'Resched 1 Tgl', 'Tgl 1', 'Resched1Tgl', Object.keys(row)[11] || '']));
-                const r2Dt = formatDisplayDate(getVal(row, ['Reschedule 2', 'Resched 2 Tgl', 'Tgl 2', 'Resched2Tgl', Object.keys(row)[12] || '']));
-                const r3Dt = formatDisplayDate(getVal(row, ['Reschedule 3', 'Resched 3 Tgl', 'Tgl 3', 'Resched3Tgl', Object.keys(row)[13] || '']));
-
-                // Pemetaan Kolom O & P (Batal & Remarks)
-                const batalVal = getVal(row, ['Batal', 'Status Batal', 'Cancel', Object.keys(row)[14] || '']) || '';
-                const rem = getVal(row, ['Remarks', 'Keterangan', 'Note', 'Remark', Object.keys(row)[15] || '']) || '';
+                const r1Dt = formatDisplayDate(rowArr[11] || getVal(row, ['Reschedule 1']));
+                const r2Dt = formatDisplayDate(rowArr[12] || getVal(row, ['Reschedule 2']));
+                const r3Dt = formatDisplayDate(rowArr[13] || getVal(row, ['Reschedule 3']));
+                const batalVal = rowArr[14] || getVal(row, ['Batal']) || '';
+                const rem = rowArr[15] || getVal(row, ['Remarks']) || '';
 
                 return { 
                     id: index, 
@@ -705,8 +704,7 @@
 
             const bookingOnCallCount = filteredGeneral.filter(item => {
                 const bocStr = String(item.tglBoc || '').trim();
-                const isValidBoc = bocStr !== '' && bocStr !== '-' && bocStr.toLowerCase() !== 'undefined' && bocStr.toLowerCase() !== 'null';
-                return isValidBoc;
+                return bocStr !== '' && bocStr !== '-' && bocStr.toLowerCase() !== 'undefined' && bocStr.toLowerCase() !== 'null';
             }).length;
 
             const totalDatang = filteredGeneral.filter(d => {
@@ -725,8 +723,8 @@
             }).length;
 
             const batalCount = filteredGeneral.filter(d => {
-                const bVal = String(d.batal || '').toLowerCase().trim();
-                return bVal === 'ya' || bVal === 'true' || bVal === '✓' || bVal === '1' || bVal === 'batal';
+                const bVal = String(d.batal || '').trim();
+                return bVal !== '' && bVal !== '-' && bVal.toLowerCase() !== 'undefined' && bVal.toLowerCase() !== 'null';
             }).length;
             
             const showRate = bookingOnCallCount > 0 ? ((totalDatang / bookingOnCallCount) * 100).toFixed(1) : 0;
@@ -905,6 +903,7 @@
 
                 const name = item.mra;
                 if (!mraStats[name]) mraStats[name] = { total: 0, datang: 0, tidak: 0, belum: 0, batal: 0 };
+                
                 mraStats[name].total++;
                 const stUpper = item.status.toUpperCase();
                 if (stUpper === 'DATANG' || stUpper === 'SBE' || stUpper === 'GRP' || (stUpper.includes('DATANG') && !stUpper.includes('TIDAK') && !stUpper.includes('BELUM'))) {
@@ -915,8 +914,8 @@
                     mraStats[name].belum++;
                 }
 
-                const bVal = String(item.batal || '').toLowerCase().trim();
-                if (bVal === 'ya' || bVal === 'true' || bVal === '✓' || bVal === '1' || bVal === 'batal') {
+                const bVal = String(item.batal || '').trim();
+                if (bVal !== '' && bVal !== '-' && bVal.toLowerCase() !== 'undefined' && bVal.toLowerCase() !== 'null') {
                     mraStats[name].batal++;
                 }
             });
@@ -952,7 +951,7 @@
                     <td class="py-3 px-4 text-center text-emerald-600 font-bold hover:underline cursor-pointer" onclick="openMraModal('${mra.name}', 'TOTAL DATANG')">${mra.datang}</td>
                     <td class="py-3 px-4 text-center text-rose-600 font-bold hover:underline cursor-pointer" onclick="openMraModal('${mra.name}', 'TIDAK DATANG')">${mra.tidak}</td>
                     <td class="py-3 px-4 text-center text-amber-600 font-bold hover:underline cursor-pointer" onclick="openMraModal('${mra.name}', 'BELUM DATANG')">${mra.belum}</td>
-                    <td class="py-3 px-4 text-center text-slate-600 font-bold hover:underline cursor-pointer" onclick="openMraModal('${mra.name}', 'BATAL')">${mra.batal}</td>
+                    <td class="py-3 px-4 text-center text-slate-700 font-bold hover:underline cursor-pointer" onclick="openMraModal('${mra.name}', 'BATAL')">${mra.batal}</td>
                     <td class="py-3 px-4 text-center"><span class="px-2.5 py-1 rounded-full text-xs font-bold border ${badgeClass}">${mra.showRate}%</span></td>
                 `;
                 tbody.appendChild(tr);
@@ -963,8 +962,7 @@
             let list = filteredBookingData.filter(d => {
                 if(d.mra !== mraName) return false;
                 const bocStr = String(d.tglBoc || '').trim();
-                const isValidBoc = bocStr !== '' && bocStr !== '-' && bocStr.toLowerCase() !== 'undefined' && bocStr.toLowerCase() !== 'null';
-                return isValidBoc;
+                return bocStr !== '' && bocStr !== '-' && bocStr.toLowerCase() !== 'undefined' && bocStr.toLowerCase() !== 'null';
             });
 
             if (statusType === 'TOTAL DATANG') {
@@ -978,8 +976,8 @@
                 list = list.filter(d => d.status.toUpperCase().includes('BELUM'));
             } else if (statusType === 'BATAL') {
                 list = list.filter(d => {
-                    const bVal = String(d.batal || '').toLowerCase().trim();
-                    return bVal === 'ya' || bVal === 'true' || bVal === '✓' || bVal === '1' || bVal === 'batal';
+                    const bVal = String(d.batal || '').trim();
+                    return bVal !== '' && bVal !== '-' && bVal.toLowerCase() !== 'undefined' && bVal.toLowerCase() !== 'null';
                 });
             }
             openBookingModalCustom(`Detail MRA: ${mraName} (${statusType})`, `Menampilkan rincian nopol unit untuk MRA ${mraName}`, list, statusType);
@@ -1021,8 +1019,8 @@
                 list = list.filter(d => d.status.toUpperCase().includes('BELUM'));
             } else if (type === 'BATAL') {
                 list = list.filter(d => {
-                    const bVal = String(d.batal || '').toLowerCase().trim();
-                    return bVal === 'ya' || bVal === 'true' || bVal === '✓' || bVal === '1' || bVal === 'batal';
+                    const bVal = String(d.batal || '').trim();
+                    return bVal !== '' && bVal !== '-' && bVal.toLowerCase() !== 'undefined' && bVal.toLowerCase() !== 'null';
                 });
             } else if (type === 'SHOW RATE') {
                 list = list.filter(d => {
@@ -1077,14 +1075,7 @@
 
         function createBookingRow(item, modalType) {
             const stUpper = item.status.toUpperCase();
-            let badgeColor = 'bg-amber-50 text-amber-600 border-amber-200';
             const isTidakDatang = stUpper.includes('TIDAK') || stUpper.includes('CANCEL') || stUpper.includes('BATAL');
-
-            if (stUpper === 'DATANG' || stUpper === 'SBE' || stUpper === 'GRP' || (stUpper.includes('DATANG') && !stUpper.includes('TIDAK') && !stUpper.includes('BELUM'))) {
-                badgeColor = 'bg-emerald-50 text-emerald-600 border-emerald-200';
-            } else if (isTidakDatang) {
-                badgeColor = 'bg-rose-50 text-rose-600 border-rose-200';
-            }
 
             const tr = document.createElement('tr');
             tr.className = "hover:bg-slate-50 transition-colors";
@@ -1094,7 +1085,7 @@
 
             let r1Html, r2Html, r3Html, batalHtml, remarksHtml, actionHtml = '';
 
-            const isBatalChecked = String(item.batal || '').toLowerCase().trim() === 'ya' || String(item.batal || '').toLowerCase().trim() === 'true' || item.batal === '✓' || item.batal === '1' || String(item.batal || '').toLowerCase().trim() === 'batal';
+            const isBatalChecked = String(item.batal || '').trim() !== '' && String(item.batal || '').trim() !== '-';
 
             if (isModulTidakDatang) {
                 r1Html = `<input type="date" id="rd1_${item.id}" value="${item.resched1Date ? parseUniversalDate(item.resched1Date)?.toISOString().split('T')[0] || '' : ''}" onchange="handleReschedDate(${item.id}, 1, this.value)" class="bg-slate-50 border border-slate-200 rounded px-1.5 py-1 text-[11px] w-32 font-medium focus:outline-none focus:ring-1 focus:ring-red-500">`;
@@ -1114,6 +1105,13 @@
                 batalHtml = `<div class="flex items-center justify-center"><input type="checkbox" disabled ${isBatalChecked ? 'checked' : ''} class="rounded text-slate-400 w-4 h-4 opacity-70"></div>`;
                 
                 remarksHtml = `<input type="text" value="${item.remarks || ''}" oninput="handleRemarksInput(${item.id}, this.value)" placeholder="Ketik remarks..." class="bg-slate-50 border border-slate-200 rounded px-2 py-1 text-[11px] w-full focus:outline-none focus:ring-1 focus:ring-red-500 font-medium">`;
+            }
+
+            let badgeColor = 'bg-amber-50 text-amber-600 border-amber-200';
+            if (stUpper === 'DATANG' || stUpper === 'SBE' || stUpper === 'GRP' || (stUpper.includes('DATANG') && !stUpper.includes('TIDAK') && !stUpper.includes('BELUM'))) {
+                badgeColor = 'bg-emerald-50 text-emerald-600 border-emerald-200';
+            } else if (isTidakDatang) {
+                badgeColor = 'bg-rose-50 text-rose-600 border-rose-200';
             }
 
             tr.innerHTML = `
@@ -1145,7 +1143,7 @@
         function handleBatalCheckbox(id, isChecked) {
             const item = rawBookingData.find(d => d.id === id);
             if (item) {
-                item.batal = isChecked ? 'YA' : 'TIDAK';
+                item.batal = isChecked ? 'YA' : '';
             }
         }
 
