@@ -630,10 +630,12 @@
                 const rawStatus = getVal(row, ['CAI', 'Status Kedatangan', 'Status', Object.keys(row)[9] || '']);
                 const status = (rawStatus !== '' && rawStatus !== '-' && rawStatus !== 'KOSONG') ? rawStatus : 'BELUM DIKONFIRMASI';
 
+                // Kolom L, M, N (Reschedule 1, 2, 3)
                 const r1Dt = formatDisplayDate(getVal(row, ['Reschedule 1', 'Resched 1 Tgl', 'Tgl 1', 'Resched1Tgl']));
                 const r2Dt = formatDisplayDate(getVal(row, ['Reschedule 2', 'Resched 2 Tgl', 'Tgl 2', 'Resched2Tgl']));
                 const r3Dt = formatDisplayDate(getVal(row, ['Reschedule 3', 'Resched 3 Tgl', 'Tgl 3', 'Resched3Tgl']));
 
+                // Kolom O & P (Batal & Remarks)
                 const batalVal = getVal(row, ['Batal', 'Status Batal', 'Cancel']) || '';
                 const rem = getVal(row, ['Remarks', 'Keterangan', 'Note', 'Remark']) || '';
 
@@ -1149,7 +1151,8 @@
             btnElement.innerHTML = `<i data-lucide="loader" class="w-3 h-3 animate-spin"></i> Proses`;
             lucide.createIcons();
 
-            const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxvJdq0jME5qm-c69IWzIXYtv2RD5uQxCRpDGTLtwF52p2J9ufMIbYt5oQeXOhS6j1LVw/exec'; 
+            // URL Web App terbaru Anda
+            const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwY7r-75S3aP1J1WbNp4MW5x-gDHfO4IH188C7D51hgqpmsYWdJRMdqyeUSp0oQBfh4kg/exec'; 
 
             const payloadObject = {
                 id: item.id,
@@ -1541,7 +1544,7 @@
             }) : filteredSopData;
 
             document.getElementById('sopKpiModalTitle').innerText = title;
-            document.getElementById('sopKpiModalTableBody').innerHTML = list.link(i => {
+            document.getElementById('sopKpiModalTableBody').innerHTML = list.map(i => {
                 return `
                     <tr class="hover:bg-slate-50 transition-colors">
                         <td class="px-4 py-3 font-mono text-[10px] font-bold text-slate-700">${i['Code'] || '-'}</td>
@@ -1550,7 +1553,7 @@
                         <td class="px-4 py-3"><span class="px-2 py-0.5 rounded text-[9px] font-bold border ${getSopStatusColor(i['Status Part'])}">${i['Status Part'] || '-'}</span></td>
                     </tr>`;
             }).join('');
-            document.getElementById('sopKpiModal').classList.add('hidden');
+            document.getElementById('sopKpiModal').classList.remove('hidden');
         }
 
         function closeSopKPIModal() { document.getElementById('sopKpiModal').classList.add('hidden'); }
