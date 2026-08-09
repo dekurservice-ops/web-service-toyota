@@ -618,25 +618,22 @@
             return data.map((row, index) => {
                 const rowArr = Object.values(row);
 
-                const nopol = rowArr[1] || getVal(row, ['Nomor Polisi', 'No Polisi']) || '-';
-                const mra = rowArr[6] || getVal(row, ['Nama MRA', 'MRA']) || 'Unassigned';
+                const nopol = getVal(row, ['Nomor Polisi', 'No Polisi', 'Nopol']) || rowArr[1] || '-';
+                const mra = getVal(row, ['Nama MRA', 'MRA', 'SA']) || rowArr[6] || 'Unassigned';
                 
-                // Kolom J (index 9) adalah CAI / Status Kedatangan
-                const rawStatus = rowArr[9] || getVal(row, ['CAI', 'Status']) || 'BELUM DIKONFIRMASI';
+                const rawStatus = getVal(row, ['CAI', 'Status', 'Status Kedatangan']) || rowArr[9] || 'BELUM DIKONFIRMASI';
                 const status = (rawStatus !== '' && rawStatus !== '-') ? rawStatus : 'BELUM DIKONFIRMASI';
 
-                const tglBoc = rowArr[4] || getVal(row, ['Tanggal BOC', 'BOC']) || '';
-                const tglService = rowArr[5] || getVal(row, ['Service Tanggal', 'Tgl Service']) || '-';
-                const sumber = rowArr[3] || getVal(row, ['Sumber Data']) || 'Lainnya';
+                const tglBoc = getVal(row, ['Tanggal BOC', 'BOC', 'Tgl BOC']) || rowArr[4] || '';
+                const tglService = getVal(row, ['Service Tanggal', 'Tgl Service', 'Tanggal Service']) || rowArr[5] || '-';
+                const sumber = getVal(row, ['Sumber Data', 'Sumber']) || rowArr[3] || 'Lainnya';
 
-                // Kolom L, M, N (index 11, 12, 13) untuk Reschedule 1, 2, 3
-                const r1Dt = formatDisplayDate(rowArr[11] || '');
-                const r2Dt = formatDisplayDate(rowArr[12] || '');
-                const r3Dt = formatDisplayDate(rowArr[13] || '');
+                const r1Dt = formatDisplayDate(getVal(row, ['Reschedule 1', 'Resched 1']) || rowArr[11] || '');
+                const r2Dt = formatDisplayDate(getVal(row, ['Reschedule 2', 'Resched 2']) || rowArr[12] || '');
+                const r3Dt = formatDisplayDate(getVal(row, ['Reschedule 3', 'Resched 3']) || rowArr[13] || '');
 
-                // Kolom O (index 14) untuk Batal & Kolom P (index 15) untuk Remarks
-                const batalVal = rowArr[14] || '';
-                const rem = rowArr[15] || '';
+                const batalVal = getVal(row, ['Batal']) || rowArr[14] || '';
+                const rem = getVal(row, ['Remarks', 'Keterangan']) || rowArr[15] || '';
 
                 return { 
                     id: index, 
