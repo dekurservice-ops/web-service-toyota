@@ -625,10 +625,10 @@
                 const status = (rawStatus !== '' && rawStatus !== '-') ? rawStatus : 'BELUM DIKONFIRMASI';
 
                 const tglBoc = getVal(row, ['Tanggal BOC', 'BOC', 'Tgl BOC']) || rowArr[4] || '';
-                const tglService = getVal(row, ['Service Tanggal', 'Tgl Service', 'Booking untuk Tgl', 'Booking Untuk Tg']) || rowArr[5] || '-';
+                const tglService = getVal(row, ['Service Tanggal', 'Tgl Service', 'Booking untuk Tgl', 'Booking untuk Tg']) || rowArr[5] || '-';
                 const sumber = getVal(row, ['Sumber Data', 'Sumber']) || rowArr[3] || 'Lainnya';
 
-                // Membaca kolom Reschedule 1 s.d. Remarks (Kolom K s.d. O / Index 10 s.d. 14)
+                // Membaca kolom K s.d. O (Reschedule 1, Reschedule 2, Reschedule 3, Batal, Remarks)
                 const r1Dt = formatDisplayDate(getVal(row, ['Reschedule 1', 'Resched 1']) || rowArr[10] || '');
                 const r2Dt = formatDisplayDate(getVal(row, ['Reschedule 2', 'Resched 2']) || rowArr[11] || '');
                 const r3Dt = formatDisplayDate(getVal(row, ['Reschedule 3', 'Resched 3']) || rowArr[12] || '');
