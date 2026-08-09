@@ -20,9 +20,52 @@
         .kpi-card:hover { transform: translateY(-3px); }
         .chart-container { position: relative; height: 260px; width: 100%; }
         .truncate-part { display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; }
+        .space-bg {
+            background-image: linear-gradient(rgba(15, 23, 42, 0.85), rgba(15, 23, 42, 0.95)), url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=1920&auto=format&fit=crop');
+            background-size: cover;
+            background-position: center;
+        }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 antialiased min-h-screen flex flex-col">
+
+    <!-- LOGIN OVERLAY -->
+    <div id="loginOverlay" class="fixed inset-0 z-50 flex items-center justify-center p-4 space-bg backdrop-blur-md">
+        <div class="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl w-full max-w-md p-8 border border-white/20 relative overflow-hidden">
+            <div class="absolute -top-12 -right-12 w-32 h-32 bg-indigo-500/10 rounded-full blur-2xl pointer-events-none"></div>
+            
+            <!-- BRANDING RUANG PIKIR BARU -->
+            <div class="flex flex-col items-center text-center mb-6">
+                <div class="w-14 h-14 bg-gradient-to-tr from-indigo-600 via-purple-600 to-pink-500 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-500/30 mb-3 transform hover:rotate-6 transition-transform">
+                    <i data-lucide="sparkles" class="w-7 h-7"></i>
+                </div>
+                <span class="text-[10px] font-extrabold uppercase tracking-widest text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full mb-1">Inovasi & Eksplorasi</span>
+                <h2 class="font-extrabold text-slate-900 text-xl tracking-tight">Ruang Pikir Baru</h2>
+                <p class="text-xs text-slate-500 mt-1">Astrido Karawang Aftersales Intelligence Portal</p>
+            </div>
+
+            <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 uppercase mb-1.5">Username / Email</label>
+                    <input type="text" id="loginUser" required placeholder="Masukkan username..." 
+                        class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:ring-2 focus:ring-indigo-500 outline-none transition-all">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 uppercase mb-1.5">Password</label>
+                    <input type="password" id="loginPass" required placeholder="••••••••" 
+                        class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:ring-2 focus:ring-indigo-500 outline-none transition-all">
+                </div>
+                <div id="loginError" class="text-rose-500 text-xs font-medium hidden text-center bg-rose-50 p-2 rounded-lg"></div>
+                
+                <button type="submit" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-slate-900/20 text-xs uppercase tracking-wider flex items-center justify-center gap-2">
+                    <i data-lucide="log-in" class="w-4 h-4"></i> Masuk ke Dashboard
+                </button>
+            </form>
+            <div class="mt-6 text-center">
+                <p class="text-[10px] text-slate-400 font-medium">Hint: Gunakan username <span class="text-slate-600 font-bold">dekurkrw24</span> & password <span class="text-slate-600 font-bold">1234567@ja</span></p>
+            </div>
+        </div>
+    </div>
 
     <!-- SIDEBAR OVERLAY -->
     <div id="sidebarOverlay" class="fixed inset-0 bg-slate-900/50 z-40 hidden transition-opacity duration-300" onclick="toggleSidebar()"></div>
@@ -54,6 +97,11 @@
                 <span>Special Order Part</span>
             </button>
         </nav>
+        <div class="p-4 border-t border-slate-100">
+            <button onclick="handleLogout()" class="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold text-rose-600 bg-rose-50 hover:bg-rose-100 rounded-xl transition-all">
+                <i data-lucide="log-out" class="w-4 h-4"></i> Keluar Akun
+            </button>
+        </div>
     </aside>
 
     <!-- HEADER -->
@@ -460,13 +508,40 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             lucide.createIcons();
-            fetchAllData();
+            
+            // Cek Sesi Login Statis
+            if (sessionStorage.getItem('isLoggedIn') === 'true') {
+                document.getElementById('loginOverlay').classList.add('hidden');
+                fetchAllData();
+            }
 
             ['sop-search', 'sop-filter-sa', 'sop-filter-status', 'sop-filter-start', 'sop-filter-end'].forEach(id => {
                 const el = document.getElementById(id);
                 if(el) el.addEventListener('input', applySopFilters);
             });
         });
+
+        function handleLogin(event) {
+            event.preventDefault();
+            const user = document.getElementById('loginUser').value.trim();
+            const pass = document.getElementById('loginPass').value.trim();
+
+            // Password Statis Baru
+            if (user === "dekurkrw24" && pass === "1234567@ja") {
+                sessionStorage.setItem('isLoggedIn', 'true');
+                document.getElementById('loginOverlay').classList.add('hidden');
+                fetchAllData();
+            } else {
+                const errEl = document.getElementById('loginError');
+                errEl.textContent = "Username atau Password salah!";
+                errEl.classList.remove('hidden');
+            }
+        }
+
+        function handleLogout() {
+            sessionStorage.removeItem('isLoggedIn');
+            location.reload();
+        }
 
         function switchView(viewName) {
             const bookingView = document.getElementById('view-booking');
@@ -508,7 +583,7 @@
             Promise.all([
                 new Promise(resolve => {
                     Papa.parse(CSV_BOOKING_URL + cacheBuster, {
-                        download: true, header: false, skipEmptyLines: true, // header: false agar array baris langsung terbaca urut
+                        download: true, header: false, skipEmptyLines: true,
                         complete: function(results) {
                             rawBookingData = processBookingData(results.data);
                             populateBookingMraFilterOptions();
@@ -604,15 +679,12 @@
 
         function processBookingData(rows) {
             const result = [];
-            // Mulai dari baris index 1 (karena baris 0 adalah Header)
             for (let i = 1; i < rows.length; i++) {
                 const r = rows[i];
                 if (!r || r.length === 0) continue;
 
-                // Pemetaan indeks kolom persis dari Google Sheet Anda:
-                // B (1) = Nopol, D (3) = Sumber, E (4) = Tgl BOC, F (5) = Tgl Service, G (6) = MRA, J (9) = Status (CAI)
                 const nopol = String(r[1] || '').trim();
-                if (!nopol || nopol === '-') continue; // Skip baris kosong
+                if (!nopol || nopol === '-') continue;
 
                 const sumber = String(r[3] || 'Lainnya').trim();
                 const tglBoc = String(r[4] || '').trim();
@@ -621,7 +693,6 @@
                 const rawStatus = String(r[9] || 'BELUM DIKONFIRMASI').trim();
                 const status = (rawStatus !== '' && rawStatus !== '-') ? rawStatus : 'BELUM DIKONFIRMASI';
 
-                // Kolom tambahan K s.d. O (Reschedule, Batal, Remarks) jika ada
                 const r1Dt = formatDisplayDate(String(r[10] || '').trim());
                 const r2Dt = formatDisplayDate(String(r[11] || '').trim());
                 const r3Dt = formatDisplayDate(String(r[12] || '').trim());
@@ -629,7 +700,7 @@
                 const rem = String(r[14] || '').trim();
 
                 result.push({
-                    id: i - 1, // ID baris untuk penyimpanan Apps Script
+                    id: i - 1,
                     nopol,
                     sumber,
                     tglBoc: formatDisplayDate(tglBoc),
@@ -1562,3 +1633,4 @@
     </script>
 </body>
 </html>
+
