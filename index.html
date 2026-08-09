@@ -625,15 +625,16 @@
                 const status = (rawStatus !== '' && rawStatus !== '-') ? rawStatus : 'BELUM DIKONFIRMASI';
 
                 const tglBoc = getVal(row, ['Tanggal BOC', 'BOC', 'Tgl BOC']) || rowArr[4] || '';
-                const tglService = getVal(row, ['Service Tanggal', 'Tgl Service', 'Tanggal Service']) || rowArr[5] || '-';
+                const tglService = getVal(row, ['Service Tanggal', 'Tgl Service', 'Booking untuk Tgl', 'Booking Untuk Tg']) || rowArr[5] || '-';
                 const sumber = getVal(row, ['Sumber Data', 'Sumber']) || rowArr[3] || 'Lainnya';
 
-                const r1Dt = formatDisplayDate(getVal(row, ['Reschedule 1', 'Resched 1']) || rowArr[11] || '');
-                const r2Dt = formatDisplayDate(getVal(row, ['Reschedule 2', 'Resched 2']) || rowArr[12] || '');
-                const r3Dt = formatDisplayDate(getVal(row, ['Reschedule 3', 'Resched 3']) || rowArr[13] || '');
+                // Membaca kolom Reschedule 1 s.d. Remarks (Kolom K s.d. O / Index 10 s.d. 14)
+                const r1Dt = formatDisplayDate(getVal(row, ['Reschedule 1', 'Resched 1']) || rowArr[10] || '');
+                const r2Dt = formatDisplayDate(getVal(row, ['Reschedule 2', 'Resched 2']) || rowArr[11] || '');
+                const r3Dt = formatDisplayDate(getVal(row, ['Reschedule 3', 'Resched 3']) || rowArr[12] || '');
 
-                const batalVal = getVal(row, ['Batal']) || rowArr[14] || '';
-                const rem = getVal(row, ['Remarks', 'Keterangan']) || rowArr[15] || '';
+                const batalVal = getVal(row, ['Batal']) || rowArr[13] || '';
+                const rem = getVal(row, ['Remarks', 'Keterangan']) || rowArr[14] || '';
 
                 return { 
                     id: index, 
