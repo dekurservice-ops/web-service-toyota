@@ -2095,10 +2095,8 @@
                 return;
             }
 
-            // Render Header dinamis dari CSV
             thead.innerHTML = `<tr>${tmsHeaders.map(h => `<th class="py-3.5 px-4">${h}</th>`).join('')}</tr>`;
 
-            // Render Baris Data dinamis dari CSV
             tbody.innerHTML = rawTmsData.map(row => {
                 return `
                     <tr class="hover:bg-slate-50 transition-colors">
@@ -2109,7 +2107,6 @@
 
             const totalKunjungan = rawTmsData.length;
 
-            // Cari kolom yang mengandung Nopol / Plat / Kendaraan untuk menghitung CZI dan SRR
             const nopolHeaderKey = tmsHeaders.find(h => {
                 const low = h.toLowerCase();
                 return low.includes('nopol') || low.includes('plat') || low.includes('nomor') || low.includes('kendaraan');
