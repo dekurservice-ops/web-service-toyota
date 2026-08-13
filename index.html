@@ -813,18 +813,14 @@
         const CSV_SOP_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTIDLFkByyO5KJDw2vLnF2kxcj1lSoDEeN_Hw9fnYOEnmXvuZuzynN1ncnaGsudHALaj-DR0nzMHB0j/pub?gid=0&single=true&output=csv';
         const CSV_DETAIL_PART_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTIDLFkByyO5KJDw2vLnF2kxcj1lSoDEeN_Hw9fnYOEnmXvuZuzynN1ncnaGsudHALaj-DR0nzMHB0j/pub?gid=539769690&single=true&output=csv';
         const CSV_REVENUE_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSJZFlXUlafjoXxaloZYYNXCBFTUAhtSSgb7c5rdLYxPoE3DRt6HTg6J-aIhOPg44xQs3VeZP1-3yuV/pub?gid=0&single=true&output=csv';
+        const CSV_TMS_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT6D-qamOPSKmIbpyU6wE9VxnhpltK4az0RpEl1LG1sHOztyPfxTB7MF4JTV3z63oG0Un-Eh3OWU1AX/pub?gid=810762351&single=true&output=csv';
 
         let rawBookingData = [], filteredBookingData = [];
         let trendChartInstance = null, sumberChartInstance = null, bocPerMraChartInstance = null;
         let rawSopMasterData = [], rawDetailPartData = [], groupedSopData = [], filteredSopData = [], sopCharts = {};
         let rawRevenueData = [], filteredRevenueData = [], filteredCompRevenueData = [];
         let revenueTrendChartInstance = null, revenueCompositionChartInstance = null, revenueSaChartInstance = null, revenueMonthlyComparisonChartInstance = null, revenueSaHorizontalChartInstance = null;
-
-        // Dummy data for Toyota Mobile Service (TMS)
-        let rawTmsData = [
-            { date: '12-Aug-2026', nopol: 'T 1234 AB', lokasi: 'PT Bridgestone Karawang', pic: 'Budi', status: 'Selesai', revenue: 1500000 },
-            { date: '13-Aug-2026', nopol: 'T 5678 CD', lokasi: 'Kawasan KIIC Lot B', pic: 'Joko', status: 'Proses', revenue: 850000 }
-        ];
+        let rawTmsData = [];
 
         Chart.register(ChartDataLabels);
 
@@ -961,6 +957,16 @@
                             rawRevenueData = processRevenueData(results.data);
                             populateRevenueSaOptions();
                             applyRevenueFilters();
+                            resolve();
+                        }
+                    });
+                }),
+                new Promise(resolve => {
+                    Papa.parse(CSV_TMS_URL + cacheBuster, {
+                        download: true, header: false, skipEmptyLines: true,
+                        complete: function(results) {
+                            rawTmsData = processTmsData(results.data);
+                            applyTmsFilters();
                             resolve();
                         }
                     });
@@ -2063,6 +2069,35 @@
         }
 
         // ================= TOYOTA MOBILE SERVICE (TMS) LOGIC =================
+        function processTmsData(rows) {
+            const result = [];
+            if (!rows || rows.length === 0) return result;
+
+            for (let i = 1; i < rows.length; i++) {
+                const r = rows[i];
+                if (!r || r.length === 0) continue;
+
+                const dateVal = String(r[0] || '').trim();
+                const nopol = String(r[1] || '').trim();
+                const lokasi = String(r[2] || '').trim();
+                const pic = String(r[3] || '').trim();
+                const status = String(r[4] || 'Proses').trim();
+                const revenue = parseNumericValue(r[5] || 0);
+
+                if (!nopol || nopol === '-') continue;
+
+                result.push({
+                    date: formatDisplayDate(dateVal) || dateVal,
+                    nopol,
+                    lokasi,
+                    pic,
+                    status: status || 'Proses',
+                    revenue
+                });
+            }
+            return result;
+        }
+
         function applyTmsFilters() {
             const tbody = document.getElementById('tmsTableBody');
             if(!tbody) return;
@@ -2074,7 +2109,7 @@
                     <td class="py-3.5 px-4 text-slate-600">${item.lokasi}</td>
                     <td class="py-3.5 px-4 text-slate-600">${item.pic}</td>
                     <td class="py-3.5 px-4 text-center">
-                        <span class="px-2.5 py-1 rounded-full text-xs font-bold border ${item.status === 'Selesai' ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-amber-50 text-amber-600 border-amber-200'}">
+                        <span class="px-2.5 py-1 rounded-full text-xs font-bold border ${item.status.toLowerCase().includes('selesai') ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-amber-50 text-amber-600 border-amber-200'}">
                             ${item.status}
                         </span>
                     </td>
@@ -2083,14 +2118,20 @@
             `).join('');
 
             document.getElementById('kpiTmsTotal').textContent = rawTmsData.length;
-            document.getElementById('kpiTmsSelesai').textContent = rawTmsData.filter(i => i.status === 'Selesai').length;
-            document.getElementById('kpiTmsProcess').textContent = rawTmsData.filter(i => i.status !== 'Selesai').length;
+            document.getElementById('kpiTmsSelesai').textContent = rawTmsData.filter(i => i.status.toLowerCase().includes('selesai')).length;
+            document.getElementById('kpiTmsProcess').textContent = rawTmsData.filter(i => !i.status.toLowerCase().includes('selesai')).length;
             
             const totalRev = rawTmsData.reduce((acc, curr) => acc + curr.revenue, 0);
-            document.getElementById('kpiTmsRevenue').textContent = `Rp ${(totalRev / 1000000).toFixed(1)} Jt`;
+            document.getElementById('kpiTmsRevenue').textContent = formatIDR ? formatIDR(totalRev) : `Rp ${totalRev.toLocaleString('id-ID')}`;
             document.getElementById('tms-data-count').textContent = `${rawTmsData.length} Records`;
             
             lucide.createIcons();
+        }
+
+        function formatIDR(val) {
+            if (val >= 1000000000) return `Rp ${(val / 1000000000).toFixed(1)} M`;
+            if (val >= 1000000) return `Rp ${(val / 1000000).toFixed(1)} Jt`;
+            return `Rp ${val.toLocaleString('id-ID')}`;
         }
 
         function openMraModal(mraName, statusType) {
