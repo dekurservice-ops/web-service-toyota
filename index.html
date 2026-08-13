@@ -666,7 +666,7 @@
                 </div>
                 <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
                     <div class="flex items-center justify-between text-emerald-600">
-                        <span class="text-[10px] font-bold uppercase tracking-wider">Nopol B-1092-CZI</span>
+                        <span class="text-[10px] font-bold uppercase tracking-wider">B-1092-CZI</span>
                         <div class="p-1.5 bg-emerald-50 text-emerald-600 rounded-lg"><i data-lucide="car" class="w-4 h-4"></i></div>
                     </div>
                     <h3 id="kpiTmsCzi" class="text-2xl font-bold mt-2 text-emerald-600">0 Unit</h3>
@@ -674,7 +674,7 @@
                 </div>
                 <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
                     <div class="flex items-center justify-between text-purple-600">
-                        <span class="text-[10px] font-bold uppercase tracking-wider">Nopol B-2953-SRR</span>
+                        <span class="text-[10px] font-bold uppercase tracking-wider">B-2953-SRR</span>
                         <div class="p-1.5 bg-purple-50 text-purple-600 rounded-lg"><i data-lucide="car" class="w-4 h-4"></i></div>
                     </div>
                     <h3 id="kpiTmsSrr" class="text-2xl font-bold mt-2 text-purple-600">0 Unit</h3>
@@ -686,23 +686,14 @@
             <section class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
                 <div class="p-5 border-b border-slate-100 flex items-center justify-between">
                     <div>
-                        <h3 class="font-bold text-slate-800 text-base">Daftar Aktivitas Toyota Mobile Service</h3>
+                        <h3 class="font-bold text-slate-800 text-base" id="tmsTableMainTitle">Daftar Aktivitas Toyota Mobile Service</h3>
                         <p class="text-xs text-slate-400">Monitoring operasional layanan servis kunjungan bergerak</p>
                     </div>
                     <span id="tms-data-count" class="text-xs font-bold bg-slate-100 border border-slate-200 text-slate-600 px-3 py-1 rounded-full">0 Records</span>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left text-xs text-slate-600">
-                        <thead class="bg-slate-50 text-slate-700 font-semibold uppercase tracking-wider border-b border-slate-100">
-                            <tr>
-                                <th class="py-3.5 px-4">Tanggal</th>
-                                <th class="py-3.5 px-4">No Kendaraan</th>
-                                <th class="py-3.5 px-4">Lokasi / Instansi</th>
-                                <th class="py-3.5 px-4">PIC / Driver</th>
-                                <th class="py-3.5 px-4 text-center">Status</th>
-                                <th class="py-3.5 px-4 text-right">Pendapatan (Rp)</th>
-                            </tr>
-                        </thead>
+                        <thead id="tmsTableHead" class="bg-slate-50 text-slate-700 font-semibold uppercase tracking-wider border-b border-slate-100"></thead>
                         <tbody id="tmsTableBody" class="divide-y divide-slate-100 font-medium"></tbody>
                     </table>
                 </div>
@@ -816,7 +807,7 @@
         let rawSopMasterData = [], rawDetailPartData = [], groupedSopData = [], filteredSopData = [], sopCharts = {};
         let rawRevenueData = [], filteredRevenueData = [], filteredCompRevenueData = [];
         let revenueTrendChartInstance = null, revenueCompositionChartInstance = null, revenueSaChartInstance = null, revenueMonthlyComparisonChartInstance = null, revenueSaHorizontalChartInstance = null;
-        let rawTmsData = [];
+        let rawTmsData = [], tmsHeaders = [];
 
         Chart.register(ChartDataLabels);
 
@@ -961,7 +952,9 @@
                     Papa.parse(CSV_TMS_URL + cacheBuster, {
                         download: true, header: false, skipEmptyLines: true,
                         complete: function(results) {
-                            rawTmsData = processTmsData(results.data);
+                            const parsedTms = processTmsData(results.data);
+                            tmsHeaders = parsedTms.headers;
+                            rawTmsData = parsedTms.rows;
                             applyTmsFilters();
                             resolve();
                         }
@@ -2066,60 +2059,72 @@
 
         // ================= TOYOTA MOBILE SERVICE (TMS) LOGIC =================
         function processTmsData(rows) {
-            const result = [];
-            if (!rows || rows.length === 0) return result;
+            if (!rows || rows.length === 0) return { headers: [], rows: [] };
+
+            const headers = rows[0].map(h => String(h || '').trim());
+            const resultRows = [];
 
             for (let i = 1; i < rows.length; i++) {
                 const r = rows[i];
                 if (!r || r.length === 0) continue;
 
-                const dateVal = String(r[0] || '').trim();
-                const nopol = String(r[1] || '').trim();
-                const lokasi = String(r[2] || '').trim();
-                const pic = String(r[3] || '').trim();
-                const status = String(r[4] || 'Proses').trim();
-                const revenue = parseNumericValue(r[5] || 0);
+                const rowObj = {};
+                let hasValue = false;
+                for (let j = 0; j < headers.length; j++) {
+                    const colName = headers[j] || `Col_${j}`;
+                    const val = String(r[j] || '').trim();
+                    rowObj[colName] = val;
+                    if (val && val !== '-') hasValue = true;
+                }
 
-                if (!nopol || nopol === '-') continue;
-
-                result.push({
-                    date: formatDisplayDate(dateVal) || dateVal,
-                    nopol,
-                    lokasi,
-                    pic,
-                    status: status || 'Proses',
-                    revenue
-                });
+                if (hasValue) {
+                    resultRows.push(rowObj);
+                }
             }
-            return result;
+            return { headers, rows: resultRows };
         }
 
         function applyTmsFilters() {
+            const thead = document.getElementById('tmsTableHead');
             const tbody = document.getElementById('tmsTableBody');
-            if(!tbody) return;
+            if(!thead || !tbody) return;
 
-            tbody.innerHTML = rawTmsData.map(item => `
-                <tr class="hover:bg-slate-50 transition-colors">
-                    <td class="py-3.5 px-4 font-semibold text-slate-700">${item.date}</td>
-                    <td class="py-3.5 px-4 font-bold text-slate-900">${item.nopol}</td>
-                    <td class="py-3.5 px-4 text-slate-600">${item.lokasi}</td>
-                    <td class="py-3.5 px-4 text-slate-600">${item.pic}</td>
-                    <td class="py-3.5 px-4 text-center">
-                        <span class="px-2.5 py-1 rounded-full text-xs font-bold border ${item.status.toLowerCase().includes('selesai') ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-amber-50 text-amber-600 border-amber-200'}">
-                            ${item.status}
-                        </span>
-                    </td>
-                    <td class="py-3.5 px-4 text-right font-bold text-indigo-600">Rp ${item.revenue.toLocaleString('id-ID')}</td>
-                </tr>
-            `).join('');
+            if (!tmsHeaders || tmsHeaders.length === 0) {
+                thead.innerHTML = `<tr><th class="py-3.5 px-4">Data Kosong</th></tr>`;
+                tbody.innerHTML = `<tr><td class="py-6 px-4 text-center text-slate-400">Tidak ada header terdeteksi</td></tr>`;
+                return;
+            }
+
+            // Render Header dinamis dari CSV
+            thead.innerHTML = `<tr>${tmsHeaders.map(h => `<th class="py-3.5 px-4">${h}</th>`).join('')}</tr>`;
+
+            // Render Baris Data dinamis dari CSV
+            tbody.innerHTML = rawTmsData.map(row => {
+                return `
+                    <tr class="hover:bg-slate-50 transition-colors">
+                        ${tmsHeaders.map(h => `<td class="py-3.5 px-4 text-slate-700">${row[h] || '-'}</td>`).join('')}
+                    </tr>
+                `;
+            }).join('');
 
             const totalKunjungan = rawTmsData.length;
-            
-            // Helper normalisasi nopol (mengabaikan spasi dan strip)
-            const normNopol = (str) => String(str || '').replace(/[\s-]/g, '').toUpperCase();
-            
-            const countCzi = rawTmsData.filter(i => normNopol(i.nopol) === 'B1092CZI').length;
-            const countSrr = rawTmsData.filter(i => normNopol(i.nopol) === 'B2953SRR').length;
+
+            // Cari kolom yang mengandung Nopol / Plat / Kendaraan untuk menghitung CZI dan SRR
+            const nopolHeaderKey = tmsHeaders.find(h => {
+                const low = h.toLowerCase();
+                return low.includes('nopol') || low.includes('plat') || low.includes('nomor') || low.includes('kendaraan');
+            }) || tmsHeaders[1] || tmsHeaders[0];
+
+            const normVal = (str) => String(str || '').replace(/[\s-]/g, '').toUpperCase();
+
+            let countCzi = 0;
+            let countSrr = 0;
+
+            rawTmsData.forEach(row => {
+                const val = normVal(row[nopolHeaderKey]);
+                if (val === 'B1092CZI') countCzi++;
+                if (val === 'B2953SRR') countSrr++;
+            });
 
             const pctCzi = totalKunjungan > 0 ? ((countCzi / totalKunjungan) * 100).toFixed(1) : 0;
             const pctSrr = totalKunjungan > 0 ? ((countSrr / totalKunjungan) * 100).toFixed(1) : 0;
@@ -2132,12 +2137,6 @@
             document.getElementById('tms-data-count').textContent = `${totalKunjungan} Records`;
             
             lucide.createIcons();
-        }
-
-        function formatIDR(val) {
-            if (val >= 1000000000) return `Rp ${(val / 1000000000).toFixed(1)} M`;
-            if (val >= 1000000) return `Rp ${(val / 1000000).toFixed(1)} Jt`;
-            return `Rp ${val.toLocaleString('id-ID')}`;
         }
 
         function openMraModal(mraName, statusType) {
