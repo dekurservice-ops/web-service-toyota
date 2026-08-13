@@ -84,7 +84,7 @@
             </div>
         </div>
 
-        <nav class="p-4 space-y-1.5 flex-1">
+        <nav class="p-4 space-y-1.5 flex-1 overflow-y-auto">
             <button id="nav-booking" onclick="switchView('booking')" class="w-full flex items-center gap-3 px-4 py-3 bg-red-50 text-red-600 font-semibold rounded-xl transition-all">
                 <i data-lucide="calendar-check" class="w-5 h-5"></i>
                 <span>Booking Analytics</span>
@@ -96,6 +96,10 @@
             <button id="nav-revenue" onclick="switchView('revenue')" class="w-full flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-slate-50 font-semibold rounded-xl transition-all">
                 <i data-lucide="wallet" class="w-5 h-5"></i>
                 <span>Pendapatan Bengkel</span>
+            </button>
+            <button id="nav-tms" onclick="switchView('tms')" class="w-full flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-slate-50 font-semibold rounded-xl transition-all">
+                <i data-lucide="truck" class="w-5 h-5"></i>
+                <span>Toyota Mobile Service</span>
             </button>
         </nav>
         <div class="p-4 border-t border-slate-100">
@@ -243,7 +247,6 @@
                 </div>
             </section>
 
-            <!-- ANALISA BOC -->
             <section class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col">
                 <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
                     <div>
@@ -260,7 +263,6 @@
                 </div>
             </section>
 
-            <!-- LEADERBOARD MRA -->
             <section class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
                 <div class="p-5 border-b border-slate-100 flex items-center justify-between">
                     <div>
@@ -409,7 +411,6 @@
                 </div>
             </section>
 
-            <!-- MAIN BOARD DATA SOP -->
             <section class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
                 <div class="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
                     <div>
@@ -438,7 +439,6 @@
 
         <!-- VIEW 3: PENDAPATAN BENGKEL -->
         <div id="view-revenue" class="hidden space-y-6">
-            <!-- FILTER PENDAPATAN BENGKEL & PEMBANDING -->
             <section class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col gap-4">
                 <div class="flex items-center gap-2 text-slate-700 font-semibold text-sm">
                     <i data-lucide="filter" class="w-4 h-4 text-emerald-600"></i>
@@ -472,12 +472,8 @@
                 </div>
             </section>
 
-            <!-- MAIN CONTAINER: KPI CARDS DI KIRI (VERTIKAL) & CHART/TABEL DI KANAN -->
             <section class="grid grid-cols-1 lg:grid-cols-4 gap-6">
-                
-                <!-- KOLOM KIRI: KPI CARDS TERSUSUN VERTIKAL (DAPAT DIKLIK) -->
                 <div class="lg:col-span-1 flex flex-col gap-4">
-                    <!-- Highlight Utama (DPP) -->
                     <div onclick="openRevenueSaDetailModal('dpp', 'Highlight DPP')" class="kpi-card bg-gradient-to-br from-slate-900 to-slate-800 text-white p-5 rounded-2xl shadow-lg border border-slate-700 flex flex-col justify-between">
                         <div>
                             <div class="flex items-center justify-between text-emerald-400 mb-2">
@@ -495,7 +491,6 @@
                         </div>
                     </div>
 
-                    <!-- Jasa Umum Card -->
                     <div onclick="openRevenueSaDetailModal('jasaUmum', 'Jasa Umum')" class="kpi-card bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
                         <div>
                             <div class="flex items-center justify-between text-purple-600 mb-1">
@@ -513,7 +508,6 @@
                         </div>
                     </div>
 
-                    <!-- Part Card -->
                     <div onclick="openRevenueSaDetailModal('part', 'Part')" class="kpi-card bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
                         <div>
                             <div class="flex items-center justify-between text-indigo-600 mb-1">
@@ -531,7 +525,6 @@
                         </div>
                     </div>
 
-                    <!-- Oli Card -->
                     <div onclick="openRevenueSaDetailModal('oli', 'Oli')" class="kpi-card bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
                         <div>
                             <div class="flex items-center justify-between text-emerald-600 mb-1">
@@ -549,7 +542,6 @@
                         </div>
                     </div>
 
-                    <!-- Bahan Card -->
                     <div onclick="openRevenueSaDetailModal('bahan', 'Bahan')" class="kpi-card bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
                         <div>
                             <div class="flex items-center justify-between text-blue-600 mb-1">
@@ -567,7 +559,6 @@
                         </div>
                     </div>
 
-                    <!-- Sublet Card -->
                     <div onclick="openRevenueSaDetailModal('sublet', 'Sublet')" class="kpi-card bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
                         <div>
                             <div class="flex items-center justify-between text-amber-600 mb-1">
@@ -586,7 +577,6 @@
                     </div>
                 </div>
 
-                <!-- KOLOM KANAN: GRAFIK & CHART -->
                 <div class="lg:col-span-3 space-y-6">
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         <div class="lg:col-span-2 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col">
@@ -632,18 +622,93 @@
                         </div>
                     </div>
 
-                    <!-- CHART KOMBINASI (SIDE-BY-SIDE BAR + LINE) UNTUK BULAN YANG SAMA -->
                     <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col">
                         <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
                             <div>
                                 <h3 class="font-bold text-slate-800 text-base">Analisa Perbandingan DPP Bulanan: Bulan yang Sama (Utama vs Pembanding)</h3>
-                                <p class="text-xs text-slate-400">Menempel berdampingan antar tahun (misal: Jun 2025 vs Jun 2026), tidak terpengaruh filter harian</p>
+                                <p class="text-xs text-slate-400">Menempel berdampingan antar tahun, tidak terpengaruh filter harian</p>
                             </div>
                         </div>
                         <div class="relative min-h-[340px]">
                             <canvas id="revenueMonthlyComparisonChart"></canvas>
                         </div>
                     </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- VIEW 4: TOYOTA MOBILE SERVICE (TMS) -->
+        <div id="view-tms" class="hidden space-y-6">
+            <section class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row gap-4 items-stretch md:items-center justify-between">
+                <div class="flex items-center gap-2 text-slate-700 font-semibold text-sm">
+                    <i data-lucide="filter" class="w-4 h-4 text-red-600"></i>
+                    <span>Filter Toyota Mobile Service (TMS):</span>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:flex gap-3 items-center flex-1 md:justify-end">
+                    <div class="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5">
+                        <label class="text-xs text-slate-500 whitespace-nowrap">Rentang Tanggal:</label>
+                        <input type="date" id="tmsStartDate" onchange="applyTmsFilters()" class="bg-transparent text-xs text-slate-800 font-medium focus:outline-none">
+                        <span class="text-xs text-slate-400">-</span>
+                        <input type="date" id="tmsEndDate" onchange="applyTmsFilters()" class="bg-transparent text-xs text-slate-800 font-medium focus:outline-none">
+                    </div>
+                </div>
+            </section>
+
+            <!-- KPI CARDS TMS -->
+            <section class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3.5">
+                <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+                    <div class="flex items-center justify-between text-indigo-600">
+                        <span class="text-[10px] font-bold uppercase tracking-wider">Total Kunjungan TMS</span>
+                        <div class="p-1.5 bg-indigo-50 text-indigo-600 rounded-lg"><i data-lucide="truck" class="w-4 h-4"></i></div>
+                    </div>
+                    <h3 id="kpiTmsTotal" class="text-2xl font-bold mt-2 text-indigo-600">0</h3>
+                </div>
+                <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+                    <div class="flex items-center justify-between text-emerald-600">
+                        <span class="text-[10px] font-bold uppercase tracking-wider">Service Selesai</span>
+                        <div class="p-1.5 bg-emerald-50 text-emerald-600 rounded-lg"><i data-lucide="check-circle-2" class="w-4 h-4"></i></div>
+                    </div>
+                    <h3 id="kpiTmsSelesai" class="text-2xl font-bold mt-2 text-emerald-600">0</h3>
+                </div>
+                <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+                    <div class="flex items-center justify-between text-amber-600">
+                        <span class="text-[10px] font-bold uppercase tracking-wider">Pending / Proses</span>
+                        <div class="p-1.5 bg-amber-50 text-amber-600 rounded-lg"><i data-lucide="clock" class="w-4 h-4"></i></div>
+                    </div>
+                    <h3 id="kpiTmsProcess" class="text-2xl font-bold mt-2 text-amber-600">0</h3>
+                </div>
+                <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+                    <div class="flex items-center justify-between text-purple-600">
+                        <span class="text-[10px] font-bold uppercase tracking-wider">Total Pendapatan TMS</span>
+                        <div class="p-1.5 bg-purple-50 text-purple-600 rounded-lg"><i data-lucide="wallet" class="w-4 h-4"></i></div>
+                    </div>
+                    <h3 id="kpiTmsRevenue" class="text-xl font-bold mt-2 text-purple-600">Rp 0</h3>
+                </div>
+            </section>
+
+            <!-- TABEL UTAMA TMS -->
+            <section class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                <div class="p-5 border-b border-slate-100 flex items-center justify-between">
+                    <div>
+                        <h3 class="font-bold text-slate-800 text-base">Daftar Aktivitas Toyota Mobile Service</h3>
+                        <p class="text-xs text-slate-400">Monitoring operasional layanan servis kunjungan bergerak</p>
+                    </div>
+                    <span id="tms-data-count" class="text-xs font-bold bg-slate-100 border border-slate-200 text-slate-600 px-3 py-1 rounded-full">0 Records</span>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs text-slate-600">
+                        <thead class="bg-slate-50 text-slate-700 font-semibold uppercase tracking-wider border-b border-slate-100">
+                            <tr>
+                                <th class="py-3.5 px-4">Tanggal</th>
+                                <th class="py-3.5 px-4">No Kendaraan</th>
+                                <th class="py-3.5 px-4">Lokasi / Instansi</th>
+                                <th class="py-3.5 px-4">PIC / Driver</th>
+                                <th class="py-3.5 px-4 text-center">Status</th>
+                                <th class="py-3.5 px-4 text-right">Pendapatan (Rp)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tmsTableBody" class="divide-y divide-slate-100 font-medium"></tbody>
+                    </table>
                 </div>
             </section>
         </div>
@@ -678,7 +743,7 @@
         </div>
     </div>
 
-    <!-- MODAL DETAIL SA PENDAPATAN BENGKEL (HORIZONTAL CHART + TABLE) -->
+    <!-- MODAL DETAIL SA PENDAPATAN BENGKEL -->
     <div id="revenueSaDetailModal" class="fixed inset-0 z-50 hidden bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl w-full max-w-5xl shadow-2xl overflow-hidden border border-slate-200 flex flex-col max-h-[90vh]">
             <div class="bg-slate-50 px-6 py-4 border-b border-slate-200 flex justify-between items-center">
@@ -689,11 +754,9 @@
                 <button onclick="closeRevenueSaDetailModal()" class="text-slate-400 hover:text-slate-700 transition-colors"><i data-lucide="x" class="w-6 h-6"></i></button>
             </div>
             <div class="p-6 overflow-y-auto flex-1 space-y-6">
-                <!-- Horizontal Bar Chart Container -->
                 <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 relative min-h-[320px]">
                     <canvas id="revenueSaHorizontalChart"></canvas>
                 </div>
-                <!-- Table Details -->
                 <div class="rounded-xl border border-slate-200 overflow-x-auto">
                     <table class="w-full text-left text-xs border-collapse">
                         <thead class="bg-slate-100 text-slate-700 font-bold uppercase text-[10px] sticky top-0 border-b border-slate-200 z-10">
@@ -757,6 +820,12 @@
         let rawRevenueData = [], filteredRevenueData = [], filteredCompRevenueData = [];
         let revenueTrendChartInstance = null, revenueCompositionChartInstance = null, revenueSaChartInstance = null, revenueMonthlyComparisonChartInstance = null, revenueSaHorizontalChartInstance = null;
 
+        // Dummy data for Toyota Mobile Service (TMS)
+        let rawTmsData = [
+            { date: '12-Aug-2026', nopol: 'T 1234 AB', lokasi: 'PT Bridgestone Karawang', pic: 'Budi', status: 'Selesai', revenue: 1500000 },
+            { date: '13-Aug-2026', nopol: 'T 5678 CD', lokasi: 'Kawasan KIIC Lot B', pic: 'Joko', status: 'Proses', revenue: 850000 }
+        ];
+
         Chart.register(ChartDataLabels);
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -798,10 +867,12 @@
             const bookingView = document.getElementById('view-booking');
             const sopView = document.getElementById('view-sop');
             const revenueView = document.getElementById('view-revenue');
+            const tmsView = document.getElementById('view-tms');
             
             const navBooking = document.getElementById('nav-booking');
             const navSop = document.getElementById('nav-sop');
             const navRevenue = document.getElementById('nav-revenue');
+            const navTms = document.getElementById('nav-tms');
             
             const pageTitle = document.getElementById('page-title');
             const pageSubtitle = document.getElementById('page-subtitle');
@@ -809,10 +880,12 @@
             navBooking.className = "w-full flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-slate-50 font-semibold rounded-xl transition-all";
             navSop.className = "w-full flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-slate-50 font-semibold rounded-xl transition-all";
             navRevenue.className = "w-full flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-slate-50 font-semibold rounded-xl transition-all";
+            navTms.className = "w-full flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-slate-50 font-semibold rounded-xl transition-all";
 
             bookingView.classList.add('hidden');
             sopView.classList.add('hidden');
             revenueView.classList.add('hidden');
+            tmsView.classList.add('hidden');
 
             if (viewName === 'booking') {
                 bookingView.classList.remove('hidden');
@@ -829,6 +902,12 @@
                 navRevenue.className = "w-full flex items-center gap-3 px-4 py-3 bg-red-50 text-red-600 font-semibold rounded-xl transition-all";
                 pageTitle.textContent = "Astrido Karawang Pendapatan Bengkel";
                 pageSubtitle.textContent = "Rekapitulasi Jasa, Part, Bahan, Oli, Sublet & DPP";
+            } else if (viewName === 'tms') {
+                tmsView.classList.remove('hidden');
+                navTms.className = "w-full flex items-center gap-3 px-4 py-3 bg-red-50 text-red-600 font-semibold rounded-xl transition-all";
+                pageTitle.textContent = "Toyota Mobile Service (TMS)";
+                pageSubtitle.textContent = "Monitoring Operasional & Kunjungan Servis Bergerak";
+                applyTmsFilters();
             }
             toggleSidebar();
         }
@@ -1563,7 +1642,6 @@
             document.getElementById('revenueSaModalTitle').textContent = `Analisa Service Advisor: ${componentLabel}`;
             document.getElementById('revenueSaModalSubtitle').textContent = `Perbandingan Utama vs Pembanding per SA (Diurutkan berdasarkan Growth tertinggi)`;
 
-            // Hitung per SA untuk Utama & Pembanding
             const saMap = {};
 
             filteredRevenueData.forEach(item => {
@@ -1578,7 +1656,6 @@
                 saMap[sa].pembanding += (item[componentKey] || 0);
             });
 
-            // Ubah ke array dan hitung growth
             const saList = Object.keys(saMap).map(sa => {
                 const utama = saMap[sa].utama;
                 const pembanding = saMap[sa].pembanding;
@@ -1591,14 +1668,12 @@
                 return { sa, utama, pembanding, growth };
             });
 
-            // URUTKAN BERDASARKAN GROWTH TERTINGGI KE TERENDAH
             saList.sort((a, b) => b.growth - a.growth);
 
             const labels = saList.map(item => item.sa);
             const utamaData = saList.map(item => item.utama);
             const pembandingData = saList.map(item => item.pembanding);
 
-            // Render Horizontal Bar Chart
             if (revenueSaHorizontalChartInstance) revenueSaHorizontalChartInstance.destroy();
 
             const ctx = document.getElementById('revenueSaHorizontalChart').getContext('2d');
@@ -1607,18 +1682,8 @@
                 data: {
                     labels: labels,
                     datasets: [
-                        {
-                            label: 'Nilai Utama',
-                            data: utamaData,
-                            backgroundColor: '#6366f1',
-                            borderRadius: 4
-                        },
-                        {
-                            label: 'Nilai Pembanding',
-                            data: pembandingData,
-                            backgroundColor: '#cbd5e1',
-                            borderRadius: 4
-                        }
+                        { label: 'Nilai Utama', data: utamaData, backgroundColor: '#6366f1', borderRadius: 4 },
+                        { label: 'Nilai Pembanding', data: pembandingData, backgroundColor: '#cbd5e1', borderRadius: 4 }
                     ]
                 },
                 options: {
@@ -1657,7 +1722,6 @@
                 }
             });
 
-            // Render Table Rows
             const tbody = document.getElementById('revenueSaModalTableBody');
             tbody.innerHTML = '';
 
@@ -1998,6 +2062,37 @@
             });
         }
 
+        // ================= TOYOTA MOBILE SERVICE (TMS) LOGIC =================
+        function applyTmsFilters() {
+            const tbody = document.getElementById('tmsTableBody');
+            if(!tbody) return;
+
+            tbody.innerHTML = rawTmsData.map(item => `
+                <tr class="hover:bg-slate-50 transition-colors">
+                    <td class="py-3.5 px-4 font-semibold text-slate-700">${item.date}</td>
+                    <td class="py-3.5 px-4 font-bold text-slate-900">${item.nopol}</td>
+                    <td class="py-3.5 px-4 text-slate-600">${item.lokasi}</td>
+                    <td class="py-3.5 px-4 text-slate-600">${item.pic}</td>
+                    <td class="py-3.5 px-4 text-center">
+                        <span class="px-2.5 py-1 rounded-full text-xs font-bold border ${item.status === 'Selesai' ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-amber-50 text-amber-600 border-amber-200'}">
+                            ${item.status}
+                        </span>
+                    </td>
+                    <td class="py-3.5 px-4 text-right font-bold text-indigo-600">Rp ${item.revenue.toLocaleString('id-ID')}</td>
+                </tr>
+            `).join('');
+
+            document.getElementById('kpiTmsTotal').textContent = rawTmsData.length;
+            document.getElementById('kpiTmsSelesai').textContent = rawTmsData.filter(i => i.status === 'Selesai').length;
+            document.getElementById('kpiTmsProcess').textContent = rawTmsData.filter(i => i.status !== 'Selesai').length;
+            
+            const totalRev = rawTmsData.reduce((acc, curr) => acc + curr.revenue, 0);
+            document.getElementById('kpiTmsRevenue').textContent = `Rp ${(totalRev / 1000000).toFixed(1)} Jt`;
+            document.getElementById('tms-data-count').textContent = `${rawTmsData.length} Records`;
+            
+            lucide.createIcons();
+        }
+
         function openMraModal(mraName, statusType) {
             let list = filteredBookingData.filter(d => {
                 if(d.mra !== mraName) return false;
@@ -2130,7 +2225,6 @@
             const isModulTidakDatang = upperModalType === 'TIDAK DATANG' || upperModalType.includes('TIDAK DATANG');
 
             let r1Html, r2Html, r3Html, batalHtml, remarksHtml, actionHtml = '';
-
             const isBatalChecked = String(item.batal || '').trim() !== '' && String(item.batal || '').trim() !== '-';
 
             if (isModulTidakDatang) {
@@ -2179,7 +2273,6 @@
         function handleReschedDate(id, level, dateVal) {
             const item = rawBookingData.find(d => d.id === id);
             if (!item) return;
-
             const formatted = dateVal ? formatDisplayDate(dateVal) : '';
             if (level === 1) item.resched1Date = formatted;
             if (level === 2) item.resched2Date = formatted;
@@ -2188,9 +2281,7 @@
 
         function handleBatalCheckbox(id, isChecked) {
             const item = rawBookingData.find(d => d.id === id);
-            if (item) {
-                item.batal = isChecked ? 'YA' : '';
-            }
+            if (item) item.batal = isChecked ? 'YA' : '';
         }
 
         function handleRemarksInput(id, val) {
