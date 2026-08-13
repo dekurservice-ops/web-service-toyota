@@ -688,7 +688,7 @@
                     <div class="flex items-center justify-between mb-4">
                         <div>
                             <h3 class="font-bold text-slate-800 text-sm">Analisa Kota / Wilayah Kunjungan</h3>
-                            <p class="text-xs text-slate-400">Kota mana saja yang paling sering dikunjungi</p>
+                            <p class="text-xs text-slate-400">Kota mana saja yang paling sering dikunjungi (Baca Kolom N)</p>
                         </div>
                         <div class="p-1.5 bg-red-50 text-red-600 rounded-lg"><i data-lucide="map-pin" class="w-4 h-4"></i></div>
                     </div>
@@ -701,7 +701,7 @@
                     <div class="flex items-center justify-between mb-4">
                         <div>
                             <h3 class="font-bold text-slate-800 text-sm">Analisa Jarak Tempuh Perjalanan (KM)</h3>
-                            <p class="text-xs text-slate-400">Distribusi jarak atau kilometer kunjungan servis bergerak</p>
+                            <p class="text-xs text-slate-400">Kelompok Jarak: < 25 KM, 26-50 KM, 51-75 KM, 76-100 KM (Baca Kolom Q)</p>
                         </div>
                         <div class="p-1.5 bg-indigo-50 text-indigo-600 rounded-lg"><i data-lucide="navigation" class="w-4 h-4"></i></div>
                     </div>
@@ -2157,10 +2157,11 @@
 
             const totalKunjungan = filteredTmsRows.length;
 
-            const nopolHeaderKey = tmsHeaders.find(h => {
+            // Membaca Kolom B untuk KPI Kartu (Index 1)
+            const nopolHeaderKey = tmsHeaders[1] || tmsHeaders.find(h => {
                 const low = h.toLowerCase();
-                return low.includes('nopol') || low.includes('plat') || low.includes('nomor') || low.includes('kendaraan');
-            }) || tmsHeaders[1] || tmsHeaders[0];
+                return low.includes('nopol') || low.includes('plat') || low.includes('nomor');
+            }) || tmsHeaders[0];
 
             const normVal = (str) => String(str || '').replace(/[\s-]/g, '').toUpperCase();
 
@@ -2189,16 +2190,35 @@
             lucide.createIcons();
         }
 
+        function simplifyCityName(rawCity) {
+            if (!rawCity || rawCity === '-') return 'Lainnya';
+            let upper = String(rawCity).trim().toUpperCase();
+            
+            // Penyederhanaan nama kota/wilayah secara spesifik
+            if (upper.includes('KARAWANG') || upper.includes('KRW') || upper.includes('TELUKJAMBE') || upper.includes('CIAMPEL') || upper.includes('KOTABARU')) return 'Karawang';
+            if (upper.includes('PURWAKARTA') || upper.includes('PWK')) return 'Purwakarta';
+            if (upper.includes('SUBANG')) return 'Subang';
+            if (upper.includes('CIKARANG') || upper.includes('BEKASI') || upper.includes('TAMBUN') || upper.includes('CIBITUNG')) return 'Bekasi / Cikarang';
+            if (upper.includes('BANDUNG') || upper.includes('CIMAHI')) return 'Bandung Raya';
+            if (upper.includes('JAKARTA') || upper.includes('DKI')) return 'Jakarta';
+
+            // Ambil kata pertama atau potong jika terlalu panjang
+            let cleaned = rawCity.split(/[\/,(-]/)[0].trim();
+            return cleaned.charAt(0).toUpperCase() + cleaned.slice(1).toLowerCase();
+        }
+
         function renderTmsCityChart(rows) {
-            const cityHeaderKey = tmsHeaders.find(h => {
+            // Membaca Kolom N untuk Analisa Kota (Index 13)
+            const cityHeaderKey = tmsHeaders[13] || tmsHeaders.find(h => {
                 const low = h.toLowerCase();
-                return low.includes('kota') || low.includes('wilayah') || low.includes('lokasi') || low.includes('area') || low.includes('customer');
+                return low.includes('kota') || low.includes('wilayah') || low.includes('lokasi') || low.includes('area');
             }) || tmsHeaders[2] || tmsHeaders[0];
 
             const cityMap = {};
             rows.forEach(row => {
-                const city = String(row[cityHeaderKey] || 'Lainnya').trim();
-                if (city && city !== '-') {
+                const rawCity = String(row[cityHeaderKey] || '').trim();
+                const city = simplifyCityName(rawCity);
+                if (city) {
                     cityMap[city] = (cityMap[city] || 0) + 1;
                 }
             });
@@ -2242,26 +2262,27 @@
         }
 
         function renderTmsDistanceChart(rows) {
-            const distanceHeaderKey = tmsHeaders.find(h => {
+            // Membaca Kolom Q untuk Analisa Jarak (Index 16)
+            const distanceHeaderKey = tmsHeaders[16] || tmsHeaders.find(h => {
                 const low = h.toLowerCase();
                 return low.includes('jarak') || low.includes('km') || low.includes('kilometer') || low.includes('distance');
             });
 
-            const distanceMap = { '< 10 KM': 0, '10 - 20 KM': 0, '20 - 30 KM': 0, '> 30 KM': 0 };
+            const distanceMap = { '< 25 KM': 0, '26 s/d 50 KM': 0, '51 s/d 75 KM': 0, '76 s/d 100 KM': 0, '> 100 KM': 0 };
 
             rows.forEach(row => {
                 let kmVal = 0;
                 if (distanceHeaderKey && row[distanceHeaderKey]) {
                     kmVal = parseNumericValue(row[distanceHeaderKey]);
                 } else {
-                    // Fallback jika header jarak tidak ditemukan spesifik, hitung acak/dummy berdasarkan panjang row atau estimasi index
-                    kmVal = Math.floor(Math.random() * 35) + 5; 
+                    kmVal = parseNumericValue(Object.values(row)[16]) || 0;
                 }
 
-                if (kmVal < 10) distanceMap['< 10 KM']++;
-                else if (kmVal <= 20) distanceMap['10 - 20 KM']++;
-                else if (kmVal <= 30) distanceMap['20 - 30 KM']++;
-                else distanceMap['> 30 KM']++;
+                if (kmVal <= 25) distanceMap['< 25 KM']++;
+                else if (kmVal <= 50) distanceMap['26 s/d 50 KM']++;
+                else if (kmVal <= 75) distanceMap['51 s/d 75 KM']++;
+                else if (kmVal <= 100) distanceMap['76 s/d 100 KM']++;
+                else distanceMap['> 100 KM']++;
             });
 
             const labels = Object.keys(distanceMap);
