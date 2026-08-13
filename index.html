@@ -688,7 +688,7 @@
                     <div class="flex items-center justify-between mb-4">
                         <div>
                             <h3 class="font-bold text-slate-800 text-sm">Analisa Kota / Wilayah Kunjungan</h3>
-                            <p class="text-xs text-slate-400">KIIC/Surya Cipta = Karawang | Jababeka = Cikarang (Kolom N)</p>
+                            <p class="text-xs text-slate-400">Kota mana saja yang paling sering dikunjungi (Baca Kolom N)</p>
                         </div>
                         <div class="p-1.5 bg-red-50 text-red-600 rounded-lg"><i data-lucide="map-pin" class="w-4 h-4"></i></div>
                     </div>
@@ -701,7 +701,7 @@
                     <div class="flex items-center justify-between mb-4">
                         <div>
                             <h3 class="font-bold text-slate-800 text-sm">Analisa Jarak Tempuh Perjalanan (KM)</h3>
-                            <p class="text-xs text-slate-400">Kelompok Jarak: < 25 KM, 26-50 KM, 51-75 KM, 76-100 KM (Kolom Q)</p>
+                            <p class="text-xs text-slate-400">Kelompok Jarak: < 25 KM, 26-50 KM, 51-75 KM, 76-100 KM (Baca Kolom Q)</p>
                         </div>
                         <div class="p-1.5 bg-indigo-50 text-indigo-600 rounded-lg"><i data-lucide="navigation" class="w-4 h-4"></i></div>
                     </div>
@@ -2194,18 +2194,15 @@
             if (!rawCity || rawCity === '-') return 'Lainnya';
             let upper = String(rawCity).trim().toUpperCase();
             
-            // Aturan spesifik kawasan KIIC, Surya Cipta -> Karawang, Jababeka -> Cikarang
-            if (upper.includes('KIIC') || upper.includes('SURYA CIPTA') || upper.includes('SURYACIPTA') || upper.includes('KARAWANG') || upper.includes('KRW') || upper.includes('TELUKJAMBE') || upper.includes('CIAMPEL') || upper.includes('KOTABARU')) {
-                return 'Karawang';
-            }
-            if (upper.includes('JABABEKA') || upper.includes('CIKARANG') || upper.includes('BEKASI') || upper.includes('TAMBUN') || upper.includes('CIBITUNG')) {
-                return 'Cikarang';
-            }
+            // Penyederhanaan nama kota/wilayah secara spesifik
+            if (upper.includes('KARAWANG') || upper.includes('KRW') || upper.includes('TELUKJAMBE') || upper.includes('CIAMPEL') || upper.includes('KOTABARU')) return 'Karawang';
             if (upper.includes('PURWAKARTA') || upper.includes('PWK')) return 'Purwakarta';
             if (upper.includes('SUBANG')) return 'Subang';
+            if (upper.includes('CIKARANG') || upper.includes('BEKASI') || upper.includes('TAMBUN') || upper.includes('CIBITUNG')) return 'Bekasi / Cikarang';
             if (upper.includes('BANDUNG') || upper.includes('CIMAHI')) return 'Bandung Raya';
             if (upper.includes('JAKARTA') || upper.includes('DKI')) return 'Jakarta';
 
+            // Ambil kata pertama atau potong jika terlalu panjang
             let cleaned = rawCity.split(/[\/,(-]/)[0].trim();
             return cleaned.charAt(0).toUpperCase() + cleaned.slice(1).toLowerCase();
         }
@@ -2214,7 +2211,7 @@
             // Membaca Kolom N untuk Analisa Kota (Index 13)
             const cityHeaderKey = tmsHeaders[13] || tmsHeaders.find(h => {
                 const low = h.toLowerCase();
-                return low.includes('kota') || low.includes('wilayah') || low.includes('lokasi') || low.includes('area') || low.includes('kawasan');
+                return low.includes('kota') || low.includes('wilayah') || low.includes('lokasi') || low.includes('area');
             }) || tmsHeaders[2] || tmsHeaders[0];
 
             const cityMap = {};
@@ -2265,7 +2262,7 @@
         }
 
         function renderTmsDistanceChart(rows) {
-            // Membaca Kolom Q untuk Analisa Jarak (Index 16) dengan pengelompokan spesifik
+            // Membaca Kolom Q untuk Analisa Jarak (Index 16)
             const distanceHeaderKey = tmsHeaders[16] || tmsHeaders.find(h => {
                 const low = h.toLowerCase();
                 return low.includes('jarak') || low.includes('km') || low.includes('kilometer') || low.includes('distance');
@@ -2281,7 +2278,7 @@
                     kmVal = parseNumericValue(Object.values(row)[16]) || 0;
                 }
 
-                if (kmVal < 25) distanceMap['< 25 KM']++;
+                if (kmVal <= 25) distanceMap['< 25 KM']++;
                 else if (kmVal <= 50) distanceMap['26 s/d 50 KM']++;
                 else if (kmVal <= 75) distanceMap['51 s/d 75 KM']++;
                 else if (kmVal <= 100) distanceMap['76 s/d 100 KM']++;
