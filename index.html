@@ -688,7 +688,7 @@
                     <div class="flex items-center justify-between mb-4">
                         <div>
                             <h3 class="font-bold text-slate-800 text-sm">Analisa Kota / Wilayah Kunjungan</h3>
-                            <p class="text-xs text-slate-400">Kota mana saja yang paling sering dikunjungi (Baca Kolom N)</p>
+                            <p class="text-xs text-slate-400">Kota mana saja yang paling sering dikunjungi (Baca Kolom Z)</p>
                         </div>
                         <div class="p-1.5 bg-red-50 text-red-600 rounded-lg"><i data-lucide="map-pin" class="w-4 h-4"></i></div>
                     </div>
@@ -2157,7 +2157,6 @@
 
             const totalKunjungan = filteredTmsRows.length;
 
-            // Membaca Kolom B untuk KPI Kartu (Index 1)
             const nopolHeaderKey = tmsHeaders[1] || tmsHeaders.find(h => {
                 const low = h.toLowerCase();
                 return low.includes('nopol') || low.includes('plat') || low.includes('nomor');
@@ -2194,7 +2193,6 @@
             if (!rawCity || rawCity === '-') return 'Lainnya';
             let upper = String(rawCity).trim().toUpperCase();
             
-            // Penyederhanaan nama kota/wilayah secara spesifik
             if (upper.includes('KARAWANG') || upper.includes('KRW') || upper.includes('TELUKJAMBE') || upper.includes('CIAMPEL') || upper.includes('KOTABARU')) return 'Karawang';
             if (upper.includes('PURWAKARTA') || upper.includes('PWK')) return 'Purwakarta';
             if (upper.includes('SUBANG')) return 'Subang';
@@ -2202,14 +2200,13 @@
             if (upper.includes('BANDUNG') || upper.includes('CIMAHI')) return 'Bandung Raya';
             if (upper.includes('JAKARTA') || upper.includes('DKI')) return 'Jakarta';
 
-            // Ambil kata pertama atau potong jika terlalu panjang
             let cleaned = rawCity.split(/[\/,(-]/)[0].trim();
             return cleaned.charAt(0).toUpperCase() + cleaned.slice(1).toLowerCase();
         }
 
         function renderTmsCityChart(rows) {
-            // Membaca Kolom N untuk Analisa Kota (Index 13)
-            const cityHeaderKey = tmsHeaders[13] || tmsHeaders.find(h => {
+            // Mengubah sumber pembacaan dari Kolom N (indeks 13) menjadi Kolom Z (indeks 25)
+            const cityHeaderKey = tmsHeaders[25] || tmsHeaders.find(h => {
                 const low = h.toLowerCase();
                 return low.includes('kota') || low.includes('wilayah') || low.includes('lokasi') || low.includes('area');
             }) || tmsHeaders[2] || tmsHeaders[0];
@@ -2262,7 +2259,6 @@
         }
 
         function renderTmsDistanceChart(rows) {
-            // Membaca Kolom Q untuk Analisa Jarak (Index 16)
             const distanceHeaderKey = tmsHeaders[16] || tmsHeaders.find(h => {
                 const low = h.toLowerCase();
                 return low.includes('jarak') || low.includes('km') || low.includes('kilometer') || low.includes('distance');
