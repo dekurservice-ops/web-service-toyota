@@ -3,17 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Astrido Karawang - Aftersales Dashboard</title>
+    <title>Astrido Karawang - Aftersales Dashboard & KPI</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- React & Recharts untuk View KPI -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/prop-types@15.8.1/prop-types.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/recharts@2.12.7/umd/Recharts.min.js"></script>
+    
+    <!-- CanvasJS untuk Chart 3D Pizza Donat yang Menarik -->
+    <script src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
     
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; }
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; -webkit-font-smoothing: antialiased; }
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: #f1f5f9; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
@@ -26,6 +36,8 @@
             background-size: cover;
             background-position: center;
         }
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 antialiased min-h-screen flex flex-col">
@@ -100,6 +112,10 @@
             <button id="nav-tms" onclick="switchView('tms')" class="w-full flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-slate-50 font-semibold rounded-xl transition-all">
                 <i data-lucide="truck" class="w-5 h-5"></i>
                 <span>Toyota Mobile Service</span>
+            </button>
+            <button id="nav-kpi" onclick="switchView('kpi')" class="w-full flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-slate-50 font-semibold rounded-xl transition-all">
+                <i data-lucide="award" class="w-5 h-5"></i>
+                <span>Key Performance Index</span>
             </button>
         </nav>
         <div class="p-4 border-t border-slate-100">
@@ -323,7 +339,7 @@
                         <span class="text-[10px] font-bold uppercase tracking-wider">Ready Pasang</span>
                         <div class="p-1.5 bg-blue-50 text-blue-600 rounded-lg"><i data-lucide="clock" class="w-4 h-4"></i></div>
                     </div>
-                    <h3 id="sop-kpi-pasang" class="text-2xl font-bold mt-2">0</h3>
+                    <h3 id="sop-kpi-pasang" class="text-2xl font-bold mt-2 text-blue-600">0</h3>
                 </div>
 
                 <div onclick="openSopKPIModal('Konfirmasi Jadwal', 'Order Tunggu Konfirmasi')" class="kpi-card bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
@@ -682,36 +698,61 @@
                 </div>
             </section>
 
-            <!-- CHARTS ANALISA TMS (KOTA & JARAK) -->
+            <!-- CHARTS ANALISA TMS (PIZZA 3D DONUT STYLE) -->
             <section class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col">
                     <div class="flex items-center justify-between mb-4">
                         <div>
-                            <h3 class="font-bold text-slate-800 text-sm">Analisa Kota / Wilayah Kunjungan</h3>
-                            <p class="text-xs text-slate-400">Kota mana saja yang paling sering dikunjungi (Baca Kolom Z)</p>
+                            <h3 class="font-bold text-slate-800 text-sm">Analisa Kota / Wilayah Kunjungan (3D Donut Pizza)</h3>
+                            <p class="text-xs text-slate-400">Kota mana saja yang paling sering dikunjungi</p>
                         </div>
                         <div class="p-1.5 bg-red-50 text-red-600 rounded-lg"><i data-lucide="map-pin" class="w-4 h-4"></i></div>
                     </div>
-                    <div class="relative flex-1 min-h-[260px]">
-                        <canvas id="tmsCityChart"></canvas>
+                    <div class="relative flex-1 min-h-[300px]" id="tmsCity3DChartContainer"></div>
+                </div>
+
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col">
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <h3 class="font-bold text-slate-800 text-sm">Analisa Jarak Tempuh Perjalanan (3D Donut Pizza)</h3>
+                            <p class="text-xs text-slate-400">Kelompok Jarak: < 25 KM, 26-50 KM, dll</p>
+                        </div>
+                        <div class="p-1.5 bg-indigo-50 text-indigo-600 rounded-lg"><i data-lucide="navigation" class="w-4 h-4"></i></div>
+                    </div>
+                    <div class="relative flex-1 min-h-[300px]" id="tmsDistance3DChartContainer"></div>
+                </div>
+            </section>
+
+            <!-- CHART TREND KUNJUNGAN MASING-MASING KENDARAAN (CZI & SRR) -->
+            <section class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col">
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <h3 class="font-bold text-slate-800 text-sm">Trend Bulanan Kunjungan: B-1092-CZI</h3>
+                            <p class="text-xs text-slate-400">Grafik perkembangan jumlah kunjungan servis bulanan</p>
+                        </div>
+                        <div class="p-1.5 bg-emerald-50 text-emerald-600 rounded-lg"><i data-lucide="trending-up" class="w-4 h-4"></i></div>
+                    </div>
+                    <div class="relative flex-1 min-h-[265px]">
+                        <canvas id="tmsTrendCziChart"></canvas>
                     </div>
                 </div>
 
                 <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col">
                     <div class="flex items-center justify-between mb-4">
                         <div>
-                            <h3 class="font-bold text-slate-800 text-sm">Analisa Jarak Tempuh Perjalanan (KM)</h3>
-                            <p class="text-xs text-slate-400">Kelompok Jarak: < 25 KM, 26-50 KM, 51-75 KM, 76-100 KM (Baca Kolom Q)</p>
+                            <h3 class="font-bold text-slate-800 text-sm">Trend Bulanan Kunjungan: B-2953-SRR</h3>
+                            <p class="text-xs text-slate-400">Grafik perkembangan jumlah kunjungan servis bulanan</p>
                         </div>
-                        <div class="p-1.5 bg-indigo-50 text-indigo-600 rounded-lg"><i data-lucide="navigation" class="w-4 h-4"></i></div>
+                        <div class="p-1.5 bg-purple-50 text-purple-600 rounded-lg"><i data-lucide="trending-up" class="w-4 h-4"></i></div>
                     </div>
-                    <div class="relative flex-1 min-h-[260px]">
-                        <canvas id="tmsDistanceChart"></canvas>
+                    <div class="relative flex-1 min-h-[265px]">
+                        <canvas id="tmsTrendSrrChart"></canvas>
                     </div>
                 </div>
             </section>
 
-            <!-- TABEL UTAMA TMS -->
+            <!-- TABEL UTAMA TMS DENGAN STICKY HEADER -->
             <section class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
                 <div class="p-5 border-b border-slate-100 flex items-center justify-between">
                     <div>
@@ -720,14 +761,20 @@
                     </div>
                     <span id="tms-data-count" class="text-xs font-bold bg-slate-100 border border-slate-200 text-slate-600 px-3 py-1 rounded-full">0 Records</span>
                 </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left text-xs text-slate-600">
-                        <thead id="tmsTableHead" class="bg-slate-50 text-slate-700 font-semibold uppercase tracking-wider border-b border-slate-100"></thead>
+                <div class="overflow-x-auto max-h-[500px] overflow-y-auto custom-scrollbar relative">
+                    <table class="w-full text-left text-xs text-slate-600 border-collapse">
+                        <thead id="tmsTableHead" class="bg-slate-100 text-slate-700 font-semibold uppercase tracking-wider sticky top-0 z-20 shadow-sm border-b border-slate-200"></thead>
                         <tbody id="tmsTableBody" class="divide-y divide-slate-100 font-medium"></tbody>
                     </table>
                 </div>
             </section>
         </div>
+
+        <!-- VIEW 5: KEY PERFORMANCE INDEX (KPI) - REACT INTEGRATION -->
+        <div id="view-kpi" class="hidden space-y-6">
+            <div id="kpi-react-root"></div>
+        </div>
+
     </main>
 
     <!-- MODALS -->
@@ -823,7 +870,7 @@
         </div>
     </div>
 
-    <!-- SCRIPTS -->
+    <!-- SCRIPTS PORTAL & REACT KPI -->
     <script>
         const CSV_BOOKING_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRgLQ8hj-ab5ZOJu31Z1d2gyWxeYNxl4BXHjXYZSq9eaAAnURBkcv61joIaU0Qpj-7G-eQ-yV2uGAIz/pub?gid=0&single=true&output=csv';
         const CSV_SOP_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTIDLFkByyO5KJDw2vLnF2kxcj1lSoDEeN_Hw9fnYOEnmXvuZuzynN1ncnaGsudHALaj-DR0nzMHB0j/pub?gid=0&single=true&output=csv';
@@ -837,7 +884,7 @@
         let rawRevenueData = [], filteredRevenueData = [], filteredCompRevenueData = [];
         let revenueTrendChartInstance = null, revenueCompositionChartInstance = null, revenueSaChartInstance = null, revenueMonthlyComparisonChartInstance = null, revenueSaHorizontalChartInstance = null;
         let rawTmsData = [], tmsHeaders = [];
-        let tmsCityChartInstance = null, tmsDistanceChartInstance = null;
+        let tmsTrendCziInstance = null, tmsTrendSrrInstance = null;
 
         Chart.register(ChartDataLabels);
 
@@ -881,11 +928,13 @@
             const sopView = document.getElementById('view-sop');
             const revenueView = document.getElementById('view-revenue');
             const tmsView = document.getElementById('view-tms');
+            const kpiView = document.getElementById('view-kpi');
             
             const navBooking = document.getElementById('nav-booking');
             const navSop = document.getElementById('nav-sop');
             const navRevenue = document.getElementById('nav-revenue');
             const navTms = document.getElementById('nav-tms');
+            const navKpi = document.getElementById('nav-kpi');
             
             const pageTitle = document.getElementById('page-title');
             const pageSubtitle = document.getElementById('page-subtitle');
@@ -894,11 +943,13 @@
             navSop.className = "w-full flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-slate-50 font-semibold rounded-xl transition-all";
             navRevenue.className = "w-full flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-slate-50 font-semibold rounded-xl transition-all";
             navTms.className = "w-full flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-slate-50 font-semibold rounded-xl transition-all";
+            navKpi.className = "w-full flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-slate-50 font-semibold rounded-xl transition-all";
 
             bookingView.classList.add('hidden');
             sopView.classList.add('hidden');
             revenueView.classList.add('hidden');
             tmsView.classList.add('hidden');
+            kpiView.classList.add('hidden');
 
             if (viewName === 'booking') {
                 bookingView.classList.remove('hidden');
@@ -921,6 +972,11 @@
                 pageTitle.textContent = "Toyota Mobile Service (TMS)";
                 pageSubtitle.textContent = "Monitoring Operasional & Kunjungan Servis Bergerak";
                 applyTmsFilters();
+            } else if (viewName === 'kpi') {
+                kpiView.classList.remove('hidden');
+                navKpi.className = "w-full flex items-center gap-3 px-4 py-3 bg-red-50 text-red-600 font-semibold rounded-xl transition-all";
+                pageTitle.textContent = "Key Performance Index (KPI)";
+                pageSubtitle.textContent = "Dashboard Profesional Evaluasi Kinerja Service Advisor";
             }
             toggleSidebar();
         }
@@ -2145,7 +2201,7 @@
                 return;
             }
 
-            thead.innerHTML = `<tr>${tmsHeaders.map(h => `<th class="py-3.5 px-4">${h}</th>`).join('')}</tr>`;
+            thead.innerHTML = `<tr>${tmsHeaders.map(h => `<th class="py-3.5 px-4 bg-slate-100">${h}</th>`).join('')}</tr>`;
 
             tbody.innerHTML = filteredTmsRows.map(row => {
                 return `
@@ -2183,8 +2239,9 @@
             document.getElementById('pctTmsSrr').textContent = `${pctSrr}% dari Total Kunjungan`;
             document.getElementById('tms-data-count').textContent = `${totalKunjungan} Records`;
 
-            renderTmsCityChart(filteredTmsRows);
-            renderTmsDistanceChart(filteredTmsRows);
+            renderTmsCity3DChart(filteredTmsRows);
+            renderTmsDistance3DChart(filteredTmsRows);
+            renderTmsVehicleTrendCharts(rawTmsData, nopolHeaderKey, dateHeaderKey);
             
             lucide.createIcons();
         }
@@ -2204,8 +2261,7 @@
             return cleaned.charAt(0).toUpperCase() + cleaned.slice(1).toLowerCase();
         }
 
-        function renderTmsCityChart(rows) {
-            // Mengubah sumber pembacaan dari Kolom N (indeks 13) menjadi Kolom Z (indeks 25)
+        function renderTmsCity3DChart(rows) {
             const cityHeaderKey = tmsHeaders[25] || tmsHeaders.find(h => {
                 const low = h.toLowerCase();
                 return low.includes('kota') || low.includes('wilayah') || low.includes('lokasi') || low.includes('area');
@@ -2220,45 +2276,38 @@
                 }
             });
 
-            const sortedCities = Object.keys(cityMap).sort((a, b) => cityMap[b] - cityMap[a]).slice(0, 6);
-            const dataVals = sortedCities.map(c => cityMap[c]);
+            const dataPoints = Object.keys(cityMap).map(city => ({
+                label: city,
+                y: cityMap[city]
+            }));
 
-            if (tmsCityChartInstance) tmsCityChartInstance.destroy();
+            if (dataPoints.length === 0) {
+                dataPoints.push({ label: 'Tidak Ada Data', y: 1 });
+            }
 
-            const ctx = document.getElementById('tmsCityChart').getContext('2d');
-            tmsCityChartInstance = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: sortedCities.length > 0 ? sortedCities : ['Tidak Ada Data'],
-                    datasets: [{
-                        label: 'Jumlah Kunjungan',
-                        data: dataVals.length > 0 ? dataVals : [0],
-                        backgroundColor: '#ef4444',
-                        borderRadius: 6
-                    }]
+            const chart = new CanvasJS.Chart("tmsCity3DChartContainer", {
+                animationEnabled: true,
+                theme: "light2",
+                backgroundColor: "transparent",
+                legend: {
+                    cursor: "pointer",
+                    fontSize: 11,
+                    horizontalAlign: "center",
+                    verticalAlign: "bottom"
                 },
-                options: {
-                    indexAxis: 'y',
-                    responsive: true, maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false },
-                        datalabels: {
-                            anchor: 'end',
-                            align: 'right',
-                            color: '#1e293b',
-                            font: { weight: 'bold', size: 10 },
-                            formatter: (value) => value > 0 ? value : ''
-                        }
-                    },
-                    scales: {
-                        x: { beginAtZero: true, ticks: { precision: 0 }, grace: '15%' },
-                        y: { grid: { display: false } }
-                    }
-                }
+                data: [{
+                    type: "doughnut",
+                    showInLegend: true,
+                    indexLabelFontSize: 11,
+                    indexLabel: "{label}: #percent%",
+                    toolTipContent: "<b>{label}</b>: {y} Kunjungan (#percent%)",
+                    dataPoints: dataPoints
+                }]
             });
+            chart.render();
         }
 
-        function renderTmsDistanceChart(rows) {
+        function renderTmsDistance3DChart(rows) {
             const distanceHeaderKey = tmsHeaders[16] || tmsHeaders.find(h => {
                 const low = h.toLowerCase();
                 return low.includes('jarak') || low.includes('km') || low.includes('kilometer') || low.includes('distance');
@@ -2281,38 +2330,136 @@
                 else distanceMap['> 100 KM']++;
             });
 
-            const labels = Object.keys(distanceMap);
-            const dataVals = labels.map(l => distanceMap[l]);
+            const dataPoints = Object.keys(distanceMap).map(label => ({
+                label: label,
+                y: distanceMap[label]
+            })).filter(dp => dp.y > 0);
 
-            if (tmsDistanceChartInstance) tmsDistanceChartInstance.destroy();
+            if (dataPoints.length === 0) {
+                dataPoints.push({ label: 'Tidak Ada Data', y: 1 });
+            }
 
-            const ctx = document.getElementById('tmsDistanceChart').getContext('2d');
-            tmsDistanceChartInstance = new Chart(ctx, {
-                type: 'bar',
+            const chart = new CanvasJS.Chart("tmsDistance3DChartContainer", {
+                animationEnabled: true,
+                theme: "light2",
+                backgroundColor: "transparent",
+                legend: {
+                    cursor: "pointer",
+                    fontSize: 11,
+                    horizontalAlign: "center",
+                    verticalAlign: "bottom"
+                },
+                data: [{
+                    type: "doughnut",
+                    showInLegend: true,
+                    indexLabelFontSize: 11,
+                    indexLabel: "{label}: #percent%",
+                    toolTipContent: "<b>{label}</b>: {y} Kunjungan (#percent%)",
+                    dataPoints: dataPoints
+                }]
+            });
+            chart.render();
+        }
+
+        function renderTmsVehicleTrendCharts(rows, nopolKey, dateKey) {
+            const monthsShort = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+            const normVal = (str) => String(str || '').replace(/[\s-]/g, '').toUpperCase();
+
+            const cziMap = {};
+            const srrMap = {};
+
+            rows.forEach(row => {
+                const nopol = normVal(row[nopolKey]);
+                if (nopol !== 'B1092CZI' && nopol !== 'B2953SRR') return;
+
+                const dateVal = dateKey ? row[dateKey] : null;
+                const pDate = parseUniversalDate(dateVal);
+                if (!pDate) return;
+
+                const monthKey = `${pDate.getFullYear()}-${String(pDate.getMonth() + 1).padStart(2, '0')}`;
+                const displayLabel = `${monthsShort[pDate.getMonth()]} ${pDate.getFullYear()}`;
+
+                if (nopol === 'B1092CZI') {
+                    if (!cziMap[monthKey]) cziMap[monthKey] = { label: displayLabel, count: 0 };
+                    cziMap[monthKey].count++;
+                } else if (nopol === 'B2953SRR') {
+                    if (!srrMap[monthKey]) srrMap[monthKey] = { label: displayLabel, count: 0 };
+                    srrMap[monthKey].count++;
+                }
+            });
+
+            const sortedCziKeys = Object.keys(cziMap).sort();
+            const cziLabels = sortedCziKeys.map(k => cziMap[k].label);
+            const cziDataVals = sortedCziKeys.map(k => cziMap[k].count);
+
+            const sortedSrrKeys = Object.keys(srrMap).sort();
+            const srrLabels = sortedSrrKeys.map(k => srrMap[k].label);
+            const srrDataVals = sortedSrrKeys.map(k => srrMap[k].count);
+
+            if (tmsTrendCziInstance) tmsTrendCziInstance.destroy();
+            const ctxCzi = document.getElementById('tmsTrendCziChart').getContext('2d');
+            tmsTrendCziInstance = new Chart(ctxCzi, {
+                type: 'line',
                 data: {
-                    labels: labels,
+                    labels: cziLabels.length > 0 ? cziLabels : ['-'],
                     datasets: [{
-                        label: 'Jumlah Kunjungan Berdasarkan Jarak',
-                        data: dataVals,
-                        backgroundColor: '#6366f1',
-                        borderRadius: 6
+                        label: 'Kunjungan B-1092-CZI',
+                        data: cziDataVals.length > 0 ? cziDataVals : [0],
+                        borderColor: '#10b981',
+                        backgroundColor: '#10b98120',
+                        tension: 0.3,
+                        fill: true
                     }]
                 },
                 options: {
                     responsive: true, maintainAspectRatio: false,
                     plugins: {
-                        legend: { display: false },
+                        legend: { position: 'top', labels: { boxWidth: 12, font: { size: 11 } } },
                         datalabels: {
                             anchor: 'end',
                             align: 'top',
-                            color: '#1e293b',
+                            color: '#065f46',
                             font: { weight: 'bold', size: 10 },
                             formatter: (value) => value > 0 ? value : ''
                         }
                     },
                     scales: {
                         x: { grid: { display: false } },
-                        y: { beginAtZero: true, ticks: { precision: 0 }, grace: '15%' }
+                        y: { beginAtZero: true, ticks: { precision: 0 } }
+                    }
+                }
+            });
+
+            if (tmsTrendSrrInstance) tmsTrendSrrInstance.destroy();
+            const ctxSrr = document.getElementById('tmsTrendSrrChart').getContext('2d');
+            tmsTrendSrrInstance = new Chart(ctxSrr, {
+                type: 'line',
+                data: {
+                    labels: srrLabels.length > 0 ? srrLabels : ['-'],
+                    datasets: [{
+                        label: 'Kunjungan B-2953-SRR',
+                        data: srrDataVals.length > 0 ? srrDataVals : [0],
+                        borderColor: '#a855f7',
+                        backgroundColor: '#a855f720',
+                        tension: 0.3,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'top', labels: { boxWidth: 12, font: { size: 11 } } },
+                        datalabels: {
+                            anchor: 'end',
+                            align: 'top',
+                            color: '#581c87',
+                            font: { weight: 'bold', size: 10 },
+                            formatter: (value) => value > 0 ? value : ''
+                        }
+                    },
+                    scales: {
+                        x: { grid: { display: false } },
+                        y: { beginAtZero: true, ticks: { precision: 0 } }
                     }
                 }
             });
@@ -2672,10 +2819,10 @@
                 
                 let matchesStatus = true;
                 if (status) {
-                    const itemStatus = i['Status Part'].toUpperCase();
-                    const filterStatusUpper = status.toUpperCase();
-                    if (filterStatusUpper.includes('TUNGGU PASANG')) {
-                        matchesStatus = itemStatus.includes('TUNGGU') || itemStatus.includes('PASANG');
+                    const itemStatus = i['Status Part'].toUpperCase().trim();
+                    const filterStatusUpper = status.toUpperCase().trim();
+                    if (filterStatusUpper === 'TUNGGU PASANG') {
+                        matchesStatus = itemStatus === 'TUNGGU PASANG';
                     } else {
                         matchesStatus = itemStatus.includes(filterStatusUpper);
                     }
@@ -2712,18 +2859,18 @@
 
         function renderSopKPIs() {
             const getLen = (st) => {
-                const upperSt = st.toUpperCase();
-                return filteredSopData.filter(i => {
-                    const itemStatus = i['Status Part'].toUpperCase();
-                    if (upperSt.includes('TUNGGU PASANG')) {
-                        return itemStatus.includes('TUNGGU') || itemStatus.includes('PASANG');
+                const upperSt = st.toUpperCase().trim();
+                return groupedSopData.filter(i => {
+                    const itemStatus = i['Status Part'].toUpperCase().trim();
+                    if (upperSt === 'TUNGGU PASANG') {
+                        return itemStatus === 'TUNGGU PASANG';
                     }
                     return itemStatus.includes(upperSt);
                 }).length;
             };
 
             const counts = { 
-                total: filteredSopData.length, 
+                total: groupedSopData.length, 
                 sedang: getLen('SEDANG ORDER'),
                 bo: getLen('B/O'), 
                 pasang: getLen('TUNGGU PASANG'), 
@@ -2741,11 +2888,11 @@
 
         function getSopStatusColor(st) {
             if(!st) return 'bg-slate-100 text-slate-500 border-slate-200';
-            const statusUpper = st.toUpperCase();
+            const statusUpper = st.toUpperCase().trim();
             if (statusUpper.includes('SEDANG ORDER')) return 'bg-purple-50 text-purple-600 border-purple-200';
             if (statusUpper.includes('B/O')) return 'bg-red-50 text-red-600 border-red-200';
             if (statusUpper.includes('KONFIRMASI JADWAL')) return 'bg-amber-50 text-amber-600 border-amber-200';
-            if (statusUpper.includes('TUNGGU') || statusUpper.includes('PASANG')) return 'bg-blue-50 text-blue-600 border-blue-200';
+            if (statusUpper === 'TUNGGU PASANG') return 'bg-blue-50 text-blue-600 border-blue-200';
             if (statusUpper.includes('TERPASANG')) return 'bg-emerald-50 text-emerald-600 border-emerald-200';
             return 'bg-slate-100 text-slate-500 border-slate-200';
         }
@@ -2794,9 +2941,9 @@
             filteredSopData.forEach(i => {
                 const etaVal = String(i['ETA B/O'] || '').trim();
                 const actVal = String(i['Aktual Kedatangan'] || '').trim();
-                const statusVal = String(i['Status Part'] || '').toUpperCase();
+                const statusVal = String(i['Status Part'] || '').toUpperCase().trim();
 
-                const isTiba = actVal !== '' && actVal !== '-' || statusVal.includes('TERPASANG') || statusVal.includes('TUNGGU') || statusVal.includes('PASANG');
+                const isTiba = actVal !== '' && actVal !== '-' || statusVal.includes('TERPASANG') || statusVal === 'TUNGGU PASANG';
                 const isBo = etaVal !== '' && etaVal !== '-' || statusVal.includes('B/O');
 
                 if (isTiba) tiba++;
@@ -2893,14 +3040,14 @@
         function closeSopDetailModal() { document.getElementById('sopDetailModal').classList.add('hidden'); }
 
         function openSopKPIModal(st, title) {
-            const upperSt = st.toUpperCase();
-            const targetList = st ? filteredSopData.filter(i => {
-                const itemStatus = i['Status Part'].toUpperCase();
-                if (upperSt.includes('TUNGGU PASANG')) {
-                    return itemStatus.includes('TUNGGU') || itemStatus.includes('PASANG');
+            const upperSt = st.toUpperCase().trim();
+            const targetList = st ? groupedSopData.filter(i => {
+                const itemStatus = i['Status Part'].toUpperCase().trim();
+                if (upperSt === 'TUNGGU PASANG') {
+                    return itemStatus === 'TUNGGU PASANG';
                 }
                 return itemStatus.includes(upperSt);
-            }) : filteredSopData;
+            }) : groupedSopData;
 
             document.getElementById('sopKpiModalTitle').innerText = title;
             document.getElementById('sopKpiModalTableBody').innerHTML = targetList.map(i => {
@@ -2920,6 +3067,545 @@
             document.getElementById('sopKpiModal').classList.remove('flex');
             document.getElementById('sopKpiModal').classList.add('hidden'); 
         }
+    </script>
+
+    <!-- REACT SCRIPT UNTUK VIEW KPI -->
+    <script type="text/babel">
+        const { useState, useEffect, useCallback, useMemo } = React;
+        const { ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, Legend } = Recharts;
+
+        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwG_6kdTltJTQg-dLycjRmRCWdw9XO-eym-7UIm8bXxK4XJylbvgw2WWgNftOll7fn9/exec";
+        const uid = () => Math.random().toString(36).slice(2, 10);
+
+        function getFallbackData() {
+            return {
+                meta: { sa: "13C110 - DEDE KURNIAWAN", periods: ["Juli 2026", "Agustus 2026"] },
+                categories: [
+                    {
+                        id: uid(), name: "Business Process", weight: 60,
+                        subItems: [
+                            { id: uid(), name: "Unit CPUS (SBE + GRP)", unit: "unit", subWeight: 25, target: 0, actual: 0, inverse: false },
+                            { id: uid(), name: "Lead Time (ALL UE)", unit: "menit", subWeight: 10, target: 0, actual: 0, inverse: true },
+                            { id: uid(), name: "FIR (Fix It Right)", unit: "%", subWeight: 0, target: 0, actual: 0, inverse: false },
+                            { id: uid(), name: "OTD (excl. TWC & RTJ)", unit: "%", subWeight: 10, target: 0, actual: 0, inverse: false },
+                            { id: uid(), name: "% Pelanggan di Engagement", unit: "%", subWeight: 10, target: 0, actual: 0, inverse: false },
+                            { id: uid(), name: "% Saran Service / CPUS", unit: "%", subWeight: 15, target: 0, actual: 0, inverse: false },
+                            { id: uid(), name: "% CAI Saran Service", unit: "%", subWeight: 15, target: 0, actual: 0, inverse: false },
+                            { id: uid(), name: "% SA Retention", unit: "%", subWeight: 15, target: 0, actual: 0, inverse: false },
+                        ],
+                    },
+                    {
+                        id: uid(), name: "Financial", weight: 30,
+                        subItems: [
+                            { id: uid(), name: "Penjualan Jasa", unit: "Rp", subWeight: 50, target: 0, actual: 0, inverse: false },
+                            { id: uid(), name: "Penjualan Spare Part", unit: "Rp", subWeight: 25, target: 0, actual: 0, inverse: false },
+                            { id: uid(), name: "Penjualan Bahan", unit: "Rp", subWeight: 15, target: 0, actual: 0, inverse: false },
+                            { id: uid(), name: "Penjualan Sublet", unit: "Rp", subWeight: 10, target: 0, actual: 0, inverse: false },
+                        ],
+                    },
+                    {
+                        id: uid(), name: "CS", weight: 10,
+                        subItems: [
+                            { id: uid(), name: "NPS Per SA - TTB", unit: "%", subWeight: 50, target: 0, actual: 0, inverse: false },
+                            { id: uid(), name: "Kuantity VOC Per SA", unit: "%", subWeight: 25, target: 0, actual: 0, inverse: false },
+                            { id: uid(), name: "NPS Real Promoter", unit: "%", subWeight: 25, target: 0, actual: 0, inverse: false },
+                        ],
+                    }
+                ],
+            };
+        }
+
+        function achievement(sub) {
+            const t = Number(sub.target);
+            const a = Number(sub.actual);
+            if (!t || Number.isNaN(t)) return 0;
+            if (sub.inverse) {
+                if (!a || Number.isNaN(a)) return 0;
+                return Math.min(130, (t / a) * 100); 
+            }
+            if (Number.isNaN(a)) return 0;
+            return Math.min(130, (a / t) * 100); 
+        }
+        
+        function subScore(sub, categoryWeight) {
+            const ach = achievement(sub);
+            return ((Number(sub.subWeight) || 0) / 100) * ((Number(categoryWeight) || 0) / 100) * ach;
+        }
+        
+        function categoryScore(cat) {
+            return cat.subItems.reduce((s, sub) => s + subScore(sub, cat.weight), 0);
+        }
+        
+        function overallScore(categories) {
+            return categories.reduce((s, c) => s + categoryScore(c), 0);
+        }
+
+        function statusStyle(pct) {
+            if (pct >= 100) return { hex: "#10B981", text: "text-emerald-700", bg: "bg-emerald-100", border: "border-emerald-200", label: "Target Utama Tercapai (100%+)" };
+            if (pct >= 85) return { hex: "#3B82F6", text: "text-blue-700", bg: "bg-blue-100", border: "border-blue-200", label: "Tahap Aman Level 2 (≥ 85%)" };
+            if (pct >= 80) return { hex: "#F59E0B", text: "text-amber-700", bg: "bg-amber-100", border: "border-amber-200", label: "Tahap Aman Level 1 (≥ 80%)" };
+            return { hex: "#EF4444", text: "text-red-700", bg: "bg-red-100", border: "border-red-200", label: "Perlu Perhatian (< 80%)" };
+        }
+
+        function formatValue(val, unit) {
+            const num = Number(val);
+            if (Number.isNaN(num) || num === 0) return "0";
+            if (unit?.toLowerCase() === 'rp') {
+                return `Rp ${num.toLocaleString("id-ID")}`;
+            }
+            if (unit === '%') {
+                return `${num.toLocaleString("id-ID")}%`;
+            }
+            return num.toLocaleString("id-ID");
+        }
+
+        function parseFormattedNumber(val) {
+            if (!val) return 0;
+            if (typeof val === 'number') return val;
+            let s = String(val).replace(/[^0-9,-]/g, '');
+            s = s.replace(/,/g, '.');
+            return parseFloat(s) || 0;
+        }
+
+        function Gauge({ value, size = 220 }) {
+            const clamped = Math.max(0, Math.min(130, value));
+            const angle = -180 + (clamped / 130) * 180;
+            const r = (size / 2) - 30;
+            const cx = size / 2;
+            const cy = size / 2 + 10;
+            const rad = (angle * Math.PI) / 180;
+            const needleLen = r - 10;
+            const nx = cx + needleLen * Math.cos(rad);
+            const ny = cy + needleLen * Math.sin(rad);
+
+            const st = statusStyle(value);
+
+            return (
+                <div className="flex flex-col items-center justify-center relative w-full overflow-hidden py-1">
+                    <svg width={size} height={size / 2 + 35} viewBox={`0 0 ${size} ${size / 2 + 35}`} className="overflow-visible">
+                        <defs>
+                            <linearGradient id="gaugeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                                <stop offset="0%" stopColor="#EF4444" />
+                                <stop offset="61%" stopColor="#F59E0B" />
+                                <stop offset="77%" stopColor="#3B82F6" />
+                                <stop offset="100%" stopColor="#10B981" />
+                            </linearGradient>
+                        </defs>
+                        <path d={`M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy}`} stroke="#E2E8F0" strokeWidth={12} fill="none" strokeLinecap="round" />
+                        <path d={`M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy}`} stroke="url(#gaugeGrad)" strokeWidth={12} fill="none" strokeLinecap="round" strokeDasharray={`${Math.PI * r}`} strokeDashoffset={`${Math.PI * r * (1 - clamped / 130)}`} />
+                        <line x1={cx} y1={cy} x2={nx} y2={ny} stroke="#1E293B" strokeWidth={3} strokeLinecap="round" />
+                        <circle cx={cx} cy={cy} r={7} fill="#FFFFFF" stroke={st.hex} strokeWidth={3} />
+                        <text x={cx} y={cy + 32} textAnchor="middle" fontFamily="Plus Jakarta Sans" fontSize="26" fontWeight="800" fill="#0F172A">{value.toFixed(2)}%</text>
+                    </svg>
+                </div>
+            );
+        }
+
+        function ChartTooltip({ active, payload, label }) {
+            if (!active || !payload || !payload.length) return null;
+            const val = payload[0].value;
+            const st = statusStyle(val);
+            return (
+                <div className="bg-white border border-slate-200 rounded-lg p-2.5 shadow-lg font-mono text-xs">
+                    <div className="text-slate-500 mb-0.5">{label}</div>
+                    <div className="font-bold" style={{ color: st.hex }}>Skor: {val.toFixed(2)}%</div>
+                </div>
+            );
+        }
+
+        const SubItemRow = ({ sub, catWeight, onSave }) => {
+            const [isLocked, setIsLocked] = useState(true);
+            const [targetNum, setTargetNum] = useState(Number(sub.target) || 0);
+            const [targetStr, setTargetStr] = useState(sub.target ? String(sub.target) : '');
+            const [actualNum, setActualNum] = useState(Number(sub.actual) || 0);
+            const [actualStr, setActualStr] = useState(sub.actual ? String(sub.actual) : '');
+
+            useEffect(() => {
+                setTargetNum(Number(sub.target) || 0);
+                setTargetStr(sub.target ? String(sub.target) : '');
+                setActualNum(Number(sub.actual) || 0);
+                setActualStr(sub.actual ? String(sub.actual) : '');
+            }, [sub.target, sub.actual]);
+
+            const handleTargetChange = (e) => {
+                setTargetStr(e.target.value);
+                setTargetNum(parseFormattedNumber(e.target.value));
+            };
+
+            const handleActualChange = (e) => {
+                setActualStr(e.target.value);
+                setActualNum(parseFormattedNumber(e.target.value));
+            };
+
+            const handleToggleLock = () => {
+                if (!isLocked) {
+                    onSave(sub.id, targetNum, actualNum);
+                }
+                setIsLocked(!isLocked);
+            };
+
+            const currentSub = { ...sub, target: targetNum, actual: actualNum };
+            const ach = achievement(currentSub);
+            const sc = subScore(currentSub, catWeight);
+            const st = statusStyle(ach);
+
+            return (
+                <tr className="border-b border-slate-100 last:border-0 hover:bg-slate-50/70 transition-colors">
+                    <td className="py-2.5 px-4">
+                        <div className="font-semibold text-slate-800 text-xs leading-tight">{sub.name}</div>
+                        {sub.inverse && <span className="text-[9px] text-slate-400 uppercase tracking-wider">Inverse</span>}
+                    </td>
+                    <td className="py-2.5 px-3 text-center text-xs font-mono text-slate-500">{sub.unit}</td>
+                    <td className="py-4 px-3 text-center text-xs font-medium text-slate-600">{sub.subWeight}%</td>
+                    
+                    <td className="py-2.5 px-3 text-right">
+                        {isLocked ? (
+                            <span className="font-mono text-xs font-medium text-slate-700">
+                                {targetNum === 0 ? '-' : formatValue(targetNum, sub.unit)}
+                            </span>
+                        ) : (
+                            <input 
+                                type="text" 
+                                value={targetStr}
+                                onChange={handleTargetChange}
+                                placeholder="0"
+                                className="w-full max-w-[120px] text-right font-mono text-xs border border-amber-400 bg-amber-50 rounded px-2 py-1 outline-none" 
+                            />
+                        )}
+                    </td>
+
+                    <td className="py-2.5 px-3 text-right">
+                        {isLocked ? (
+                            <span className="font-mono text-xs font-medium text-slate-700">
+                                {actualNum === 0 ? '-' : formatValue(actualNum, sub.unit)}
+                            </span>
+                        ) : (
+                            <input 
+                                type="text" 
+                                value={actualStr}
+                                onChange={handleActualChange}
+                                placeholder="0"
+                                className="w-full max-w-[120px] text-right font-mono text-xs border border-emerald-400 bg-emerald-50 rounded px-2 py-1 outline-none" 
+                            />
+                        )}
+                    </td>
+
+                    <td className="py-2.5 px-3 text-center">
+                        <span className={`px-2 py-0.5 rounded text-[11px] font-bold ${st.bg} ${st.text}`}>
+                            {ach.toFixed(1)}%
+                        </span>
+                    </td>
+                    <td className="py-2.5 px-3 text-center font-mono font-bold text-slate-800 text-xs">
+                        {sc.toFixed(2)}
+                    </td>
+                    <td className="py-2.5 px-3 text-center">
+                        <button 
+                            onClick={handleToggleLock} 
+                            className={`px-2.5 py-1 rounded text-[11px] font-bold transition-all cursor-pointer
+                                ${isLocked 
+                                    ? 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-100' 
+                                    : 'bg-emerald-500 text-white hover:bg-emerald-600'
+                                }`}
+                        >
+                            {isLocked ? '🔓 Edit' : '🔒 Simpan'}
+                        </button>
+                    </td>
+                </tr>
+            );
+        };
+
+        function KpiDashboardApp() {
+            const [periods, setPeriods] = useState(["Juli 2026", "Agustus 2026"]);
+            const [active, setActive] = useState("Juli 2026");
+            const [currentData, setCurrentData] = useState(getFallbackData());
+            const [historyData, setHistoryData] = useState([]);
+            const [syncStatus, setSyncStatus] = useState("Menghubungkan Google Sheets...");
+
+            const fetchAllPeriodsScore = useCallback(async (periodList) => {
+                try {
+                    const results = await Promise.all(
+                        periodList.map(async (p) => {
+                            const res = await fetch(`${APPS_SCRIPT_URL}?period=${encodeURIComponent(p)}`);
+                            const json = await res.json();
+                            const score = json && json.categories ? overallScore(json.categories) : 0;
+                            return { name: p, score: score };
+                        })
+                    );
+                    setHistoryData(results);
+                } catch (err) {
+                    console.error("Gagal mengambil riwayat grafik", err);
+                }
+            }, []);
+
+            const fetchData = useCallback((selectedPeriod) => {
+                setSyncStatus("⏳ Memuat Data...");
+                const targetPeriod = selectedPeriod || active;
+                fetch(`${APPS_SCRIPT_URL}?period=${encodeURIComponent(targetPeriod)}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data && data.categories) {
+                            setCurrentData(data);
+                            if (data.meta && data.meta.periods) {
+                                setPeriods(data.meta.periods);
+                                fetchAllPeriodsScore(data.meta.periods);
+                            }
+                            setSyncStatus("✅ Terhubung Google Sheets");
+                        } else {
+                            setSyncStatus("⚠️ Data Kosong");
+                        }
+                    })
+                    .catch(err => {
+                        console.error("Gagal fetch", err);
+                        setSyncStatus("⚠️ Gagal Akses Apps Script");
+                    });
+            }, [active, fetchAllPeriodsScore]);
+
+            useEffect(() => {
+                fetchData(active);
+            }, [active, fetchData]);
+
+            const handleAddPeriod = () => {
+                const newPeriodName = prompt("Masukkan Nama Periode Baru (Contoh: September 2026):");
+                if (!newPeriodName || newPeriodName.trim() === "") return;
+                
+                const trimmedName = newPeriodName.trim();
+                if (periods.includes(trimmedName)) {
+                    alert("Periode tersebut sudah ada!");
+                    return;
+                }
+
+                setSyncStatus("⏳ Menambahkan Periode...");
+                fetch(APPS_SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: "add_period", activePeriod: trimmedName })
+                })
+                .then(() => {
+                    setSyncStatus("✅ Periode Ditambahkan");
+                    setPeriods(prev => [...prev, trimmedName]);
+                    setActive(trimmedName);
+                    fetchData(trimmedName);
+                })
+                .catch(err => {
+                    console.error("Error add period", err);
+                    setSyncStatus("⚠️ Gagal Tambah Periode");
+                });
+            };
+
+            const saveSubItem = (catId, subId, newTarget, newActual) => {
+                const updatedCategories = currentData.categories.map(c => {
+                    if (c.id !== catId) return c;
+                    return {
+                        ...c,
+                        subItems: c.subItems.map(s => s.id === subId ? { ...s, target: newTarget, actual: newActual } : s)
+                    };
+                });
+                
+                const newData = { ...currentData, categories: updatedCategories };
+                setCurrentData(newData);
+                setSyncStatus("⏳ Menyimpan ke Sheets...");
+
+                fetch(APPS_SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: "save", ...newData, activePeriod: active })
+                })
+                .then(() => {
+                    setSyncStatus("✅ Tersimpan di Google Sheets");
+                    fetchAllPeriodsScore(periods);
+                })
+                .catch(err => {
+                    console.error("Error post", err);
+                    setSyncStatus("⚠️ Gagal Menyimpan");
+                });
+            };
+
+            const totalCatWeight = useMemo(() => currentData.categories.reduce((s, c) => s + (Number(c.weight) || 0), 0), [currentData]);
+            const total = useMemo(() => overallScore(currentData.categories), [currentData]);
+            const overallStatus = statusStyle(total);
+
+            const focusList = useMemo(() => {
+                const rows = [];
+                currentData.categories.forEach((cat) => {
+                    cat.subItems.forEach((sub) => {
+                        const ach = achievement(sub);
+                        const potential = (Number(sub.subWeight) || 0) / 100 * (Number(cat.weight) || 0) / 100 * Math.max(0, 100 - ach);
+                        if (potential > 0.05 && (Number(cat.weight) || 0) > 0 && (Number(sub.subWeight) || 0) > 0) {
+                            rows.push({ cat: cat.name, name: sub.name, ach, potential, target: sub.target, actual: sub.actual, unit: sub.unit });
+                        }
+                    });
+                });
+                return rows.sort((a, b) => b.potential - a.potential).slice(0, 4);
+            }, [currentData]);
+
+            return (
+                <div className="min-h-screen text-slate-800 font-sans pb-12">
+                    <div className="max-w-6xl mx-auto px-4 pt-2">
+                        
+                        {/* Header Area */}
+                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 mb-4">
+                            <div>
+                                <h1 className="text-2xl font-extrabold tracking-tight text-slate-900">KPI Service Advisor</h1>
+                                <div className="text-xs text-slate-500 font-medium">{currentData.meta.sa}</div>
+                            </div>
+                            <div className="flex items-center gap-2 flex-wrap">
+                                <button 
+                                    onClick={() => fetchData(active)}
+                                    title="Segarkan data dari Google Sheets"
+                                    className="p-1.5 bg-white border border-slate-200 hover:bg-slate-100 rounded-full transition-colors shadow-sm text-sm cursor-pointer"
+                                >
+                                    🔄
+                                </button>
+                                <div className="flex items-center gap-1.5 px-3 py-1 bg-white border border-slate-200 rounded-full shadow-sm text-xs font-semibold text-slate-600">
+                                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                                    {syncStatus}
+                                </div>
+                                <select 
+                                    value={active} 
+                                    onChange={(e) => setActive(e.target.value)}
+                                    className="bg-white border border-slate-300 text-slate-700 rounded-lg px-3 py-1.5 text-xs font-semibold shadow-sm outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer"
+                                >
+                                    {periods.map((p) => <option key={p} value={p}>{p}</option>)}
+                                </select>
+                                <button 
+                                    onClick={handleAddPeriod}
+                                    className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold shadow-sm transition-all cursor-pointer flex items-center gap-1"
+                                >
+                                    <span>+ Periode</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Top Cards (Gauge & Chart) */}
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+                            
+                            {/* Score Summary Card */}
+                            <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 flex flex-col items-center justify-center lg:col-span-1">
+                                <div className="w-full flex justify-center py-1">
+                                    <Gauge value={total} size={210} />
+                                </div>
+                                <div className="text-xs font-bold text-slate-400 mt-0.5 tracking-wide uppercase">Skor Total — {active}</div>
+                                
+                                <div className="w-full mt-4 space-y-2">
+                                    <div className={`w-full text-center py-2 rounded-lg border font-bold text-xs ${overallStatus.bg} ${overallStatus.text} ${overallStatus.border}`}>
+                                        {overallStatus.label}
+                                    </div>
+                                    <div className="flex justify-between items-center text-[11px] font-semibold px-1">
+                                        <span className="text-slate-500">Bobot KPI:</span>
+                                        <span className={Math.abs(totalCatWeight - 100) < 0.1 ? "text-emerald-600" : "text-amber-600"}>{totalCatWeight}%</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Combined Bar & Line Chart Card */}
+                            <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 lg:col-span-2 flex flex-col">
+                                <div className="flex items-center gap-1.5 mb-2">
+                                    <span className="text-base">📈</span>
+                                    <h2 className="text-sm font-bold text-slate-800">Grafik Kinerja Bulanan (Batang & Garis)</h2>
+                                </div>
+                                <div className="w-full flex-grow min-h-[190px]">
+                                    <ResponsiveContainer>
+                                      <ComposedChart data={historyData} margin={{ top: 5, right: 5, left: -25, bottom: 0 }}>
+                                        <CartesianGrid stroke="#F1F5F9" vertical={false} />
+                                        <XAxis dataKey="name" tick={{ fill: "#64748B", fontSize: 10, fontFamily: "JetBrains Mono" }} axisLine={{ stroke: "#E2E8F0" }} tickLine={false} />
+                                        <YAxis tick={{ fill: "#64748B", fontSize: 10, fontFamily: "JetBrains Mono" }} axisLine={false} tickLine={false} domain={[0, 130]} />
+                                        <ReferenceLine y={100} stroke="#10B981" strokeDasharray="3 3" opacity={0.6} />
+                                        <ReferenceLine y={85} stroke="#3B82F6" strokeDasharray="3 3" opacity={0.5} />
+                                        <Tooltip content={<ChartTooltip />} cursor={{ fill: '#F1F5F9' }} />
+                                        <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '4px' }} />
+                                        <Bar dataKey="score" name="Capaian Aktual (%)" fill="#3B82F6" radius={[4, 4, 0, 0]} barSize={28} />
+                                        <Line type="monotone" dataKey="score" name="Tren Kinerja" stroke="#10B981" strokeWidth={2.5} dot={{ r: 4, fill: "#10B981", stroke: "#FFFFFF", strokeWidth: 2 }} activeDot={{ r: 6 }} />
+                                      </ComposedChart>
+                                    </ResponsiveContainer>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Rekomendasi Prioritas (Compact Grid) */}
+                        {focusList.length > 0 && (
+                            <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 mb-6">
+                              <div className="flex items-center gap-1.5 mb-3">
+                                <span className="text-base">🎯</span>
+                                <h2 className="text-sm font-bold text-slate-800">Prioritas Peningkatan Kinerja</h2>
+                              </div>
+                              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+                                  {focusList.map((f, i) => {
+                                    const st = statusStyle(f.ach);
+                                    return (
+                                      <div key={i} className="bg-slate-50 border border-slate-200 rounded-lg p-3 flex flex-col justify-between">
+                                        <div>
+                                          <div className="text-xs font-bold text-slate-800 line-clamp-1">{i + 1}. {f.name}</div>
+                                          <div className="text-[11px] text-slate-500 mt-1">
+                                              Aktual: {formatValue(f.actual, f.unit)}
+                                          </div>
+                                        </div>
+                                        <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-200">
+                                          <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${st.bg} ${st.text}`}>{f.ach.toFixed(1)}%</span>
+                                          <span className="text-[11px] font-bold text-emerald-600">+{f.potential.toFixed(2)} pts</span>
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
+                              </div>
+                            </div>
+                        )}
+
+                        {/* KPI Cards (Categories) */}
+                        <div className="space-y-4">
+                          {currentData.categories.map((cat) => {
+                            const catScore = categoryScore(cat);
+                            return (
+                              <div key={cat.id} className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+                                
+                                {/* Category Header */}
+                                <div className="bg-slate-800 px-4 py-2.5 flex flex-col sm:flex-row justify-between sm:items-center gap-2">
+                                    <h3 className="text-sm font-bold text-white tracking-tight">{cat.name}</h3>
+                                    <div className="flex items-center gap-4 text-xs">
+                                        <span className="text-slate-300">Bobot: <strong className="text-white ml-0.5">{cat.weight}%</strong></span>
+                                        <span className="text-slate-300">Skor: <strong className="text-emerald-400 ml-0.5">{catScore.toFixed(2)}</strong></span>
+                                    </div>
+                                </div>
+
+                                {/* SubItems Table */}
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-left border-collapse min-w-[850px]">
+                                        <thead className="bg-slate-50 text-slate-500 text-[10px] uppercase tracking-wider font-bold border-b border-slate-200">
+                                            <tr>
+                                                 <th className="px-4 py-2.5 w-[28%]">Indikator KPI</th>
+                                                 <th className="px-3 py-2.5 text-center w-[8%]">Satuan</th>
+                                                 <th className="px-3 py-2.5 text-center w-[8%]">Bobot</th>
+                                                 <th className="px-3 py-2.5 text-right w-[15%]">Target</th>
+                                                 <th className="px-3 py-2.5 text-right w-[15%]">Aktual</th>
+                                                 <th className="px-3 py-2.5 text-center w-[10%]">Capaian</th>
+                                                 <th className="px-3 py-2.5 text-center w-[8%]">Skor</th>
+                                                 <th className="px-3 py-2.5 text-center w-[8%]">Aksi</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-slate-100">
+                                            {cat.subItems.map((sub) => (
+                                                <SubItemRow 
+                                                    key={sub.id}
+                                                    sub={sub} 
+                                                    catWeight={cat.weight} 
+                                                    onSave={(subId, target, actual) => saveSubItem(cat.id, subId, target, actual)}
+                                                />
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                        
+                    </div>
+                </div>
+            );
+        }
+
+        ReactDOM.render(<KpiDashboardApp />, document.getElementById("kpi-react-root"));
     </script>
 </body>
 </html>
